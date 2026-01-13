@@ -127,172 +127,173 @@ class CursorActionHandler(
             if (event.keyCode in activateKeys) {
                 return handleActivationKey(event)
             }
+//
+//            if (settings.ignoreNumpad) {
+//                if (event.keyCode in setOf(
+//                        KeyEvent.KEYCODE_1,
+//                        KeyEvent.KEYCODE_2,
+//                        KeyEvent.KEYCODE_3,
+//                        KeyEvent.KEYCODE_4,
+//                        KeyEvent.KEYCODE_5,
+//                        KeyEvent.KEYCODE_6,
+//                        KeyEvent.KEYCODE_7,
+//                        KeyEvent.KEYCODE_8,
+//                        KeyEvent.KEYCODE_9,
+//                        KeyEvent.KEYCODE_0,
+//                        KeyEvent.KEYCODE_STAR,
+//                        KeyEvent.KEYCODE_POUND
+//                    )) {
+//                    return false
+//                }
+//            }
+//
+//            if (!cursorStateManager.isCursorVisible()) return false
+//
+//            // Map keys based on control scheme
+//            movementKeys =
+//                when (settings.controlScheme) {
+//                    ControlScheme.STANDARD, ControlScheme.TV -> {
+//                        setOf(
+//                            KeyEvent.KEYCODE_U,
+//                            KeyEvent.KEYCODE_B,
+//                            KeyEvent.KEYCODE_H,
+//                            KeyEvent.KEYCODE_K
+//                        )
+//                    }
+//
+//                    ControlScheme.SWAPPED -> {
+//                        setOf(
+//                            KeyEvent.KEYCODE_2,
+//                            KeyEvent.KEYCODE_4,
+//                            KeyEvent.KEYCODE_6,
+//                            KeyEvent.KEYCODE_8
+//                        )
+//                    }
+//
+//                    ControlScheme.DPAD_TOGGLE -> {
+//                        if (cursorStateManager.isInScrollMode()) {
+//                            emptySet()
+//                        } else {
+//                            setOf(
+//                                KeyEvent.KEYCODE_U,
+//                                KeyEvent.KEYCODE_B,
+//                                KeyEvent.KEYCODE_H,
+//                                KeyEvent.KEYCODE_K
+//                            )
+//                        }
+//                    }
+//
+//                    ControlScheme.NUMPAD_TOGGLE -> {
+//                        if (cursorStateManager.isInScrollMode()) {
+//                            emptySet()
+//                        } else {
+//                            setOf(
+//                                KeyEvent.KEYCODE_2,
+//                                KeyEvent.KEYCODE_8,
+//                                KeyEvent.KEYCODE_4,
+//                                KeyEvent.KEYCODE_6
+//                            )
+//                        }
+//                    }
+//                }
+//
+//            scrollKeys =
+//                when (settings.controlScheme) {
+//                    ControlScheme.STANDARD -> {
+//                        setOf(
+//                            KeyEvent.KEYCODE_2,
+//                            KeyEvent.KEYCODE_4,
+//                            KeyEvent.KEYCODE_6,
+//                            KeyEvent.KEYCODE_8
+//                        )
+//                    }
+//
+//                    ControlScheme.SWAPPED -> {
+//                        setOf(
+//                            KeyEvent.KEYCODE_U,
+//                            KeyEvent.KEYCODE_B,
+//                            KeyEvent.KEYCODE_H,
+//                            KeyEvent.KEYCODE_K
+//                        )
+//                    }
+//
+//                    ControlScheme.DPAD_TOGGLE -> {
+//                        if (cursorStateManager.isInScrollMode()) {
+//                            setOf(
+//                                    KeyEvent.KEYCODE_U,
+//                                    KeyEvent.KEYCODE_B,
+//                                    KeyEvent.KEYCODE_H,
+//                                    KeyEvent.KEYCODE_K
+//                            )
+//                        } else {
+//                            emptySet()
+//                        }
+//                    }
+//
+//                    ControlScheme.NUMPAD_TOGGLE -> {
+//                        if (cursorStateManager.isInScrollMode()) {
+//                            setOf(
+//                                    KeyEvent.KEYCODE_2,
+//                                    KeyEvent.KEYCODE_8,
+//                                    KeyEvent.KEYCODE_4,
+//                                    KeyEvent.KEYCODE_6
+//                            )
+//                        } else {
+//                            emptySet()
+//                        }
+//                    }
+//
+//                    ControlScheme.TV -> {
+//                        setOf(
+//                            settings.scrollUpKey,
+//                            settings.scrollDownKey,
+//                            settings.scrollLeftKey,
+//                            settings.scrollRightKey
+//                        )
+//                    }
+//                }
+//
+//            actionKeys = setOf(
+//                KeyEvent.KEYCODE_DPAD_CENTER,
+//                KeyEvent.KEYCODE_ENTER,
+//                KeyEvent.KEYCODE_5,
+//                KeyEvent.KEYCODE_J
+//            )
+//
+//            zoomKeys = buildSet {
+//                add(KeyEvent.KEYCODE_Y)
+//                add(KeyEvent.KEYCODE_I)
+//
+//                if (BuildConfig.DEBUG) {
+//                    add(KeyEvent.KEYCODE_LEFT_BRACKET)
+//                    add(KeyEvent.KEYCODE_RIGHT_BRACKET)
+//                }
+//            }
+//
+//            disableKeys = setOf(
+//                KeyEvent.KEYCODE_7,
+//                KeyEvent.KEYCODE_9,
+//                KeyEvent.KEYCODE_0,
+//                KeyEvent.KEYCODE_POUND,
+//                KeyEvent.KEYCODE_STAR
+//            )
+//
+//            val reservedKeys = movementKeys + scrollKeys + zoomKeys + actionKeys + disableKeys
+//            if (event.keyCode !in reservedKeys) {
+//                return false
+//            }
+//
+//            // Buttons should be consumed at this point
+//            backgroundScope.launch {
+//                channel.send(
+//                    ChannelMessage(
+//                        event = event,
+//                        handler = ::handleKeyEventInternal
+//                    )
+//                )
+//            }
 
-            if (settings.ignoreNumpad) {
-                if (event.keyCode in setOf(
-                        KeyEvent.KEYCODE_1,
-                        KeyEvent.KEYCODE_2,
-                        KeyEvent.KEYCODE_3,
-                        KeyEvent.KEYCODE_4,
-                        KeyEvent.KEYCODE_5,
-                        KeyEvent.KEYCODE_6,
-                        KeyEvent.KEYCODE_7,
-                        KeyEvent.KEYCODE_8,
-                        KeyEvent.KEYCODE_9,
-                        KeyEvent.KEYCODE_0,
-                        KeyEvent.KEYCODE_STAR,
-                        KeyEvent.KEYCODE_POUND
-                    )) {
-                    return false
-                }
-            }
-
-            if (!cursorStateManager.isCursorVisible()) return false
-
-            // Map keys based on control scheme
-            movementKeys =
-                when (settings.controlScheme) {
-                    ControlScheme.STANDARD, ControlScheme.TV -> {
-                        setOf(
-                            KeyEvent.KEYCODE_DPAD_UP,
-                            KeyEvent.KEYCODE_DPAD_DOWN,
-                            KeyEvent.KEYCODE_DPAD_LEFT,
-                            KeyEvent.KEYCODE_DPAD_RIGHT
-                        )
-                    }
-
-                    ControlScheme.SWAPPED -> {
-                        setOf(
-                            KeyEvent.KEYCODE_2,
-                            KeyEvent.KEYCODE_4,
-                            KeyEvent.KEYCODE_6,
-                            KeyEvent.KEYCODE_8
-                        )
-                    }
-
-                    ControlScheme.DPAD_TOGGLE -> {
-                        if (cursorStateManager.isInScrollMode()) {
-                            emptySet()
-                        } else {
-                            setOf(
-                                KeyEvent.KEYCODE_DPAD_UP,
-                                KeyEvent.KEYCODE_DPAD_DOWN,
-                                KeyEvent.KEYCODE_DPAD_LEFT,
-                                KeyEvent.KEYCODE_DPAD_RIGHT
-                            )
-                        }
-                    }
-
-                    ControlScheme.NUMPAD_TOGGLE -> {
-                        if (cursorStateManager.isInScrollMode()) {
-                            emptySet()
-                        } else {
-                            setOf(
-                                KeyEvent.KEYCODE_2,
-                                KeyEvent.KEYCODE_8,
-                                KeyEvent.KEYCODE_4,
-                                KeyEvent.KEYCODE_6
-                            )
-                        }
-                    }
-                }
-
-            scrollKeys =
-                when (settings.controlScheme) {
-                    ControlScheme.STANDARD -> {
-                        setOf(
-                            KeyEvent.KEYCODE_2,
-                            KeyEvent.KEYCODE_4,
-                            KeyEvent.KEYCODE_6,
-                            KeyEvent.KEYCODE_8
-                        )
-                    }
-
-                    ControlScheme.SWAPPED -> {
-                        setOf(
-                            KeyEvent.KEYCODE_DPAD_UP,
-                            KeyEvent.KEYCODE_DPAD_DOWN,
-                            KeyEvent.KEYCODE_DPAD_LEFT,
-                            KeyEvent.KEYCODE_DPAD_RIGHT
-                        )
-                    }
-
-                    ControlScheme.DPAD_TOGGLE -> {
-                        if (cursorStateManager.isInScrollMode()) {
-                            setOf(
-                                    KeyEvent.KEYCODE_DPAD_UP,
-                                    KeyEvent.KEYCODE_DPAD_DOWN,
-                                    KeyEvent.KEYCODE_DPAD_LEFT,
-                                    KeyEvent.KEYCODE_DPAD_RIGHT
-                            )
-                        } else {
-                            emptySet()
-                        }
-                    }
-
-                    ControlScheme.NUMPAD_TOGGLE -> {
-                        if (cursorStateManager.isInScrollMode()) {
-                            setOf(
-                                    KeyEvent.KEYCODE_2,
-                                    KeyEvent.KEYCODE_8,
-                                    KeyEvent.KEYCODE_4,
-                                    KeyEvent.KEYCODE_6
-                            )
-                        } else {
-                            emptySet()
-                        }
-                    }
-
-                    ControlScheme.TV -> {
-                        setOf(
-                            settings.scrollUpKey,
-                            settings.scrollDownKey,
-                            settings.scrollLeftKey,
-                            settings.scrollRightKey
-                        )
-                    }
-                }
-
-            actionKeys = setOf(
-                KeyEvent.KEYCODE_DPAD_CENTER,
-                KeyEvent.KEYCODE_ENTER,
-                KeyEvent.KEYCODE_5
-            )
-
-            zoomKeys = buildSet {
-                add(KeyEvent.KEYCODE_1)
-                add(KeyEvent.KEYCODE_3)
-
-                if (BuildConfig.DEBUG) {
-                    add(KeyEvent.KEYCODE_LEFT_BRACKET)
-                    add(KeyEvent.KEYCODE_RIGHT_BRACKET)
-                }
-            }
-
-            disableKeys = setOf(
-                KeyEvent.KEYCODE_7,
-                KeyEvent.KEYCODE_9,
-                KeyEvent.KEYCODE_0,
-                KeyEvent.KEYCODE_POUND,
-                KeyEvent.KEYCODE_STAR
-            )
-
-            val reservedKeys = movementKeys + scrollKeys + zoomKeys + actionKeys + disableKeys
-            if (event.keyCode !in reservedKeys) {
-                return false
-            }
-
-            // Buttons should be consumed at this point
-            backgroundScope.launch {
-                channel.send(
-                    ChannelMessage(
-                        event = event,
-                        handler = ::handleKeyEventInternal
-                    )
-                )
-            }
-
-            return true
+            return false
         } catch (e: Exception) {
             Logger.e("Error processing cursor key event", e)
             cancelContinuousGesture()
@@ -405,10 +406,10 @@ class CursorActionHandler(
 
     private suspend fun handleMovementKey(event: KeyEvent, keyCode: Int): Boolean {
         val direction = when (keyCode) {
-            KeyEvent.KEYCODE_DPAD_UP, KeyEvent.KEYCODE_2 -> CursorDirection.UP
-            KeyEvent.KEYCODE_DPAD_DOWN, KeyEvent.KEYCODE_8 -> CursorDirection.DOWN
-            KeyEvent.KEYCODE_DPAD_LEFT, KeyEvent.KEYCODE_4 -> CursorDirection.LEFT
-            KeyEvent.KEYCODE_DPAD_RIGHT, KeyEvent.KEYCODE_6 -> CursorDirection.RIGHT
+            KeyEvent.KEYCODE_U, KeyEvent.KEYCODE_2 -> CursorDirection.UP
+            KeyEvent.KEYCODE_B, KeyEvent.KEYCODE_8 -> CursorDirection.DOWN
+            KeyEvent.KEYCODE_H, KeyEvent.KEYCODE_4 -> CursorDirection.LEFT
+            KeyEvent.KEYCODE_K, KeyEvent.KEYCODE_6 -> CursorDirection.RIGHT
             else -> return false
         }
 
@@ -438,10 +439,10 @@ class CursorActionHandler(
                 cancelContinuousGesture()
 
                 val direction = when (keyCode) {
-                    KeyEvent.KEYCODE_DPAD_UP, KeyEvent.KEYCODE_2, settings.scrollUpKey -> ScrollDirection.UP
-                    KeyEvent.KEYCODE_DPAD_DOWN, KeyEvent.KEYCODE_8, settings.scrollDownKey -> ScrollDirection.DOWN
-                    KeyEvent.KEYCODE_DPAD_LEFT, KeyEvent.KEYCODE_4, settings.scrollLeftKey -> ScrollDirection.LEFT
-                    KeyEvent.KEYCODE_DPAD_RIGHT, KeyEvent.KEYCODE_6, settings.scrollRightKey -> ScrollDirection.RIGHT
+                    KeyEvent.KEYCODE_U, KeyEvent.KEYCODE_2, settings.scrollUpKey -> ScrollDirection.UP
+                    KeyEvent.KEYCODE_B, KeyEvent.KEYCODE_8, settings.scrollDownKey -> ScrollDirection.DOWN
+                    KeyEvent.KEYCODE_H, KeyEvent.KEYCODE_4, settings.scrollLeftKey -> ScrollDirection.LEFT
+                    KeyEvent.KEYCODE_K, KeyEvent.KEYCODE_6, settings.scrollRightKey -> ScrollDirection.RIGHT
                     else -> null
                 }
 
@@ -477,8 +478,8 @@ class CursorActionHandler(
                 cancelContinuousGesture()
 
                 val isZoomIn = when (event.keyCode) {
-                    KeyEvent.KEYCODE_1, KeyEvent.KEYCODE_LEFT_BRACKET -> false
-                    KeyEvent.KEYCODE_3, KeyEvent.KEYCODE_RIGHT_BRACKET -> true
+                    KeyEvent.KEYCODE_Y, KeyEvent.KEYCODE_LEFT_BRACKET -> false
+                    KeyEvent.KEYCODE_I, KeyEvent.KEYCODE_RIGHT_BRACKET -> true
                     else -> return false
                 }
 

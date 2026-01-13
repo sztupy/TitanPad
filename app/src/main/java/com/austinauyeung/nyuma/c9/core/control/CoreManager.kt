@@ -10,6 +10,7 @@ import com.austinauyeung.nyuma.c9.core.logs.Logger
 import com.austinauyeung.nyuma.c9.core.notification.NotificationManager
 import com.austinauyeung.nyuma.c9.cursor.control.CursorActionHandler
 import com.austinauyeung.nyuma.c9.cursor.control.CursorStateManager
+import com.austinauyeung.nyuma.c9.cursor.control.TrackpadActionHandler
 import com.austinauyeung.nyuma.c9.gesture.api.GestureManager
 import com.austinauyeung.nyuma.c9.gesture.shizuku.ShizukuGestureStrategy
 import com.austinauyeung.nyuma.c9.gesture.standard.DefaultGestureStrategy
@@ -47,6 +48,7 @@ class CoreManager(
     private lateinit var gridActionHandler: GridActionHandler
     lateinit var modeCoordinator: ModeCoordinator
     private lateinit var notificationManager: NotificationManager
+    private lateinit var trackpadActionHandler: TrackpadActionHandler
 
     private val screenDimensionsFlow = orientationHandler.screenDimensions
 
@@ -153,6 +155,14 @@ class CoreManager(
                     updateNotification(modeCoordinator.activeMode.value)
                 }
                 .launchIn(backgroundScope)
+
+            trackpadActionHandler = TrackpadActionHandler(
+                isEnabled = { true },
+                scope = backgroundScope,
+                cursorStateManager = cursorStateManager,
+                gestureManager = gestureManager
+            )
+            trackpadActionHandler.start()
 
             Logger.i("CoreManager initialization complete")
         } catch (e: Exception) {

@@ -1,0 +1,128 @@
+package scot.raven.titanpad.grid.control
+
+import scot.raven.titanpad.core.constants.CursorConstants
+import scot.raven.titanpad.core.domain.ScreenDimensions
+import scot.raven.titanpad.core.logs.Logger
+import scot.raven.titanpad.gesture.api.GestureManager
+import scot.raven.titanpad.grid.domain.Grid
+import scot.raven.titanpad.settings.domain.OverlaySettings
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
+
+/**
+ * Manages grid state including visibility, grid hierarchy, and state transitions.
+ */
+class GridStateManager(
+    private val gestureManager: GestureManager,
+    private val settingsFlow: StateFlow<OverlaySettings>,
+    private val dimensionsFlow: StateFlow<ScreenDimensions>,
+) {
+    private val _gridState = MutableStateFlow<Grid?>(null)
+    val gridState: StateFlow<Grid?> = _gridState.asStateFlow()
+    private val keySequence = mutableListOf<Int>()
+
+    fun isGridVisible(): Boolean = _gridState.value != null
+
+    suspend fun handleNumberKey(number: Int): Boolean {
+        val settings = settingsFlow.value
+        keySequence.add(number)
+        Logger.d("Current grid sequence: $keySequence")
+        if (keySequence.size >= settings.gridLevels) {
+            performClick(number)
+        } else {
+            updateGrid(calculateGridFromSequence(keySequence))
+        }
+
+        return true
+    }
+
+    fun toggleGridVisibility() {
+        if (_gridState.value == null) {
+            showGrid()
+        } else {
+            hideGrid()
+        }
+    }
+
+    private fun showGrid() {
+        keySequence.clear()
+        updateGrid(calculateGridFromSequence(keySequence))
+    }
+
+    fun hideGrid() {
+        keySequence.clear()
+        updateGrid(null)
+    }
+
+    private fun updateGrid(grid: Grid?) {
+        _gridState.value = grid
+    }
+
+    // Performs the final action when a cell is selected in the deepest grid level
+    private suspend fun performClick(number: Int) {
+        val settings = settingsFlow.value
+        val grid = _gridState.value
+        if (grid != null) {
+            val coordinates = grid.getCellCenter(number)
+            val (x, y) = coordinates
+
+            gestureManager.startTap(x, y)
+            while (!gestureManager.getGestureReady()) {
+                delay(CursorConstants.POLLING_DURATION_MS.toLong())
+            }
+            gestureManager.endTap(x, y)
+        }
+
+        if (!settings.persistOverlay) {
+            hideGrid()
+        } else {
+            showGrid()
+        }
+    }
+
+    fun resetToMainGrid(force: Boolean = false) {
+        if ((_gridState.value?.level != null && _gridState.value?.level!! > 0) || force) {
+            keySequence.clear()
+            updateGrid(calculateGridFromSequence(keySequence))
+        }
+    }
+
+    fun getCellCoordinates(number: Int?): Pair<Float, Float> {
+        val grid = _gridState.value
+        val dimensions = dimensionsFlow.value
+        if (grid != null && number != null) return grid.getCellCenter(number)
+
+        // Default to screen center if grid is null/invalid
+        return Pair(dimensions.width / 2f, dimensions.height / 2f)
+    }
+
+    private fun calculateGridFromSequence(sequence: List<Int>): Grid {
+        var x = 0f
+        var y = 0f
+        val dimensions = dimensionsFlow.value
+        var width = dimensions.width.toFloat()
+        var height = dimensions.height.toFloat()
+
+        sequence.forEach { number ->
+            val row = (number - 1) / 3
+            val col = (number - 1) % 3
+            val cellWidth = width / 3
+            val cellHeight = height / 3
+
+            x += col * cellWidth
+            y += row * cellHeight
+            width = cellWidth
+            height = cellHeight
+        }
+
+        return Grid(
+            x = x,
+            y = y,
+            width = width,
+            height = height,
+            level = sequence.size
+        )
+    }
+}

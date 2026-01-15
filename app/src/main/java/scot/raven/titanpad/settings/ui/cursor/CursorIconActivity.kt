@@ -1,0 +1,41 @@
+package scot.raven.titanpad.settings.ui.cursor
+
+import android.os.Bundle
+import android.widget.Toast
+import androidx.activity.ComponentActivity
+import androidx.activity.compose.setContent
+import androidx.lifecycle.ViewModelProvider
+import scot.raven.titanpad.TitanPad
+import scot.raven.titanpad.core.ui.AppTheme
+import scot.raven.titanpad.settings.ui.SettingsState
+
+/**
+ * Cursor icon settings.
+ */
+class CursorIconActivity : ComponentActivity() {
+    private lateinit var settingsState: SettingsState
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+
+        val factory =
+            SettingsState.Factory(
+                TitanPad.getInstance().settingsRepository,
+            )
+        settingsState = ViewModelProvider(this, factory)[SettingsState::class.java]
+        settingsState.setToastFunction { message ->
+            Toast.makeText(this, message, Toast.LENGTH_SHORT).show()
+        }
+
+        setContent {
+            AppTheme {
+                CursorIconScreen(
+                    settingsState = settingsState,
+                    onNavigateBack = {
+                        finish()
+                    },
+                )
+            }
+        }
+    }
+}

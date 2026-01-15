@@ -6,12 +6,12 @@ plugins {
 }
 
 android {
-    namespace = "com.austinauyeung.nyuma.c9"
+    namespace = "scot.raven.titanpad"
     compileSdk = 36
 
     defaultConfig {
-        applicationId = "com.austinauyeung.nyuma.c9"
-        minSdk = 24
+        applicationId = "scot.raven.titanpad"
+        minSdk = 35
         targetSdk = 36
         versionCode = 1
         versionName = "3.0.1"
@@ -31,11 +31,11 @@ android {
         }
     }
     compileOptions {
-        sourceCompatibility = JavaVersion.VERSION_11
-        targetCompatibility = JavaVersion.VERSION_11
+        sourceCompatibility = JavaVersion.VERSION_17
+        targetCompatibility = JavaVersion.VERSION_17
     }
     kotlinOptions {
-        jvmTarget = "11"
+        jvmTarget = "17"
     }
     buildFeatures {
         compose = true

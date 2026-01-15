@@ -19,5 +19,5 @@ dependencyResolutionManagement {
     }
 }
 
-rootProject.name = "C9"
+rootProject.name = "TitanPad"
 include(":app")

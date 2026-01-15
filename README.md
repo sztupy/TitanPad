@@ -43,7 +43,7 @@ Install using the standard package installer. Allow the accessibility service us
 Install using adb:
 ```
 >> adb install path/to/apk
->> adb shell settings put secure enabled_accessibility_services com.austinauyeung.nyuma.c9/com.austinauyeung.nyuma.c9.accessibility.AppAccessibilityService
+>> adb shell settings put secure enabled_accessibility_services scot.raven.titanpad/scot.raven.titanpad.accessibility.AppAccessibilityService
 ```
 
 ### Additional installation for certain Android versions

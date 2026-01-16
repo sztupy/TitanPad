@@ -35,12 +35,6 @@
         </activity>
 
         <activity
-            android:name=".settings.ui.grid.GridSettingsActivity"
-            android:exported="false"
-            android:theme="@style/Theme.TitanPad"
-            android:parentActivityName=".settings.ui.SettingsActivity" />
-
-        <activity
             android:name=".settings.ui.cursor.CursorSettingsActivity"
             android:exported="false"
             android:theme="@style/Theme.TitanPad"
@@ -119,28 +113,6 @@
             android:parentActivityName=".settings.ui.autohide.AutoHideSettingsActivity" />
 
         <activity
-            android:name=".shortcuts.GridCursorCreateShortcutActivity"
-            android:exported="true"
-            android:label="Activate Grid Cursor"
-            android:theme="@android:style/Theme.NoDisplay">
-            <intent-filter>
-                <action android:name="android.intent.action.CREATE_SHORTCUT" />
-                <category android:name="android.intent.category.DEFAULT" />
-            </intent-filter>
-        </activity>
-
-        <activity
-            android:name=".shortcuts.ResetGridCreateShortcutActivity"
-            android:exported="true"
-            android:label="Reset Grid"
-            android:theme="@android:style/Theme.NoDisplay">
-            <intent-filter>
-                <action android:name="android.intent.action.CREATE_SHORTCUT" />
-                <category android:name="android.intent.category.DEFAULT" />
-            </intent-filter>
-        </activity>
-
-        <activity
             android:name=".shortcuts.StandardCursorCreateShortcutActivity"
             android:exported="true"
             android:label="Activate Standard Cursor"
@@ -152,57 +124,12 @@
         </activity>
 
         <activity
-            android:name=".shortcuts.ToggleCursorCreateShortcutActivity"
-            android:exported="true"
-            android:label="Toggle Cursor Scroll"
-            android:theme="@android:style/Theme.NoDisplay">
-            <intent-filter>
-                <action android:name="android.intent.action.CREATE_SHORTCUT" />
-                <category android:name="android.intent.category.DEFAULT" />
-            </intent-filter>
-        </activity>
-
-        <activity
-            android:name=".shortcuts.GridCursorActivity"
-            android:exported="true"
-            android:theme="@android:style/Theme.NoDisplay"
-            android:taskAffinity=""
-            android:excludeFromRecents="true"
-            android:launchMode="singleInstance" />
-
-        <activity
-            android:name=".shortcuts.ResetGridActivity"
-            android:exported="true"
-            android:theme="@android:style/Theme.NoDisplay"
-            android:taskAffinity=""
-            android:excludeFromRecents="true"
-            android:launchMode="singleInstance" />
-
-        <activity
             android:name=".shortcuts.StandardCursorActivity"
             android:exported="true"
             android:theme="@android:style/Theme.NoDisplay"
             android:taskAffinity=""
             android:excludeFromRecents="true"
             android:launchMode="singleInstance" />
-
-        <activity
-            android:name=".shortcuts.ToggleCursorActivity"
-            android:exported="true"
-            android:theme="@android:style/Theme.NoDisplay"
-            android:taskAffinity=""
-            android:excludeFromRecents="true"
-            android:launchMode="singleInstance" />
-
-        <!--        <activity-->
-        <!--            android:name=".grid.debug.GridVisualizationActivity"-->
-        <!--            android:exported="true"-->
-        <!--            android:theme="@android:style/Theme.Translucent.NoTitleBar">-->
-        <!--            <intent-filter>-->
-        <!--                <action android:name="android.intent.action.MAIN" />-->
-        <!--                <category android:name="android.intent.category.LAUNCHER" />-->
-        <!--            </intent-filter>-->
-        <!--        </activity>-->
 
         <service
             android:name=".accessibility.AppAccessibilityService"

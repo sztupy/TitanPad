@@ -12,11 +12,8 @@ import scot.raven.titanpad.cursor.control.CursorActionHandler
 import scot.raven.titanpad.cursor.control.CursorStateManager
 import scot.raven.titanpad.cursor.control.TrackpadActionHandler
 import scot.raven.titanpad.gesture.api.GestureManager
-import scot.raven.titanpad.gesture.shizuku.ShizukuGestureStrategy
 import scot.raven.titanpad.gesture.standard.DefaultGestureStrategy
 import scot.raven.titanpad.gesture.ui.GesturePath
-import scot.raven.titanpad.grid.control.GridActionHandler
-import scot.raven.titanpad.grid.control.GridStateManager
 import scot.raven.titanpad.settings.domain.OverlaySettings
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -31,7 +28,7 @@ import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
 
 /**
- * Manages grid cursor and standard cursor modes.
+ * Manages standard cursor modes.
  */
 class CoreManager(
     private val service: AccessibilityService,
@@ -44,8 +41,6 @@ class CoreManager(
     private lateinit var gestureManager: GestureManager
     lateinit var cursorStateManager: CursorStateManager
     private lateinit var cursorActionHandler: CursorActionHandler
-    lateinit var gridStateManager: GridStateManager
-    private lateinit var gridActionHandler: GridActionHandler
     lateinit var modeCoordinator: ModeCoordinator
     private lateinit var notificationManager: NotificationManager
     private lateinit var trackpadActionHandler: TrackpadActionHandler
@@ -93,32 +88,11 @@ class CoreManager(
             notificationManager = NotificationManager(service)
 
             val defaultStrategy = DefaultGestureStrategy(service, settingsFlow)
-            val shizukuStrategy = ShizukuGestureStrategy(
-                settingsFlow = settingsFlow
-            )
-            TitanPad.getInstance().setShizukuGestureStrategy(shizukuStrategy)
 
             gestureManager = GestureManager(
                 defaultStrategy,
-                shizukuStrategy,
                 settingsFlow,
-                screenDimensionsFlow,
                 backgroundScope
-            )
-
-            // Grid components
-            gridStateManager = GridStateManager(
-                gestureManager,
-                settingsFlow,
-                screenDimensionsFlow
-            )
-            gridActionHandler = GridActionHandler(
-                gridStateManager,
-                gestureManager,
-                settingsFlow,
-                backgroundScope,
-                modeCoordinator,
-                { orientationHandler.getCurrentOrientation() }
             )
 
             // Cursor components
@@ -132,8 +106,6 @@ class CoreManager(
                 settingsFlow,
                 backgroundScope,
                 modeCoordinator,
-                { orientationHandler.getCurrentOrientation() },
-                screenDimensionsFlow
             )
 
             // Listen for orientation changes
@@ -162,6 +134,8 @@ class CoreManager(
                 cursorStateManager = cursorStateManager,
                 gestureManager = gestureManager
             )
+
+            TitanPad.getInstance().setTrackpadActionHandler(trackpadActionHandler)
             trackpadActionHandler.start()
 
             Logger.i("CoreManager initialization complete")
@@ -173,44 +147,12 @@ class CoreManager(
 
     private fun onScreenDimensionsChanged(newDimensions: ScreenDimensions) {
         try {
-            if (gridStateManager.isGridVisible()) {
-                gridStateManager.resetToMainGrid(force = true)
-            }
-
             if (cursorStateManager.isCursorVisible()) {
                 val (centerX, centerY) = newDimensions.center()
                 cursorStateManager.updatePosition(Offset(centerX, centerY))
             }
         } catch (e: Exception) {
             Logger.e("Error handling screen dimensions change", e)
-        }
-    }
-
-    fun activateGridMode(keymapToggle: Boolean = false): Boolean {
-        try {
-            if ((!gridStateManager.isGridVisible() || keymapToggle) && modeCoordinator.requestActivation(
-                    ModeCoordinator.OverlayMode.GRID
-                )) {
-                gridStateManager.toggleGridVisibility()
-                return gridStateManager.isGridVisible()
-            }
-            return false
-        } catch (e: Exception) {
-            Logger.e("Error activating grid mode", e)
-            return false
-        }
-    }
-
-    fun resetGrid(): Boolean {
-        try {
-            if (modeCoordinator.activeMode.value == ModeCoordinator.OverlayMode.GRID) {
-                gridStateManager.resetToMainGrid()
-                return true
-            }
-            return false
-        } catch (e: Exception) {
-            Logger.e("Error resetting grid mode", e)
-            return false
         }
     }
 
@@ -229,28 +171,12 @@ class CoreManager(
         }
     }
 
-    fun toggleCursorScroll(): Boolean {
-        try {
-            if (modeCoordinator.activeMode.value == ModeCoordinator.OverlayMode.CURSOR) {
-                cursorStateManager.toggleScrollMode()
-                return true
-            }
-            return false
-        } catch (e: Exception) {
-            Logger.e("Error toggling cursor scroll", e)
-            return false
-        }
-    }
-
     fun handleKeyEvent(event: KeyEvent?): Boolean {
         Logger.d("Key event: $event")
         val settings = settingsFlow.value
 
         try {
-            // Check grid mode first
-            val gridHandled = gridActionHandler.handleKeyEvent(event, channel)
-            val cursorHandled = if (!gridHandled) cursorActionHandler.handleKeyEvent(event, channel) else false
-            val eventHandled = gridHandled || cursorHandled
+            val eventHandled = cursorActionHandler.handleKeyEvent(event, channel)
 
             if (settings.allowPassthrough) {
                 Logger.d("Allowing key event to pass through")
@@ -290,18 +216,12 @@ class CoreManager(
         Logger.d("Force hiding all overlays")
 
         try {
-            if (gridStateManager.isGridVisible()) {
-                gridStateManager.hideGrid()
-            }
-
             if (cursorStateManager.isCursorVisible()) {
                 cursorStateManager.hideCursor()
             }
 
-            modeCoordinator.deactivate(ModeCoordinator.OverlayMode.GRID, fromAutoHide)
             modeCoordinator.deactivate(ModeCoordinator.OverlayMode.CURSOR, fromAutoHide)
 
-            gridActionHandler.cleanup()
             cursorActionHandler.cleanup()
         } catch (e: Exception) {
             Logger.e("Error force hiding overlays", e)
@@ -317,7 +237,6 @@ class CoreManager(
     }
 
     fun cleanup() {
-        gridActionHandler.cleanup()
         cursorActionHandler.cleanup()
         gestureManager.cleanup()
     }

@@ -7,7 +7,6 @@ import android.content.Intent
 import android.net.Uri
 import android.os.Build
 import android.provider.MediaStore
-import android.view.KeyEvent
 import android.webkit.MimeTypeMap
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.ActivityResultLauncher
@@ -37,10 +36,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.datastore.core.IOException
 import scot.raven.titanpad.core.constants.CursorConstants
-import scot.raven.titanpad.core.constants.GestureConstants
-import scot.raven.titanpad.core.domain.ScreenEdgeBehavior
 import scot.raven.titanpad.core.logs.Logger
-import scot.raven.titanpad.cursor.domain.ControlScheme
 import scot.raven.titanpad.settings.domain.AppListType
 import scot.raven.titanpad.settings.domain.OverlaySettings
 import scot.raven.titanpad.settings.ui.ClearKeyPreferenceItem
@@ -61,7 +57,6 @@ import java.io.File
 import java.io.FileOutputStream
 import java.util.Locale
 import java.util.UUID
-import kotlin.math.round
 
 /**
  * Standard cursor settings screen.
@@ -72,114 +67,13 @@ fun CursorSettingsScreen(
     settingsState: SettingsState,
     onNavigateToCursorIcon: () -> Unit,
     onNavigateToLocationClickableIcon: () -> Unit,
-    onNavigateToScrollToggleIcon: () -> Unit,
     onNavigateToClickableAppsScreen: () -> Unit,
-    onNavigateToAssignScrollScreen: () -> Unit,
     onNavigateBack: () -> Unit
 ) {
     val uiState by settingsState.uiState.collectAsState()
     var showCursorKeyCaptureOverlay by remember { mutableStateOf(false) }
     var reservedKeys by remember { mutableStateOf(emptyMap<Int, String>()) }
     var showColorPickerDialog by remember { mutableStateOf(false) }
-    val inToggleControlScheme = (uiState.controlScheme == ControlScheme.DPAD_TOGGLE || uiState.controlScheme == ControlScheme.NUMPAD_TOGGLE)
-
-    when (uiState.controlScheme) {
-        ControlScheme.STANDARD -> {
-            reservedKeys =
-                mapOf(
-                    KeyEvent.KEYCODE_1 to "Zoom out",
-                    KeyEvent.KEYCODE_2 to "Scroll up",
-                    KeyEvent.KEYCODE_3 to "Zoom in",
-                    KeyEvent.KEYCODE_4 to "Scroll left",
-                    KeyEvent.KEYCODE_5 to "Cursor select and double tap",
-                    KeyEvent.KEYCODE_6 to "Scroll right",
-                    KeyEvent.KEYCODE_7 to "",
-                    KeyEvent.KEYCODE_8 to "Scroll down",
-                    KeyEvent.KEYCODE_9 to "",
-                    KeyEvent.KEYCODE_STAR to "",
-                    KeyEvent.KEYCODE_0 to "",
-                    KeyEvent.KEYCODE_POUND to "",
-                    KeyEvent.KEYCODE_DPAD_UP to "Cursor up",
-                    KeyEvent.KEYCODE_DPAD_DOWN to "Cursor down",
-                    KeyEvent.KEYCODE_DPAD_LEFT to "Cursor left",
-                    KeyEvent.KEYCODE_DPAD_RIGHT to "Cursor right",
-                    KeyEvent.KEYCODE_DPAD_CENTER to "Cursor select and double tap",
-                )
-        }
-
-        ControlScheme.SWAPPED -> {
-            reservedKeys =
-                mapOf(
-                    KeyEvent.KEYCODE_1 to "Zoom out",
-                    KeyEvent.KEYCODE_2 to "Cursor up",
-                    KeyEvent.KEYCODE_3 to "Zoom in",
-                    KeyEvent.KEYCODE_4 to "Cursor left",
-                    KeyEvent.KEYCODE_5 to "Cursor select and double tap",
-                    KeyEvent.KEYCODE_6 to "Cursor right",
-                    KeyEvent.KEYCODE_7 to "",
-                    KeyEvent.KEYCODE_8 to "Cursor down",
-                    KeyEvent.KEYCODE_9 to "",
-                    KeyEvent.KEYCODE_STAR to "",
-                    KeyEvent.KEYCODE_0 to "",
-                    KeyEvent.KEYCODE_POUND to "",
-                    KeyEvent.KEYCODE_DPAD_UP to "Scroll up",
-                    KeyEvent.KEYCODE_DPAD_DOWN to "Scroll down",
-                    KeyEvent.KEYCODE_DPAD_LEFT to "Scroll left",
-                    KeyEvent.KEYCODE_DPAD_RIGHT to "Scroll right",
-                    KeyEvent.KEYCODE_DPAD_CENTER to "",
-                )
-        }
-
-        ControlScheme.DPAD_TOGGLE -> {
-            reservedKeys =
-                mapOf(
-                    KeyEvent.KEYCODE_1 to "Zoom out",
-                    KeyEvent.KEYCODE_2 to "",
-                    KeyEvent.KEYCODE_3 to "Zoom in",
-                    KeyEvent.KEYCODE_4 to "",
-                    KeyEvent.KEYCODE_5 to "Cursor select and double tap",
-                    KeyEvent.KEYCODE_6 to "",
-                    KeyEvent.KEYCODE_7 to "",
-                    KeyEvent.KEYCODE_8 to "",
-                    KeyEvent.KEYCODE_9 to "",
-                    KeyEvent.KEYCODE_STAR to "",
-                    KeyEvent.KEYCODE_0 to "",
-                    KeyEvent.KEYCODE_POUND to "",
-                    KeyEvent.KEYCODE_DPAD_UP to "Cursor up and scroll up",
-                    KeyEvent.KEYCODE_DPAD_DOWN to "Cursor down and scroll down",
-                    KeyEvent.KEYCODE_DPAD_LEFT to "Cursor left and scroll left",
-                    KeyEvent.KEYCODE_DPAD_RIGHT to "Cursor right and scroll right",
-                    KeyEvent.KEYCODE_DPAD_CENTER to "Cursor select and double tap",
-                )
-        }
-
-        ControlScheme.NUMPAD_TOGGLE -> {
-            reservedKeys =
-                mapOf(
-                    KeyEvent.KEYCODE_1 to "Zoom out",
-                    KeyEvent.KEYCODE_2 to "Cursor up and scroll up",
-                    KeyEvent.KEYCODE_3 to "Zoom in",
-                    KeyEvent.KEYCODE_4 to "Cursor left and scroll left",
-                    KeyEvent.KEYCODE_5 to "Cursor select and double tap",
-                    KeyEvent.KEYCODE_6 to "Cursor right and scroll right",
-                    KeyEvent.KEYCODE_7 to "",
-                    KeyEvent.KEYCODE_8 to "Cursor down and scroll down",
-                    KeyEvent.KEYCODE_9 to "",
-                    KeyEvent.KEYCODE_STAR to "",
-                    KeyEvent.KEYCODE_0 to "",
-                    KeyEvent.KEYCODE_POUND to "",
-                    KeyEvent.KEYCODE_DPAD_UP to "",
-                    KeyEvent.KEYCODE_DPAD_DOWN to "",
-                    KeyEvent.KEYCODE_DPAD_LEFT to "",
-                    KeyEvent.KEYCODE_DPAD_RIGHT to "",
-                    KeyEvent.KEYCODE_DPAD_CENTER to "Cursor select and double tap",
-                )
-        }
-
-        ControlScheme.TV -> {
-            reservedKeys = emptyMap()
-        }
-    }
 
     val currentKeyDescription =
         if (
@@ -243,133 +137,13 @@ fun CursorSettingsScreen(
 
                 if (showCursorKeyCaptureOverlay) {
                     KeyCaptureOverlay(
-                        restrictedKeys = setOf(uiState.gridActivationKey),
+                        restrictedKeys = setOf(),
                         reservedKeys = reservedKeys,
                         onKeySelected = { settingsState.updateCursorActivationKey(it) },
                         onDismiss = { showCursorKeyCaptureOverlay = false },
                         showToast = { message -> settingsState.showToast(message) },
                     )
                 }
-            }
-
-            PreferenceCategory(title = "Behavior") {
-                DropdownPreferenceItem(
-                    title = "Control Scheme",
-                    subtitle =
-                    when (uiState.controlScheme) {
-                        ControlScheme.STANDARD -> "D-pad moves, numpad scrolls"
-                        ControlScheme.SWAPPED -> "D-pad scrolls, numpad moves"
-                        ControlScheme.DPAD_TOGGLE -> "D-pad scrolls and moves"
-                        ControlScheme.NUMPAD_TOGGLE -> "Numpad scrolls and moves"
-                        ControlScheme.TV -> "D-pad moves, scroll buttons are manually assigned"
-                    },
-                    selectedOption = uiState.controlScheme,
-                    options =
-                    listOf(
-                        ControlScheme.STANDARD to "Standard",
-                        ControlScheme.SWAPPED to "Swapped",
-                        ControlScheme.DPAD_TOGGLE to "D-pad",
-                        ControlScheme.NUMPAD_TOGGLE to "Numpad",
-                        ControlScheme.TV to "TV"
-                    ),
-                    onOptionSelected = { value ->
-                        settingsState.updatePreference(value) { settings, v ->
-                            settings.copy(controlScheme = v)
-                        }
-                    },
-                )
-
-                SimplePreferenceItem(
-                    title = "Assign Scroll Buttons",
-                    subtitle = "The TV control scheme requires manual assignment",
-                    onClick = onNavigateToAssignScrollScreen,
-                    enabled = uiState.controlScheme == ControlScheme.TV
-                )
-
-                DropdownPreferenceItem(
-                    title = "Screen Edge Behavior",
-                    subtitle =
-                    when (uiState.cursorEdgeBehavior) {
-                        ScreenEdgeBehavior.NONE -> "Cursor remains at edge"
-                        ScreenEdgeBehavior.WRAP_AROUND -> "Cursor wraps to opposite side"
-                        ScreenEdgeBehavior.AUTO_SCROLL -> "Cursor slowly scrolls in edge direction"
-                    },
-                    selectedOption = uiState.cursorEdgeBehavior,
-                    options =
-                    listOf(
-                        ScreenEdgeBehavior.NONE to "None",
-                        ScreenEdgeBehavior.WRAP_AROUND to "Wrap",
-                        ScreenEdgeBehavior.AUTO_SCROLL to "Scroll"
-                    ),
-                    onOptionSelected = { value ->
-                        settingsState.updatePreference(value) { settings, v ->
-                            settings.copy(cursorEdgeBehavior = v)
-                        }
-                    },
-                )
-
-                SliderPreferenceItem(
-                    title = "Cursor Speed",
-                    value = uiState.cursorSpeed.toFloat(),
-                    valueRange = CursorConstants.MIN_SPEED.toFloat()..CursorConstants.MAX_SPEED.toFloat(),
-                    valueText = uiState.cursorSpeed.toString(),
-                    onValueChange = { value ->
-                        settingsState.updatePreference(value) { settings, v ->
-                            settings.copy(cursorSpeed = v.toInt())
-                        }
-                    },
-                    steps = 8,
-                )
-
-                SliderPreferenceItem(
-                    title = "Cursor Acceleration",
-                    value = uiState.cursorAcceleration.toFloat(),
-                    valueRange = CursorConstants.MIN_ACCELERATION.toFloat()..CursorConstants.MAX_ACCELERATION.toFloat(),
-                    valueText = "${uiState.cursorAcceleration}${if (uiState.cursorAcceleration == 0) " (no acceleration)" else ""}",
-                    onValueChange = { value ->
-                        settingsState.updatePreference(value) { settings, v ->
-                            settings.copy(cursorAcceleration = v.toInt())
-                        }
-                    },
-                    steps = 9,
-                )
-
-                SliderPreferenceItem(
-                    title = "Cursor Acceleration Start",
-                    value = uiState.cursorAccelerationStart.toFloat(),
-                    valueRange = GestureConstants.MIN_ACCELERATION_START.toFloat()..GestureConstants.MAX_ACCELERATION_START.toFloat(),
-                    valueText = "${round(uiState.cursorAccelerationStart / 100.0).toInt() * 100} ms",
-                    onValueChange = { value ->
-                        settingsState.updatePreference(value) { settings, v ->
-                            settings.copy(cursorAccelerationStart = v.toLong())
-                        }
-                    },
-                    steps = 9,
-                )
-
-                SliderPreferenceItem(
-                    title = "Cursor Acceleration Duration",
-                    value = uiState.cursorAccelerationDuration.toFloat(),
-                    valueRange = GestureConstants.MIN_ACCELERATION_DURATION.toFloat()..GestureConstants.MAX_ACCELERATION_DURATION.toFloat(),
-                    valueText = "${round(uiState.cursorAccelerationDuration / 100.0).toInt() * 100} ms",
-                    onValueChange = { value ->
-                        settingsState.updatePreference(value) { settings, v ->
-                            settings.copy(cursorAccelerationDuration = v.toLong())
-                        }
-                    },
-                    steps = 9,
-                )
-
-//                SwitchPreferenceItem(
-//                    title = "Long Press Hold",
-//                    subtitle = "Press both action keys to toggle hold",
-//                    checked = uiState.toggleHold,
-//                    onCheckedChange = { value ->
-//                        settingsState.updatePreference(value) { settings, v ->
-//                            settings.copy(toggleHold = v)
-//                        }
-//                    },
-//                )
             }
 
             PreferenceCategory(title = "Adaptive") {
@@ -501,18 +275,6 @@ fun CursorSettingsScreen(
                     onClick = onNavigateToLocationClickableIcon,
                     enabled = uiState.useCustomCursorIcon && uiState.checkClickable,
                 )
-
-                SimplePreferenceItem(
-                    title = "Scroll Toggle Icon",
-                    subtitle = when {
-                        !inToggleControlScheme -> "Only applicable to the D-pad or numpad control schemes"
-                        uiState.clickableImagePath == null -> "Select icon, otherwise falling back to base custom icon"
-                        else -> "Update icon"
-                    },
-                    onClick = onNavigateToScrollToggleIcon,
-                    enabled = uiState.useCustomCursorIcon && inToggleControlScheme
-                )
-
             }
         }
     }

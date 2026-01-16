@@ -12,7 +12,6 @@ class ModeCoordinator {
     enum class OverlayMode {
         OFF,
         AUTOHIDDEN,
-        GRID,
         CURSOR
     }
 
@@ -21,13 +20,6 @@ class ModeCoordinator {
 
     fun requestActivation(mode: OverlayMode): Boolean {
         val currentMode = _activeMode.value
-        val mismatch1 = (currentMode == OverlayMode.GRID) && (mode == OverlayMode.CURSOR)
-        val mismatch2 = (currentMode == OverlayMode.CURSOR) && (mode == OverlayMode.GRID)
-        if (mismatch1 || mismatch2) {
-            Logger.d("Cannot activate $mode, $currentMode is already active")
-            return false
-        }
-
         val newMode = if (currentMode == mode) OverlayMode.OFF else mode
         _activeMode.value = newMode
         Logger.d("Overlay mode changed: $currentMode -> $newMode")

@@ -12,7 +12,6 @@ import scot.raven.titanpad.core.logs.LogManager
 import scot.raven.titanpad.core.logs.Logger
 import scot.raven.titanpad.core.shizuku.ShizukuConnection
 import scot.raven.titanpad.core.shizuku.ShizukuStatus
-import scot.raven.titanpad.gesture.shizuku.ShizukuGestureStrategy
 import scot.raven.titanpad.settings.domain.OverlaySettings
 import scot.raven.titanpad.settings.repository.SettingsRepository
 import scot.raven.titanpad.settings.repository.SettingsRepositoryImpl
@@ -27,6 +26,7 @@ import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.stateIn
+import scot.raven.titanpad.cursor.control.TrackpadActionHandler
 
 /**
  * Checks accessibility service and initializes Shizuku service on Android 11.
@@ -40,7 +40,7 @@ class TitanPad : Application() {
     val settingsRepository: SettingsRepository by _settingsRepository
     private val applicationScope = CoroutineScope(SupervisorJob() + Dispatchers.Main)
     private var shizukuObserverJob: Job? = null
-    private var _shizukuGestureStrategy: ShizukuGestureStrategy? = null
+    private var _trackpadActionHandler: TrackpadActionHandler? = null
     private var settingsObserverJob: Job? = null
     private lateinit var _settingsFlow: StateFlow<OverlaySettings>
 
@@ -55,8 +55,8 @@ class TitanPad : Application() {
         return _settingsFlow
     }
 
-    fun setShizukuGestureStrategy(strategy: ShizukuGestureStrategy) {
-        _shizukuGestureStrategy = strategy
+    fun setTrackpadActionHandler(handler: TrackpadActionHandler) {
+        _trackpadActionHandler = handler
     }
 
     override fun onCreate() {
@@ -80,11 +80,11 @@ class TitanPad : Application() {
             .flowOn(Dispatchers.IO)
             .launchIn(applicationScope)
 
-        Logger.i("C9 application initialized")
+        Logger.i("TitanPad application initialized")
     }
 
     private fun initializeShizuku() {
-        Logger.i("Initializing Shizuku on Android 11")
+        Logger.i("Initializing Shizuku")
         ShizukuConnection.initialize()
         shizukuObserverJob =
             ShizukuConnection.observeStatus { status ->
@@ -98,15 +98,16 @@ class TitanPad : Application() {
 
                     ShizukuStatus.NOT_AVAILABLE -> {
                         ShizukuConnection.resetPermissionRetryCount()
-                        _shizukuGestureStrategy?.reset()
+                        _trackpadActionHandler?.stop()
                     }
 
                     ShizukuStatus.ERROR -> {
-                        _shizukuGestureStrategy?.reset()
+                        _trackpadActionHandler?.stop()
                     }
 
                     ShizukuStatus.READY -> {
                         ShizukuConnection.resetPermissionRetryCount()
+                        _trackpadActionHandler?.start()
                         Logger.i("Shizuku ready")
                     }
 
@@ -117,13 +118,13 @@ class TitanPad : Application() {
 
     private fun cleanupShizuku() {
         shizukuObserverJob?.cancel()
-        _shizukuGestureStrategy?.shutdown()
+        _trackpadActionHandler?.stop()
         ShizukuConnection.cleanup()
         shizukuObserverJob?.cancel()
     }
 
     override fun onTerminate() {
-        Logger.i("C9 application terminating")
+        Logger.i("TitanPad application terminating")
 
         settingsObserverJob?.cancel()
         applicationScope.cancel()

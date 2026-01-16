@@ -48,11 +48,6 @@ class NotificationManager(private val context: Context) {
     fun showNotification(mode: ModeCoordinator.OverlayMode) {
         try {
             val (title, text, icon) = when (mode) {
-                ModeCoordinator.OverlayMode.GRID -> Triple(
-                    "Grid Cursor Active",
-                    "Tap to open settings",
-                    R.drawable.ic_blur_on
-                )
                 ModeCoordinator.OverlayMode.CURSOR -> Triple(
                     "Standard Cursor Active",
                     "Tap to open settings",

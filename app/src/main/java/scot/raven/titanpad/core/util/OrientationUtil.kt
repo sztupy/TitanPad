@@ -94,31 +94,6 @@ object OrientationUtil {
         }
     }
 
-    fun getRotatedGridNumbers(orientation: Orientation): Array<Array<Int>> {
-        return when (orientation) {
-            Orientation.PORTRAIT -> arrayOf(
-                arrayOf(1, 2, 3),
-                arrayOf(4, 5, 6),
-                arrayOf(7, 8, 9)
-            )
-            Orientation.LANDSCAPE_RIGHT -> arrayOf(
-                arrayOf(7, 4, 1),
-                arrayOf(8, 5, 2),
-                arrayOf(9, 6, 3)
-            )
-            Orientation.PORTRAIT_UPSIDE_DOWN -> arrayOf(
-                arrayOf(9, 8, 7),
-                arrayOf(6, 5, 4),
-                arrayOf(3, 2, 1)
-            )
-            Orientation.LANDSCAPE_LEFT -> arrayOf(
-                arrayOf(3, 6, 9),
-                arrayOf(2, 5, 8),
-                arrayOf(1, 4, 7)
-            )
-        }
-    }
-
     fun isDpadDirection(keyCode: Int): Boolean {
         return keyCode == KeyEvent.KEYCODE_DPAD_UP ||
                 keyCode == KeyEvent.KEYCODE_DPAD_RIGHT ||

@@ -18,8 +18,6 @@ import scot.raven.titanpad.settings.ui.autohide.AutoHideSettingsActivity
 import scot.raven.titanpad.settings.ui.cursor.CursorSettingsActivity
 import scot.raven.titanpad.settings.ui.gesture.CommonGestureSettingsActivity
 import scot.raven.titanpad.settings.ui.gesture.ScrollSettingsActivity
-import scot.raven.titanpad.settings.ui.gesture.ZoomSettingsActivity
-import scot.raven.titanpad.settings.ui.grid.GridSettingsActivity
 
 /**
  * Main settings screen.
@@ -53,13 +51,11 @@ class SettingsActivity : ComponentActivity() {
             AppTheme {
                 SettingsScreen(
                     settingsState = settingsState,
-                    onNavigateToGridSettings = { startCustomActivity(this, GridSettingsActivity::class.java) },
                     onNavigateToCursorSettings = { startCustomActivity(this, CursorSettingsActivity::class.java) },
                     onNavigateToDebugOptions = { startCustomActivity(this, DebugOptionsActivity::class.java) },
                     onNavigateToAutoHideSettings = { startCustomActivity(this, AutoHideSettingsActivity::class.java) },
                     onNavigateToCommonGestureSettings = { startCustomActivity(this, CommonGestureSettingsActivity::class.java) },
                     onNavigateToScrollSettings = { startCustomActivity(this, ScrollSettingsActivity::class.java) },
-                    onNavigateToZoomSettings = { startCustomActivity(this, ZoomSettingsActivity::class.java) }
                 )
             }
         }

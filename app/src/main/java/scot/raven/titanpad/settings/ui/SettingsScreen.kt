@@ -1,12 +1,16 @@
 package scot.raven.titanpad.settings.ui
 
+import android.content.Context
 import android.content.Intent
 import android.content.pm.ApplicationInfo
 import android.content.pm.PackageManager
+import android.net.Uri
+import android.os.Bundle
 import android.provider.Settings
 import android.view.KeyEvent
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -77,7 +81,6 @@ import scot.raven.titanpad.R
 import scot.raven.titanpad.core.constants.ApplicationConstants
 import scot.raven.titanpad.core.shizuku.ShizukuConnection
 import scot.raven.titanpad.core.shizuku.ShizukuStatus
-import scot.raven.titanpad.cursor.domain.ControlScheme
 import scot.raven.titanpad.settings.domain.OverlaySettings
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -89,13 +92,11 @@ import kotlinx.coroutines.withContext
 @Composable
 fun SettingsScreen(
     settingsState: SettingsState,
-    onNavigateToGridSettings: () -> Unit,
     onNavigateToCursorSettings: () -> Unit,
     onNavigateToDebugOptions: () -> Unit,
     onNavigateToAutoHideSettings: () -> Unit,
     onNavigateToCommonGestureSettings: () -> Unit,
-    onNavigateToScrollSettings: () -> Unit,
-    onNavigateToZoomSettings: () -> Unit
+    onNavigateToScrollSettings: () -> Unit
 ) {
     val uiState by settingsState.uiState.collectAsState()
     val context = LocalContext.current
@@ -142,17 +143,6 @@ fun SettingsScreen(
 
             PreferenceCategory(title = "Input Modes") {
                 SimplePreferenceItem(
-                    title = "Grid Cursor",
-                    subtitle =
-                    if (uiState.gridActivationKey == OverlaySettings.KEY_NONE) {
-                        "Unmapped"
-                    } else {
-                        "Mapped"
-                    },
-                    onClick = onNavigateToGridSettings,
-                )
-
-                SimplePreferenceItem(
                     title = "Standard Cursor",
                     subtitle =
                     if (uiState.cursorActivationKey == OverlaySettings.KEY_NONE) {
@@ -192,25 +182,12 @@ fun SettingsScreen(
                         color = Color(0xFFFFF4E6),
                     )
                     NoteItem(
-                        title = "Grid cursor reset and standard cursor control scheme toggle will be disabled",
+                        title = "Standard cursor control scheme toggle will be disabled",
                         icon = Icons.Default.Warning,
                         contentDescription = "Warning",
                         color = Color(0xFFFFF4E6),
                     )
                 }
-
-                // The enable switch currently only checks standard cursor settings
-                SwitchPreferenceItem(
-                    title = "Rotate Buttons With Orientation",
-                    subtitle = "Rotate certain D-pad and numpad buttons with phone screen",
-                    checked = uiState.rotateButtonsWithOrientation && (uiState.controlScheme != ControlScheme.TV),
-                    onCheckedChange = { value ->
-                        settingsState.updatePreference(value) { settings, v ->
-                            settings.copy(rotateButtonsWithOrientation = v)
-                        }
-                    },
-                    enabled = uiState.controlScheme != ControlScheme.TV
-                )
 
                 SwitchPreferenceItem(
                     title = "Show Notification Icon",
@@ -235,12 +212,6 @@ fun SettingsScreen(
                     title = "Scroll Options",
                     subtitle = "Settings specific to scrolling",
                     onClick = onNavigateToScrollSettings
-                )
-
-                SimplePreferenceItem(
-                    title = "Zoom Options",
-                    subtitle = "Settings specific to zoom",
-                    onClick = onNavigateToZoomSettings
                 )
             }
 
@@ -267,9 +238,31 @@ fun SettingsScreen(
                             verticalAlignment = Alignment.CenterVertically,
                         ) {
                             Text(
-                                text = "Visit github.com/austinauyeung/C9 for instructions and updates.",
+                                text = "Visit github.com/sztupy/TitanPad for instructions and updates.",
                                 style = MaterialTheme.typography.bodyMedium,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                modifier = Modifier
+                                    .clickable {
+                                        openNewTabWindow("https://github.com/sztupy/TitanPad", context)
+                                    }
+                            )
+                        }
+                        Row(
+                            modifier =
+                                Modifier
+                                    .fillMaxWidth()
+                                    .padding(dimensionResource(R.dimen.padding_standard)),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically,
+                        ) {
+                            Text(
+                                text = "Visit https://ko-fi.com/sztupy if you want to send me a coffee",
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                modifier = Modifier
+                                    .clickable {
+                                        openNewTabWindow("https://ko-fi.com/sztupy", context)
+                                    }
                             )
                         }
                         Row(
@@ -312,32 +305,6 @@ fun PreferenceCategory(
         )
         content()
         Spacer(modifier = Modifier.height(dimensionResource(R.dimen.spacing_standard)))
-    }
-}
-
-@Composable
-private fun PreferenceItem(
-    title: String,
-    subtitle: String? = null,
-    onClick: (() -> Unit)? = null,
-) {
-    Surface(
-        onClick = onClick ?: {},
-        enabled = onClick != null,
-        modifier = Modifier.fillMaxWidth(),
-    ) {
-        Column(
-            modifier = Modifier.padding(dimensionResource(R.dimen.padding_standard)),
-        ) {
-            Text(text = title)
-            if (subtitle != null) {
-                Text(
-                    text = subtitle,
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                )
-            }
-        }
     }
 }
 
@@ -1076,4 +1043,13 @@ fun ColorPickerDialog(
             }
         }
     )
+}
+
+fun openNewTabWindow(urls: String, context: Context) {
+    val uris = Uri.parse(urls)
+    val intents = Intent(Intent.ACTION_VIEW, uris)
+    val b = Bundle()
+    b.putBoolean("new_window", true)
+    intents.putExtras(b)
+    context.startActivity(intents)
 }

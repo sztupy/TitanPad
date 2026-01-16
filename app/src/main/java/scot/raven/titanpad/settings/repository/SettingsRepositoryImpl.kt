@@ -25,10 +25,6 @@ class SettingsRepositoryImpl(
 ) : SettingsRepository {
     companion object {
         private val ACTIVATION_DURATION = longPreferencesKey("activation_duration")
-        private val GRID_LEVELS = intPreferencesKey("grid_levels")
-        private val PERSIST_OVERLAY = booleanPreferencesKey("persist_overlay")
-        private val HIDE_NUMBERS = booleanPreferencesKey("hide_numbers")
-        private val GRID_LINE_VISIBILITY = stringPreferencesKey("grid_line_visibility")
         private val USE_NATURAL_SCROLLING = booleanPreferencesKey("use_natural_scrolling")
         private val SHOW_GESTURE_VISUAL = booleanPreferencesKey("show_gesture_visual")
         private val VISUAL_SIZE = intPreferencesKey("visual_size")
@@ -37,7 +33,6 @@ class SettingsRepositoryImpl(
         private val CURSOR_SIZE = intPreferencesKey("cursor_size")
         private val CURSOR_ACCELERATION_START = longPreferencesKey("cursor_acceleration_start")
         private val CURSOR_ACCELERATION_DURATION = longPreferencesKey("cursor_acceleration_duration")
-        private val GRID_ACTIVATION_KEY = intPreferencesKey("grid_activation_key")
         private val CURSOR_ACTIVATION_KEY = intPreferencesKey("cursor_activation_key")
         private val SCROLL_UP_KEY = intPreferencesKey("scroll_up_key")
         private val SCROLL_DOWN_KEY = intPreferencesKey("scroll_down_key")
@@ -88,12 +83,6 @@ class SettingsRepositoryImpl(
         private val CLICKABLE_LIST_TYPE = stringPreferencesKey("clickable_list_type")
         private val IGNORE_NUMPAD = booleanPreferencesKey("ignore_numpad")
         private val CHECK_CLICKABLE = booleanPreferencesKey("check_clickable")
-        private val KEEP_CURRENT_GRID_TRANSPARENT = booleanPreferencesKey("keep_current_grid_transparent")
-        private val GRID_CURSOR_BACKGROUND_HEX = stringPreferencesKey("grid_cursor_background_hex")
-        private val GRID_CURSOR_LINES_HEX = stringPreferencesKey("grid_cursor_lines_hex")
-        private val GRID_CURSOR_NUMBERS_HEX = stringPreferencesKey("grid_cursor_numbers_hex")
-        private val GRID_CURSOR_LINE_WIDTH = intPreferencesKey("grid_cursor_line_width")
-        private val GRID_CURSOR_FONT_SIZE = intPreferencesKey("grid_cursor_font_size")
         private val DISABLE_TOUCHSCREEN = booleanPreferencesKey("disable_touchscreen")
     }
 
@@ -123,32 +112,11 @@ class SettingsRepositoryImpl(
                 emit(emptyPreferences())
             }
             .map { preferences ->
-                val controlScheme = getEnumPreference(
-                    preferences,
-                    CONTROL_SCHEME,
-                    OverlaySettings.DEFAULT.controlScheme,
-                    "control scheme"
-                )
-
                 val gestureStyle = getEnumPreference(
                     preferences,
                     GESTURE_STYLE,
                     OverlaySettings.DEFAULT.gestureStyle,
                     "gesture style"
-                )
-
-                val gridLineVisibility = getEnumPreference(
-                    preferences,
-                    GRID_LINE_VISIBILITY,
-                    OverlaySettings.DEFAULT.gridLineVisibility,
-                    "grid line visibility"
-                )
-
-                val cursorEdgeBehavior = getEnumPreference(
-                    preferences,
-                    CURSOR_EDGE_BEHAVIOR,
-                    OverlaySettings.DEFAULT.cursorEdgeBehavior,
-                    "cursor edge behavior"
                 )
 
                 val cursorImageAlignment = getEnumPreference(
@@ -203,62 +171,29 @@ class SettingsRepositoryImpl(
                 val settings = OverlaySettings(
                     activationDuration = preferences[ACTIVATION_DURATION]
                         ?: OverlaySettings.DEFAULT.activationDuration,
-                    gridLevels = preferences[GRID_LEVELS] ?: OverlaySettings.DEFAULT.gridLevels,
-                    persistOverlay = preferences[PERSIST_OVERLAY]
-                        ?: OverlaySettings.DEFAULT.persistOverlay,
-                    hideNumbers = preferences[HIDE_NUMBERS] ?: OverlaySettings.DEFAULT.hideNumbers,
-                    gridLineVisibility = gridLineVisibility,
                     useNaturalScrolling = preferences[USE_NATURAL_SCROLLING]
                         ?: OverlaySettings.DEFAULT.useNaturalScrolling,
                     showGestureVisualization = preferences[SHOW_GESTURE_VISUAL]
                         ?: OverlaySettings.DEFAULT.showGestureVisualization,
                     visualSize = preferences[VISUAL_SIZE] ?: OverlaySettings.DEFAULT.visualSize,
-                    cursorSpeed = preferences[CURSOR_SPEED] ?: OverlaySettings.DEFAULT.cursorSpeed,
-                    cursorAcceleration = preferences[CURSOR_ACCELERATION]
-                        ?: OverlaySettings.DEFAULT.cursorAcceleration,
                     cursorSize = preferences[CURSOR_SIZE] ?: OverlaySettings.DEFAULT.cursorSize,
                     cursorAccelerationStart = preferences[CURSOR_ACCELERATION_START]
                         ?: OverlaySettings.DEFAULT.cursorAccelerationStart,
                     cursorAccelerationDuration = preferences[CURSOR_ACCELERATION_DURATION]
                         ?: OverlaySettings.DEFAULT.cursorAccelerationDuration,
-                    gridActivationKey = preferences[GRID_ACTIVATION_KEY]
-                        ?: OverlaySettings.DEFAULT.gridActivationKey,
                     cursorActivationKey = preferences[CURSOR_ACTIVATION_KEY]
                         ?: OverlaySettings.DEFAULT.cursorActivationKey,
-                    scrollUpKey = preferences[SCROLL_UP_KEY]
-                        ?: OverlaySettings.DEFAULT.scrollUpKey,
-                    scrollDownKey = preferences[SCROLL_DOWN_KEY]
-                        ?: OverlaySettings.DEFAULT.scrollDownKey,
-                    scrollLeftKey = preferences[SCROLL_LEFT_KEY]
-                        ?: OverlaySettings.DEFAULT.scrollLeftKey,
-                    scrollRightKey = preferences[SCROLL_RIGHT_KEY]
-                        ?: OverlaySettings.DEFAULT.scrollRightKey,
-                    controlScheme = controlScheme,
-                    cursorEdgeBehavior = cursorEdgeBehavior,
                     gestureStyle = gestureStyle,
-                    toggleHold = preferences[TOGGLE_HOLD] ?: OverlaySettings.DEFAULT.toggleHold,
-                    scrollDuration = preferences[SCROLL_DURATION]
-                        ?: OverlaySettings.DEFAULT.scrollDuration,
-                    scrollMultiplier = preferences[SCROLL_MULTIPLIER]
-                        ?: OverlaySettings.DEFAULT.scrollMultiplier,
-                    zoomDuration = preferences[ZOOM_DURATION]
-                        ?: OverlaySettings.DEFAULT.zoomDuration,
-                    zoomFactor = preferences[ZOOM_FACTOR]
-                        ?: OverlaySettings.DEFAULT.zoomFactor,
                     allowPassthrough = preferences[ALLOW_PASSTHROUGH]
                         ?: OverlaySettings.DEFAULT.allowPassthrough,
                     enableShizukuIntegration = preferences[ENABLE_SHIZUKU_INTEGRATION]
                         ?: OverlaySettings.DEFAULT.enableShizukuIntegration,
-                    overrideAndroid7 = preferences[OVERRIDE_ANDROID_7]
-                        ?: OverlaySettings.DEFAULT.overrideAndroid7,
                     hideOnKeyboardOpen = preferences[HIDE_ON_KEYBOARD_OPEN]
                         ?: OverlaySettings.DEFAULT.hideOnKeyboardOpen,
                     hideOnLauncherOpen = preferences[HIDE_ON_LAUNCHER_OPEN]
                         ?: OverlaySettings.DEFAULT.hideOnLauncherOpen,
                     hideOnLockScreen = preferences[HIDE_ON_LOCK_SCREEN]
                         ?: OverlaySettings.DEFAULT.hideOnLockScreen,
-                    rotateButtonsWithOrientation = preferences[ROTATE_BUTTONS_WITH_ORIENTATION]
-                        ?: OverlaySettings.DEFAULT.rotateButtonsWithOrientation,
                     roundedCursorCorners = preferences[ROUNDED_CURSOR_CORNERS]
                         ?: OverlaySettings.DEFAULT.roundedCursorCorners,
                     usePhysicalSize = preferences[USE_PHYSICAL_SIZE]
@@ -269,8 +204,6 @@ class SettingsRepositoryImpl(
                         ?: OverlaySettings.DEFAULT.standardCursorMatchBorder,
                     allowOverlappingGestures = preferences[ALLOW_OVERLAPPING_GESTURES]
                         ?: OverlaySettings.DEFAULT.allowOverlappingGestures,
-                    forceSmootherGestures = preferences[FORCE_SMOOTHER_GESTURES]
-                        ?: OverlaySettings.DEFAULT.forceSmootherGestures,
                     cursorImagePath = preferences[CURSOR_IMAGE_PATH]
                         ?: OverlaySettings.DEFAULT.cursorImagePath,
                     clickableImagePath = preferences[CLICKABLE_IMAGE_PATH]
@@ -282,24 +215,6 @@ class SettingsRepositoryImpl(
                     cursorImageAlignment = cursorImageAlignment,
                     clickableImageAlignment = clickableImageAlignment,
                     scrollToggleImageAlignment = scrollToggleImageAlignment,
-                    useAdvancedScrolling = preferences[USE_ADVANCED_SCROLLING]
-                        ?: OverlaySettings.DEFAULT.useAdvancedScrolling,
-                    continuousScrollDuration = preferences[CONTINUOUS_SCROLL_DURATION]
-                        ?: OverlaySettings.DEFAULT.continuousScrollDuration,
-                    continuousScrollMultiplier = preferences[CONTINUOUS_SCROLL_MULTIPLIER]
-                        ?: OverlaySettings.DEFAULT.continuousScrollMultiplier,
-                    continuousScrollAccelerationStart = preferences[CONTINUOUS_SCROLL_ACCELERATION_START]
-                        ?: OverlaySettings.DEFAULT.continuousScrollAccelerationStart,
-                    continuousScrollAccelerationDuration = preferences[CONTINUOUS_SCROLL_ACCELERATION_DURATION]
-                        ?: OverlaySettings.DEFAULT.continuousScrollAccelerationDuration,
-                    edgeScrollDuration = preferences[EDGE_SCROLL_DURATION]
-                        ?: OverlaySettings.DEFAULT.edgeScrollDuration,
-                    edgeScrollMultiplier = preferences[EDGE_SCROLL_MULTIPLIER]
-                        ?: OverlaySettings.DEFAULT.edgeScrollMultiplier,
-                    edgeScrollAccelerationStart = preferences[EDGE_SCROLL_ACCELERATION_START]
-                        ?: OverlaySettings.DEFAULT.edgeScrollAccelerationStart,
-                    edgeScrollAccelerationDuration = preferences[EDGE_SCROLL_ACCELERATION_DURATION]
-                        ?: OverlaySettings.DEFAULT.edgeScrollAccelerationDuration,
                     collectLogs = preferences[COLLECT_LOGS]
                         ?: OverlaySettings.DEFAULT.collectLogs,
                     autoHideApps = autoHideApps,
@@ -308,20 +223,8 @@ class SettingsRepositoryImpl(
                         ?: OverlaySettings.DEFAULT.showNotification,
                     applicationListType = applicationListType,
                     clickableListType = clickableListType,
-                    ignoreNumpad = preferences[IGNORE_NUMPAD]
-                        ?: OverlaySettings.DEFAULT.ignoreNumpad,
                     checkClickable = preferences[CHECK_CLICKABLE]
                         ?: OverlaySettings.DEFAULT.checkClickable,
-                    keepCurrentGridTransparent = preferences[KEEP_CURRENT_GRID_TRANSPARENT]
-                        ?: OverlaySettings.DEFAULT.keepCurrentGridTransparent,
-                    gridCursorBackgroundHex = preferences[GRID_CURSOR_BACKGROUND_HEX]
-                        ?: OverlaySettings.DEFAULT.gridCursorBackgroundHex,
-                    gridCursorLinesHex = preferences[GRID_CURSOR_LINES_HEX]
-                        ?: OverlaySettings.DEFAULT.gridCursorLinesHex,
-                    gridCursorNumbersHex = preferences[GRID_CURSOR_NUMBERS_HEX]
-                        ?: OverlaySettings.DEFAULT.gridCursorNumbersHex,
-                    gridCursorLineWidth = preferences[GRID_CURSOR_LINE_WIDTH] ?: OverlaySettings.DEFAULT.gridCursorLineWidth,
-                    gridCursorFontSize = preferences[GRID_CURSOR_FONT_SIZE] ?: OverlaySettings.DEFAULT.gridCursorFontSize,
                     disableTouchscreen = preferences[DISABLE_TOUCHSCREEN] ?: OverlaySettings.DEFAULT.disableTouchscreen
                 )
 
@@ -333,72 +236,35 @@ class SettingsRepositoryImpl(
         try {
             dataStore.edit { preferences ->
                 preferences[ACTIVATION_DURATION] = settings.activationDuration
-                preferences[GRID_LEVELS] = settings.gridLevels
-                preferences[PERSIST_OVERLAY] = settings.persistOverlay
-                preferences[HIDE_NUMBERS] = settings.hideNumbers
-                preferences[GRID_LINE_VISIBILITY] = settings.gridLineVisibility.name
                 preferences[USE_NATURAL_SCROLLING] = settings.useNaturalScrolling
                 preferences[SHOW_GESTURE_VISUAL] = settings.showGestureVisualization
                 preferences[VISUAL_SIZE] = settings.visualSize
-                preferences[CURSOR_SPEED] = settings.cursorSpeed
-                preferences[CURSOR_ACCELERATION] = settings.cursorAcceleration
                 preferences[CURSOR_SIZE] = settings.cursorSize
                 preferences[CURSOR_ACCELERATION_START] = settings.cursorAccelerationStart
                 preferences[CURSOR_ACCELERATION_DURATION] = settings.cursorAccelerationDuration
-                preferences[GRID_ACTIVATION_KEY] = settings.gridActivationKey
                 preferences[CURSOR_ACTIVATION_KEY] = settings.cursorActivationKey
-                preferences[SCROLL_UP_KEY] = settings.scrollUpKey
-                preferences[SCROLL_DOWN_KEY] = settings.scrollDownKey
-                preferences[SCROLL_LEFT_KEY] = settings.scrollLeftKey
-                preferences[SCROLL_RIGHT_KEY] = settings.scrollRightKey
-                preferences[CONTROL_SCHEME] = settings.controlScheme.name
-                preferences[CURSOR_EDGE_BEHAVIOR] = settings.cursorEdgeBehavior.name
                 preferences[GESTURE_STYLE] = settings.gestureStyle.name
-                preferences[TOGGLE_HOLD] = settings.toggleHold
-                preferences[SCROLL_DURATION] = settings.scrollDuration
-                preferences[SCROLL_MULTIPLIER] = settings.scrollMultiplier
-                preferences[ZOOM_DURATION] = settings.zoomDuration
-                preferences[ZOOM_FACTOR] = settings.zoomFactor
                 preferences[ALLOW_PASSTHROUGH] = settings.allowPassthrough
                 preferences[ENABLE_SHIZUKU_INTEGRATION] = settings.enableShizukuIntegration
-                preferences[OVERRIDE_ANDROID_7] = settings.overrideAndroid7
                 preferences[HIDE_ON_KEYBOARD_OPEN] = settings.hideOnKeyboardOpen
                 preferences[HIDE_ON_LAUNCHER_OPEN] = settings.hideOnLauncherOpen
                 preferences[HIDE_ON_LOCK_SCREEN] = settings.hideOnLockScreen
-                preferences[ROTATE_BUTTONS_WITH_ORIENTATION] = settings.rotateButtonsWithOrientation
                 preferences[ROUNDED_CURSOR_CORNERS] = settings.roundedCursorCorners
                 preferences[USE_PHYSICAL_SIZE] = settings.usePhysicalSize
                 preferences[STANDARD_CURSOR_HEX] = settings.standardCursorHex
                 preferences[STANDARD_CURSOR_MATCH_BORDER] = settings.standardCursorMatchBorder
                 preferences[ALLOW_OVERLAPPING_GESTURES] = settings.allowOverlappingGestures
-                preferences[FORCE_SMOOTHER_GESTURES] = settings.forceSmootherGestures
                 preferences[USE_CUSTOM_CURSOR_ICON] = settings.useCustomCursorIcon
                 preferences[CURSOR_IMAGE_ALIGNMENT] = settings.cursorImageAlignment.name
                 preferences[CLICKABLE_IMAGE_ALIGNMENT] = settings.clickableImageAlignment.name
                 preferences[SCROLL_TOGGLE_IMAGE_ALIGNMENT] = settings.scrollToggleImageAlignment.name
-                preferences[USE_ADVANCED_SCROLLING] = settings.useAdvancedScrolling
-                preferences[CONTINUOUS_SCROLL_DURATION] = settings.continuousScrollDuration
-                preferences[CONTINUOUS_SCROLL_MULTIPLIER] = settings.continuousScrollMultiplier
-                preferences[CONTINUOUS_SCROLL_ACCELERATION_START] = settings.continuousScrollAccelerationStart
-                preferences[CONTINUOUS_SCROLL_ACCELERATION_DURATION] = settings.continuousScrollAccelerationDuration
-                preferences[EDGE_SCROLL_DURATION] = settings.edgeScrollDuration
-                preferences[EDGE_SCROLL_MULTIPLIER] = settings.edgeScrollMultiplier
-                preferences[EDGE_SCROLL_ACCELERATION_START] = settings.edgeScrollAccelerationStart
-                preferences[EDGE_SCROLL_ACCELERATION_DURATION] = settings.edgeScrollAccelerationDuration
                 preferences[COLLECT_LOGS] = settings.collectLogs
                 preferences[AUTO_HIDE_APPS] = settings.autoHideApps.joinToString(",")
                 preferences[CLICKABLE_APPS] = settings.clickableApps.joinToString(",")
                 preferences[SHOW_NOTIFICATION] = settings.showNotification
                 preferences[APPLICATION_LIST_TYPE] = settings.applicationListType.name
                 preferences[CLICKABLE_LIST_TYPE] = settings.clickableListType.name
-                preferences[IGNORE_NUMPAD] = settings.ignoreNumpad
                 preferences[CHECK_CLICKABLE] = settings.checkClickable
-                preferences[KEEP_CURRENT_GRID_TRANSPARENT] = settings.keepCurrentGridTransparent
-                preferences[GRID_CURSOR_BACKGROUND_HEX] = settings.gridCursorBackgroundHex
-                preferences[GRID_CURSOR_LINES_HEX] = settings.gridCursorLinesHex
-                preferences[GRID_CURSOR_NUMBERS_HEX] = settings.gridCursorNumbersHex
-                preferences[GRID_CURSOR_LINE_WIDTH] = settings.gridCursorLineWidth
-                preferences[GRID_CURSOR_FONT_SIZE] = settings.gridCursorFontSize
                 preferences[DISABLE_TOUCHSCREEN] = settings.disableTouchscreen
 
                 if (settings.cursorImagePath != null) {

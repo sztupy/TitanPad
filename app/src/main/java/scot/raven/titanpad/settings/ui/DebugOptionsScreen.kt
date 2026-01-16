@@ -91,18 +91,6 @@ fun DebugOptionsScreen(
                     },
                     enabled = !VersionUtil.belowVersion(Build.VERSION_CODES.O)
                 )
-
-                SwitchPreferenceItem(
-                    title = "Android 7 Override",
-                    subtitle = "Removes Shizuku requirement but restricts gestures to clicks only",
-                    checked = uiState.overrideAndroid7,
-                    onCheckedChange = { value ->
-                        settingsState.updatePreference(value) { settings, v ->
-                            settings.copy(overrideAndroid7 = v, enableShizukuIntegration = !v)
-                        }
-                    },
-                    enabled = VersionUtil.belowVersion(Build.VERSION_CODES.O)
-                )
             }
 
             if (showShizukuDialog) {
@@ -143,25 +131,6 @@ fun DebugOptionsScreen(
                         }
                     },
                 )
-                SwitchPreferenceItem(
-                    title = "Improve Non-Shizuku Gestures",
-                    subtitle = "Currently recommended only for Android versions 8-10 as needed",
-                    checked = uiState.forceSmootherGestures,
-                    onCheckedChange = { value ->
-                        settingsState.updatePreference(value) { settings, v ->
-                            settings.copy(forceSmootherGestures = v)
-                        }
-                    },
-                )
-
-                if (uiState.forceSmootherGestures && Build.VERSION.SDK_INT !in Build.VERSION_CODES.O..Build.VERSION_CODES.Q) {
-                    NoteItem(
-                        title = "Not recommended for this device",
-                        icon = Icons.Default.Warning,
-                        contentDescription = "Warning",
-                        color = Color(0xFFFFF4E6),
-                    )
-                }
             }
 
             PreferenceCategory(title = "Display") {
@@ -187,17 +156,6 @@ fun DebugOptionsScreen(
                             showTouchscreenDialog = true
                         } else {
                             settingsState.updateDisableTouchscreen(newValue)
-                        }
-                    },
-                )
-
-                SwitchPreferenceItem(
-                    title = "Ignore Numpad",
-                    subtitle = "Bypass all numpad behavior except for activation",
-                    checked = uiState.ignoreNumpad,
-                    onCheckedChange = { value ->
-                        settingsState.updatePreference(value) { settings, v ->
-                            settings.copy(ignoreNumpad = v)
                         }
                     },
                 )

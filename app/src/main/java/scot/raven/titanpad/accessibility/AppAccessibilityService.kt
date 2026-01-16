@@ -93,24 +93,9 @@ class AppAccessibilityService : AccessibilityService(), LifecycleOwner,
     private val receiver = object : BroadcastReceiver() {
         override fun onReceive(context: Context, intent: Intent) {
             when (intent.action) {
-                ACTION_ACTIVATE_GRID -> {
-                    backgroundScope.launch {
-                        coreManager.activateGridMode(true)
-                    }
-                }
-                ACTION_RESET_GRID -> {
-                    backgroundScope.launch {
-                        coreManager.resetGrid()
-                    }
-                }
                 ACTION_ACTIVATE_CURSOR -> {
                     backgroundScope.launch {
                         coreManager.activateCursorMode(true)
-                    }
-                }
-                ACTION_TOGGLE_CURSOR -> {
-                    backgroundScope.launch {
-                        coreManager.toggleCursorScroll()
                     }
                 }
             }
@@ -124,43 +109,10 @@ class AppAccessibilityService : AccessibilityService(), LifecycleOwner,
             return instance
         }
 
-        const val ACTION_ACTIVATE_GRID = "scot.raven.titanpad.ACTION_ACTIVATE_GRID"
-        const val ACTION_RESET_GRID = "scot.raven.titanpad.ACTION_RESET_GRID"
         const val ACTION_ACTIVATE_CURSOR = "scot.raven.titanpad.ACTION_ACTIVATE_CURSOR"
-        const val ACTION_TOGGLE_CURSOR = "scot.raven.titanpad.ACTION_TOGGLE_CURSOR"
-
-        fun activateGridCursor(context: Context) {
-            val intent = Intent(ACTION_ACTIVATE_GRID)
-            intent.setPackage(context.packageName)
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-                context.sendBroadcast(intent, null)
-            } else {
-                context.sendBroadcast(intent)
-            }
-        }
-
-        fun resetGrid(context: Context) {
-            val intent = Intent(ACTION_RESET_GRID)
-            intent.setPackage(context.packageName)
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-                context.sendBroadcast(intent, null)
-            } else {
-                context.sendBroadcast(intent)
-            }
-        }
 
         fun activateStandardCursor(context: Context) {
             val intent = Intent(ACTION_ACTIVATE_CURSOR)
-            intent.setPackage(context.packageName)
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-                context.sendBroadcast(intent, null)
-            } else {
-                context.sendBroadcast(intent)
-            }
-        }
-
-        fun toggleCursorScroll(context: Context) {
-            val intent = Intent(ACTION_TOGGLE_CURSOR)
             intent.setPackage(context.packageName)
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
                 context.sendBroadcast(intent, null)
@@ -245,10 +197,7 @@ class AppAccessibilityService : AccessibilityService(), LifecycleOwner,
             overlayManager.initialize()
 
             val filter = IntentFilter().apply {
-                addAction(ACTION_ACTIVATE_GRID)
-                addAction(ACTION_RESET_GRID)
                 addAction(ACTION_ACTIVATE_CURSOR)
-                addAction(ACTION_TOGGLE_CURSOR)
             }
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
                 registerReceiver(receiver, filter, Context.RECEIVER_NOT_EXPORTED)
@@ -293,14 +242,12 @@ class AppAccessibilityService : AccessibilityService(), LifecycleOwner,
 
         Logger.d("Restoring cursor overlay")
         val settings = TitanPad.getInstance().getSettingsFlow().value
-        val gridMapped = settings.gridActivationKey != ApplicationConstants.OVERLAY_DISABLED
-        val gridLost = (lastOverlayType == ModeCoordinator.OverlayMode.GRID) && !gridMapped
         val cursorMapped = settings.cursorActivationKey != ApplicationConstants.OVERLAY_DISABLED
         val cursorLost = (lastOverlayType == ModeCoordinator.OverlayMode.CURSOR) && !cursorMapped
 
         // Edge case: cursor previously autohidden and then cleared
         // Commenting out for now; always triggers for a user with keymapper and both internally unmapped
-//        if (gridLost || cursorLost) {
+//        if (cursorLost) {
 //            lastOverlayType = ModeCoordinator.OverlayMode.OFF
 //        }
 
@@ -308,16 +255,11 @@ class AppAccessibilityService : AccessibilityService(), LifecycleOwner,
         if (lastOverlayType == ModeCoordinator.OverlayMode.OFF) {
             lastOverlayType = when {
                 cursorMapped -> ModeCoordinator.OverlayMode.CURSOR
-                gridMapped -> ModeCoordinator.OverlayMode.GRID
                 else -> ModeCoordinator.OverlayMode.OFF
             }
         }
 
         when (lastOverlayType) {
-            ModeCoordinator.OverlayMode.GRID -> {
-                coreManager.activateGridMode()
-            }
-
             ModeCoordinator.OverlayMode.CURSOR -> {
                 coreManager.activateCursorMode()
             }

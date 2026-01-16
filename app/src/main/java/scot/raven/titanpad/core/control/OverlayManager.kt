@@ -26,7 +26,6 @@ import scot.raven.titanpad.core.logs.Logger
 import scot.raven.titanpad.core.ui.AppTheme
 import scot.raven.titanpad.cursor.ui.CursorOverlay
 import scot.raven.titanpad.gesture.ui.GestureVisualization
-import scot.raven.titanpad.grid.ui.GridOverlay
 import scot.raven.titanpad.settings.domain.OverlaySettings
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.MutableSharedFlow
@@ -65,15 +64,6 @@ class OverlayManager(
     }
 
     private fun observeStateChanges() {
-        coreManager.gridStateManager.gridState
-            .onEach { grid ->
-                Logger.d("Grid state changed: ${grid != null}")
-                mainScope.launch {
-                    updateOverlayUI()
-                }
-            }
-            .launchIn(backgroundScope)
-
         coreManager.cursorStateManager.cursorState
             .onEach { cursor ->
 //                Logger.d("Cursor state changed: ${cursor != null}")
@@ -137,13 +127,11 @@ class OverlayManager(
 //                return
 //            }
 
-            val grid = coreManager.gridStateManager.gridState.value
             val cursor = coreManager.cursorStateManager.cursorState.value
             val gesturePaths = coreManager.getGesturePaths().value
             val settings = settingsFlow.value
 
-            val shouldShowOverlay = grid != null ||
-                    cursor != null ||
+            val shouldShowOverlay = cursor != null ||
                     (gesturePaths.isNotEmpty() && settings.showGestureVisualization)
 
             if (!shouldShowOverlay && overlayView != null) {
@@ -187,16 +175,6 @@ class OverlayManager(
                         modifier = Modifier.fillMaxSize(),
                         color = Color.Transparent,
                     ) {
-                        val currentGrid by coreManager.gridStateManager.gridState.collectAsState()
-                        currentGrid?.let { activeGrid ->
-                            GridOverlay(
-                                grid = activeGrid,
-                                settings = currentSettings,
-                                orientation = currentOrientation,
-                                useRotatedNumbers = currentSettings.rotateButtonsWithOrientation
-                            )
-                        }
-
                         val currentCursor by coreManager.cursorStateManager.cursorState.collectAsState()
                         currentCursor?.let { activeCursor ->
                             CursorOverlay(
@@ -221,8 +199,7 @@ class OverlayManager(
             try {
                 mainScope.launch {
                     removeOverlayView()
-                    if (coreManager.gridStateManager.gridState.value != null ||
-                        coreManager.cursorStateManager.cursorState.value != null
+                    if (coreManager.cursorStateManager.cursorState.value != null
                     ) {
                         createOverlayView()
                     }

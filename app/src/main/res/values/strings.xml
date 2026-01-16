@@ -4,20 +4,6 @@
     <string name="app_name">TitanPad</string>
     <string name="accessibility_service_label">TitanPad</string>
 
-    <!-- Service -->
-
     <!-- Settings -->
-    <string name="settings_title">C9: Click on 9 keys</string>
-
-    <!-- Grid Levels -->
-    <string name="settings_grid_levels_2">Two levels (81 cells)</string>
-    <string name="settings_grid_levels_3">Three levels (729 cells)</string>
-    <string name="settings_grid_levels_4">Four levels (6561 cells)</string>
-
-    <!-- Activation -->
-
-    <!-- Status Messages -->
-
-    <!-- Error Messages -->
-
+    <string name="settings_title">TitanPad: Titan 2 Trackpad</string>
 </resources>

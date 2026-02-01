@@ -34,21 +34,10 @@ class TrackpadActionHandler(
     ) {
 
     private var geteventJob: Job? = null
-    private var touchDown = false
-    private var startX = 0
-    private var startY = 0
-    private var currentX = 0
-    private var currentY = 0
     private var dragStartX = 0.0f
     private var dragStartY = 0.0f
-    private var width = 0
-    private var height = 0
-    private var startPosSet = false
-    private var startTime: Long = 0
-    private var endTime: Long = 0
-
-    private var numFingers = 0
     private var startGesture = false
+    private var state = TouchState()
 
     fun start() {
         // Guard: if already running, do nothing
@@ -137,151 +126,166 @@ class TrackpadActionHandler(
     }
 
     private fun parseTrackpadEvent(line: String) {
-        when {
-            line.contains("BTN_TOUCH") && line.contains("DOWN") -> {
-                touchDown = true
-                startPosSet = false
+        parseEvent(line)?.let { updateTouchState(it) }
+    }
+
+    private fun parseEvent(line: String): TrackpadEvent? {
+        fun hexValue(): Int? =
+            line.trim().split(Regex("\\s+")).lastOrNull()?.toIntOrNull(16)
+
+        return when {
+            line.contains("BTN_TOUCH") && line.contains("DOWN") ->
+                TrackpadEvent.TouchDown
+
+            line.contains("BTN_TOUCH") && line.contains("UP") ->
+                TrackpadEvent.TouchUp
+
+            line.contains("ABS_MT_POSITION_X") ->
+                hexValue()?.let { TrackpadEvent.PositionX(it) }
+
+            line.contains("ABS_MT_POSITION_Y") ->
+                hexValue()?.let { TrackpadEvent.PositionY(it) }
+
+            line.contains("ABS_MT_TOUCH_MAJOR") ->
+                hexValue()?.let { TrackpadEvent.TouchMajor(it) }
+
+            line.contains("ABS_MT_TOUCH_MINOR") ->
+                hexValue()?.let { TrackpadEvent.TouchMinor(it) }
+
+            line.contains("SYN_REPORT") ->
+                TrackpadEvent.SynReport
+
+            else -> null
+        }
+    }
+
+    private fun updateTouchState(event: TrackpadEvent) {
+        state = when (event) {
+
+            TrackpadEvent.TouchDown -> state.copy(
+                isDown = true,
+                startPosSet = false,
                 startTime = System.nanoTime()
+            )
+
+            TrackpadEvent.TouchUp -> state.copy(
+                isDown = false,
+                startPosSet = false,
+                endTime = if (state.isDown) System.nanoTime() else state.endTime
+            )
+
+            is TrackpadEvent.PositionX -> {
+                val startX = if (state.isDown && !state.startPosSet) event.value else state.startX
+                state.copy(currentX = event.value, startX = startX)
             }
 
-            line.contains("BTN_TOUCH") && line.contains("UP") -> {
-                if (touchDown) {
-                    endTime = System.nanoTime()
-                }
-                touchDown = false
-                startPosSet = false
+            is TrackpadEvent.PositionY -> {
+                val startY = if (state.isDown && !state.startPosSet) event.value else state.startY
+                state.copy(currentY = event.value, startY = startY)
             }
 
-            line.contains("ABS_MT_POSITION_X") -> {
-                val parts = line.trim().split(Regex("\\s+"))
-                if (parts.size >= 3) {
-                    val hexValue = parts.last()
-                    val newX = hexValue.toIntOrNull(16)
-                    if (newX != null) {
-                        currentX = newX
-                        if (touchDown && !startPosSet) {
-                            startX = newX
-                        }
+            is TrackpadEvent.TouchMajor ->
+                state.copy(width = event.value)
+
+            is TrackpadEvent.TouchMinor ->
+                state.copy(height = event.value)
+
+            TrackpadEvent.SynReport -> {
+                if (state.isDown && !state.startPosSet) {
+                    state.copy(
+                        startPosSet = true,
+                    ).also {
+                        startGesture = true
+                        detectGesture()
                     }
+                } else {
+                    detectGesture()
+                    state
                 }
-            }
-
-            line.contains("ABS_MT_POSITION_Y") -> {
-                val parts = line.trim().split(Regex("\\s+"))
-                if (parts.size >= 3) {
-                    val hexValue = parts.last()
-                    val newY = hexValue.toIntOrNull(16)
-                    if (newY != null) {
-                        currentY = newY
-                        if (touchDown && !startPosSet) {
-                            startY = newY
-                        }
-                    }
-                }
-            }
-
-            line.contains("ABS_MT_TOUCH_MAJOR") -> {
-                val parts = line.trim().split(Regex("\\s+"))
-                if (parts.size >= 3) {
-                    val hexValue = parts.last()
-                    val newWidth = hexValue.toIntOrNull(16)
-                    if (newWidth != null) {
-                        width = newWidth
-                    }
-                }
-            }
-
-            line.contains("SYN_REPORT") -> {
-                if (touchDown && !startPosSet) {
-                    numFingers = if (width <= settingsFlow.value.touchWidthThreshold) 1 else 2
-                    startPosSet = true
-                    startGesture = true
-                }
-                detectGesture()
             }
         }
     }
 
     private fun detectGesture() {
-        if (touchDown && startPosSet) {
-            val deltaX = currentX - startX + 0.0f
-            val deltaY = currentY - startY + 0.0f
-            Log.d(DEBUG_TAG, "X: ${deltaX}, Y: ${deltaY}, W: ${width}, NF: ${numFingers}, DSX: ${dragStartX} DSY: ${dragStartY}")
+        val numFingers = if (state.width <= settingsFlow.value.touchWidthThreshold) 1 else 2
+
+        if (state.isDown && state.startPosSet) {
+            val dx = (state.currentX - state.startX).toFloat()
+            val dy = (state.currentY - state.startY).toFloat()
 
             if (numFingers <= 1) {
-                val newPosition = cursorStateManager.applyMovement(Offset(deltaX, deltaY))
-                cursorStateManager.updatePosition(newPosition)
-                startX = currentX
-                startY = currentY
-                if (width >= settingsFlow.value.touchWidthThreshold) {
-                    numFingers = 2
-                    startGesture = true
-                }
-            } else {
-                if (gestureManager.getGestureReady()) {
-                    if (cursorStateManager.cursorState.value != null) {
-                        val value = cursorStateManager.cursorState.value!!
-                        val position = value.position
+                moveCursor(dx, dy)
+            } else if (gestureManager.getGestureReady()) {
+                state.startX = state.currentX
+                state.startY = state.currentY
 
-                        val deltaX = (currentX - startX + 0.0f) * 2
-                        val deltaY = (currentY - startY + 0.0f) * 2
-                        startX = currentX
-                        startY = currentY
-
-                        if (startGesture) {
-                            startGesture = false
-                            dragStartX = position.x
-                            dragStartY = position.y
-
-                            val fromX = dragStartX
-                            val fromY = dragStartY
-
-                            scope.launch {
-                                gestureManager.startTap(fromX, fromY)
-                            }
-                        } else {
-                            val fromX = dragStartX
-                            val fromY = dragStartY
-
-                            scope.launch {
-                                gestureManager.dragTap(
-                                    fromX,
-                                    fromY,
-                                    fromX + deltaX,
-                                    fromY + deltaY
-                                )
-                            }
-                            dragStartX += deltaX
-                            dragStartY += deltaY
-                        }
-                    }
+                if (startGesture) {
+                    startGesture()
+                } else {
+                    val scaledDx = dx * 2
+                    val scaledDy = dy * 2
+                    drag(scaledDx, scaledDy)
                 }
             }
         }
 
-        if (!touchDown && !startPosSet) {
-            val durationMs = (endTime - startTime) / 1_000_000.0
+        if (!state.isDown && !state.startPosSet) {
+            val durationMs = (state.endTime - state.startTime) / 1_000_000.0
             if (durationMs < 100 || numFingers > 1) {
-                if (cursorStateManager.cursorState.value != null) {
-                    val value = cursorStateManager.cursorState.value!!
-                    val position = value.position
-                    Log.d(DEBUG_TAG, "CLICK ${durationMs} X: ${position.x}, Y: ${position.y}, DX: ${dragStartX}, DY: ${dragStartY}")
-
-                    val fromX = dragStartX
-                    val fromY = dragStartY
-                    var oldFingers = numFingers
-
-                    scope.launch {
-                        if (oldFingers<=1) {
-                            gestureManager.startTap(position.x, position.y)
-                            gestureManager.endTap(position.x, position.y)
-                        } else {
-                            gestureManager.endTap(-1f, -1f)
-                        }
-                    }
+                if (numFingers > 1) {
+                    endGesture()
+                } else {
+                    click()
                 }
             }
-            numFingers = 0
+        }
+    }
+
+    private fun moveCursor(dx: Float, dy: Float) {
+        val newPos = cursorStateManager.applyMovement(
+            Offset(dx, dy)
+        )
+        cursorStateManager.updatePosition(newPos)
+
+        state.startX = state.currentX
+        state.startY = state.currentY
+    }
+
+    private fun startGesture() {
+        startGesture = false
+        val pos = cursorStateManager.cursorState.value?.position ?: return
+        dragStartX = pos.x
+        dragStartY = pos.y
+        scope.launch {
+            gestureManager.startTap(dragStartX, dragStartY)
+        }
+    }
+
+    private fun drag(dx: Float, dy: Float) {
+        val fromX = dragStartX
+        val fromY = dragStartY
+        val toX = fromX + dx
+        val toY = fromY + dy
+
+        scope.launch {
+            gestureManager.dragTap(fromX, fromY, toX, toY)
+        }
+
+        dragStartX = toX
+        dragStartY = toY
+    }
+
+    private fun click() {
+        val pos = cursorStateManager.cursorState.value?.position ?: return
+        scope.launch {
+            gestureManager.startTap(pos.x, pos.y)
+            gestureManager.endTap(pos.x, pos.y)
+        }
+    }
+
+    private fun endGesture() {
+        scope.launch {
+            gestureManager.endTap(-1f, -1f)
         }
     }
 
@@ -295,6 +299,27 @@ class TrackpadActionHandler(
     }
 }
 
+sealed interface TrackpadEvent {
+    object TouchDown : TrackpadEvent
+    object TouchUp : TrackpadEvent
+    data class PositionX(val value: Int) : TrackpadEvent
+    data class PositionY(val value: Int) : TrackpadEvent
+    data class TouchMajor(val value: Int) : TrackpadEvent
+    data class TouchMinor(val value: Int) : TrackpadEvent
+    object SynReport : TrackpadEvent
+}
 
+data class TouchState(
+    val isDown: Boolean = false,
+    val startPosSet: Boolean = false,
+    val startTime: Long = 0L,
+    val endTime: Long = 0L,
 
+    var startX: Int = 0,
+    var startY: Int = 0,
+    val currentX: Int = 0,
+    val currentY: Int = 0,
 
+    val width: Int = 0,
+    val height: Int = 0,
+)

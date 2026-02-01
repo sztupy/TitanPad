@@ -191,17 +191,6 @@ class TrackpadActionHandler(
                 }
             }
 
-            line.contains("ABS_MT_TOUCH_MAJOR") -> {
-                val parts = line.trim().split(Regex("\\s+"))
-                if (parts.size >= 3) {
-                    val hexValue = parts.last()
-                    val newHeight = hexValue.toIntOrNull(16)
-                    if (newHeight != null) {
-                        height = newHeight
-                    }
-                }
-            }
-
             line.contains("SYN_REPORT") -> {
                 if (touchDown && !startPosSet) {
                     numFingers = if (width <= settingsFlow.value.touchWidthThreshold) 1 else 2

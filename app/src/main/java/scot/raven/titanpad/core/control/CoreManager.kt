@@ -132,7 +132,8 @@ class CoreManager(
                 isEnabled = { true },
                 scope = backgroundScope,
                 cursorStateManager = cursorStateManager,
-                gestureManager = gestureManager
+                gestureManager = gestureManager,
+                settingsFlow = settingsFlow
             )
 
             TitanPad.getInstance().setTrackpadActionHandler(trackpadActionHandler)

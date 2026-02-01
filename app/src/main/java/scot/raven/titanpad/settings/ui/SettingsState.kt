@@ -83,7 +83,8 @@ class SettingsState(
                             applicationListType = settings.applicationListType,
                             clickableListType = settings.clickableListType,
                             checkClickable = settings.checkClickable,
-                            disableTouchscreen = settings.disableTouchscreen
+                            disableTouchscreen = settings.disableTouchscreen,
+                            touchWidthThreshold = settings.touchWidthThreshold
                         )
                     }
                 }
@@ -150,7 +151,8 @@ class SettingsState(
             applicationListType = _uiState.value.applicationListType,
             clickableListType = _uiState.value.clickableListType,
             checkClickable = _uiState.value.checkClickable,
-            disableTouchscreen = _uiState.value.disableTouchscreen
+            disableTouchscreen = _uiState.value.disableTouchscreen,
+            touchWidthThreshold = _uiState.value.touchWidthThreshold
         )
     }
 
@@ -235,5 +237,6 @@ data class SettingsUiState(
     val applicationListType: AppListType = Defaults.Settings.APPLICATION_LIST_TYPE,
     val clickableListType: AppListType = Defaults.Settings.CLICKABLE_LIST_TYPE,
     val checkClickable: Boolean = Defaults.Settings.CHECK_CLICKABLE,
-    val disableTouchscreen: Boolean = Defaults.Settings.DISABLE_TOUCHSCREEN
+    val disableTouchscreen: Boolean = Defaults.Settings.DISABLE_TOUCHSCREEN,
+    val touchWidthThreshold: Int = Defaults.Settings.TOUCH_WIDTH_THRESHOLD
 )

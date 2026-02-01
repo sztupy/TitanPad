@@ -8,8 +8,10 @@ import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import android.content.pm.PackageManager
 import androidx.compose.ui.geometry.Offset
+import kotlinx.coroutines.flow.StateFlow
 import scot.raven.titanpad.gesture.api.GestureManager
 import rikka.shizuku.Shizuku
+import scot.raven.titanpad.settings.domain.OverlaySettings
 import java.io.BufferedReader
 import java.io.InputStreamReader
 
@@ -27,8 +29,9 @@ class TrackpadActionHandler(
     private val logTag: String = DEFAULT_LOG_TAG,
     private val shizukuPing: () -> Boolean = {
         Shizuku.pingBinder() && Shizuku.checkSelfPermission() == PackageManager.PERMISSION_GRANTED
-    }
-) {
+    },
+    private val settingsFlow: StateFlow<OverlaySettings>
+    ) {
 
     private var geteventJob: Job? = null
     private var touchDown = false
@@ -201,7 +204,7 @@ class TrackpadActionHandler(
 
             line.contains("SYN_REPORT") -> {
                 if (touchDown && !startPosSet) {
-                    numFingers = if (width <= 8) 1 else 2
+                    numFingers = if (width <= settingsFlow.value.touchWidthThreshold) 1 else 2
                     startPosSet = true
                     startGesture = true
                 }
@@ -221,7 +224,7 @@ class TrackpadActionHandler(
                 cursorStateManager.updatePosition(newPosition)
                 startX = currentX
                 startY = currentY
-                if (width >= 10) {
+                if (width >= settingsFlow.value.touchWidthThreshold) {
                     numFingers = 2
                     startGesture = true
                 }

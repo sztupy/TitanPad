@@ -84,6 +84,7 @@ class SettingsRepositoryImpl(
         private val IGNORE_NUMPAD = booleanPreferencesKey("ignore_numpad")
         private val CHECK_CLICKABLE = booleanPreferencesKey("check_clickable")
         private val DISABLE_TOUCHSCREEN = booleanPreferencesKey("disable_touchscreen")
+        private val TOUCH_WIDTH_THRESHOLD = intPreferencesKey("touch_width_threshold")
     }
 
     private inline fun <reified T : Enum<T>> getEnumPreference(
@@ -225,8 +226,9 @@ class SettingsRepositoryImpl(
                     clickableListType = clickableListType,
                     checkClickable = preferences[CHECK_CLICKABLE]
                         ?: OverlaySettings.DEFAULT.checkClickable,
-                    disableTouchscreen = preferences[DISABLE_TOUCHSCREEN] ?: OverlaySettings.DEFAULT.disableTouchscreen
-                )
+                    disableTouchscreen = preferences[DISABLE_TOUCHSCREEN] ?: OverlaySettings.DEFAULT.disableTouchscreen,
+                    touchWidthThreshold = preferences[TOUCH_WIDTH_THRESHOLD] ?: OverlaySettings.DEFAULT.touchWidthThreshold
+                    )
 
                 settings
             }
@@ -266,6 +268,7 @@ class SettingsRepositoryImpl(
                 preferences[CLICKABLE_LIST_TYPE] = settings.clickableListType.name
                 preferences[CHECK_CLICKABLE] = settings.checkClickable
                 preferences[DISABLE_TOUCHSCREEN] = settings.disableTouchscreen
+                preferences[TOUCH_WIDTH_THRESHOLD] = settings.touchWidthThreshold
 
                 if (settings.cursorImagePath != null) {
                     preferences[CURSOR_IMAGE_PATH] = settings.cursorImagePath

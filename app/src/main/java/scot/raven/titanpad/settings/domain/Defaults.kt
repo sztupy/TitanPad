@@ -1,6 +1,5 @@
 package scot.raven.titanpad.settings.domain
 
-import android.os.Build
 import android.view.KeyEvent
 import scot.raven.titanpad.core.constants.ApplicationConstants
 import scot.raven.titanpad.core.constants.CursorConstants
@@ -49,7 +48,7 @@ object Defaults {
         val CLICKABLE_LIST_TYPE = AppListType.DENY_LIST
         const val CHECK_CLICKABLE = false
         const val KEEP_CURRENT_GRID_TRANSPARENT = true
-
         const val DISABLE_TOUCHSCREEN = false
+        const val TOUCH_WIDTH_THRESHOLD = 8
     }
 }

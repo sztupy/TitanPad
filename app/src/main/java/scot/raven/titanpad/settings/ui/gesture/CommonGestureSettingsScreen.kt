@@ -106,6 +106,21 @@ fun CommonGestureSettingsScreen(
                     enabled = uiState.showGestureVisualization
                 )
             }
+
+            PreferenceCategory(title = "Multitouch") {
+                SliderPreferenceItem(
+                    title = "Touch Width Threshold",
+                    value = uiState.touchWidthThreshold.toFloat(),
+                    valueRange = GestureConstants.MIN_TOUCH_SIZE.toFloat()..GestureConstants.MAX_TOUCH_SIZE.toFloat(),
+                    valueText = uiState.touchWidthThreshold.toString(),
+                    onValueChange = { value ->
+                        settingsState.updatePreference(value) { settings, v ->
+                            settings.copy(touchWidthThreshold = v.toInt())
+                        }
+                    },
+                    steps = 18,
+                )
+            }
         }
     }
 }

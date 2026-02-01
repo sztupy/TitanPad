@@ -58,4 +58,7 @@ object GestureConstants {
     fun calculateSteps(duration: Long): Int {
         return ((duration / FRAME_DURATION_MS).toInt()).coerceAtLeast(1)
     }
+
+    const val MIN_TOUCH_SIZE = 1
+    const val MAX_TOUCH_SIZE = 20
 }

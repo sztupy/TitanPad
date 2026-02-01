@@ -2,7 +2,6 @@ package scot.raven.titanpad.settings.domain
 
 import scot.raven.titanpad.core.constants.ApplicationConstants
 import scot.raven.titanpad.core.constants.CursorConstants
-import scot.raven.titanpad.core.constants.GestureConstants
 import scot.raven.titanpad.core.domain.GestureStyle
 import scot.raven.titanpad.cursor.domain.IconAlignment
 
@@ -44,7 +43,8 @@ data class OverlaySettings(
     val clickableListType: AppListType = Defaults.Settings.CLICKABLE_LIST_TYPE,
     val checkClickable: Boolean = Defaults.Settings.CHECK_CLICKABLE,
     val keepCurrentGridTransparent: Boolean = Defaults.Settings.KEEP_CURRENT_GRID_TRANSPARENT,
-    val disableTouchscreen: Boolean = Defaults.Settings.DISABLE_TOUCHSCREEN
+    val disableTouchscreen: Boolean = Defaults.Settings.DISABLE_TOUCHSCREEN,
+    val touchWidthThreshold: Int = Defaults.Settings.TOUCH_WIDTH_THRESHOLD
 ) {
     companion object {
         val DEFAULT = OverlaySettings()

@@ -285,7 +285,7 @@ class TrackpadActionHandler(
 
     private fun endGesture() {
         scope.launch {
-            gestureManager.endTap(-1f, -1f)
+            gestureManager.endTap(dragStartX, dragStartY)
         }
     }
 

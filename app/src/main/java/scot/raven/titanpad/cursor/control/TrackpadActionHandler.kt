@@ -126,82 +126,70 @@ class TrackpadActionHandler(
     }
 
     private fun parseTrackpadEvent(line: String) {
-        parseEvent(line)?.let { updateTouchState(it) }
-    }
-
-    private fun parseEvent(line: String): TrackpadEvent? {
-        fun hexValue(): Int? =
+        fun parseValue(): Int? =
             line.trim().split(Regex("\\s+")).lastOrNull()?.toIntOrNull(16)
 
-        return when {
-            line.contains("BTN_TOUCH") && line.contains("DOWN") ->
-                TrackpadEvent.TouchDown
+        when {
 
-            line.contains("BTN_TOUCH") && line.contains("UP") ->
-                TrackpadEvent.TouchUp
-
-            line.contains("ABS_MT_POSITION_X") ->
-                hexValue()?.let { TrackpadEvent.PositionX(it) }
-
-            line.contains("ABS_MT_POSITION_Y") ->
-                hexValue()?.let { TrackpadEvent.PositionY(it) }
-
-            line.contains("ABS_MT_TOUCH_MAJOR") ->
-                hexValue()?.let { TrackpadEvent.TouchMajor(it) }
-
-            line.contains("ABS_MT_TOUCH_MINOR") ->
-                hexValue()?.let { TrackpadEvent.TouchMinor(it) }
-
-            line.contains("SYN_REPORT") ->
-                TrackpadEvent.SynReport
-
-            else -> null
-        }
-    }
-
-    private fun updateTouchState(event: TrackpadEvent) {
-        state = when (event) {
-
-            TrackpadEvent.TouchDown -> state.copy(
-                isDown = true,
-                startPosSet = false,
-                startTime = System.nanoTime()
-            )
-
-            TrackpadEvent.TouchUp -> state.copy(
-                isDown = false,
-                startPosSet = false,
-                endTime = if (state.isDown) System.nanoTime() else state.endTime
-            )
-
-            is TrackpadEvent.PositionX -> {
-                val startX = if (state.isDown && !state.startPosSet) event.value else state.startX
-                state.copy(currentX = event.value, startX = startX)
+            line.contains("BTN_TOUCH") && line.contains("DOWN") -> {
+                state.isDown = true
+                state.startPosSet = false
+                state.startTime = System.nanoTime()
             }
 
-            is TrackpadEvent.PositionY -> {
-                val startY = if (state.isDown && !state.startPosSet) event.value else state.startY
-                state.copy(currentY = event.value, startY = startY)
-            }
-
-            is TrackpadEvent.TouchMajor ->
-                state.copy(width = event.value)
-
-            is TrackpadEvent.TouchMinor ->
-                state.copy(height = event.value)
-
-            TrackpadEvent.SynReport -> {
-                if (state.isDown && !state.startPosSet) {
-                    state.copy(
-                        startPosSet = true,
-                    ).also {
-                        startGesture = true
-                        detectGesture()
-                    }
-                } else {
-                    detectGesture()
-                    state
+            line.contains("BTN_TOUCH") && line.contains("UP") -> {
+                if (state.isDown) {
+                    state.endTime = System.nanoTime()
                 }
+                state.startPosSet = false
+                state.isDown = false
+            }
+
+            line.contains("ABS_MT_POSITION_X") -> {
+                val value = parseValue()
+
+                if (value != null) {
+                    if (state.isDown && !state.startPosSet) {
+                        state.startX = value
+                    }
+                    state.currentX = value
+                }
+            }
+
+            line.contains("ABS_MT_POSITION_Y") -> {
+                val value = parseValue()
+
+                if (value != null) {
+                    if (state.isDown && !state.startPosSet) {
+                        state.startY = value
+                    }
+                    state.currentY = value
+                }
+            }
+
+            line.contains("ABS_MT_TOUCH_MAJOR") -> {
+                val value = parseValue()
+
+                if (value != null) {
+                    state.width = value
+                }
+            }
+
+            line.contains("ABS_MT_TOUCH_MINOR") -> {
+                val value = parseValue()
+
+                if (value != null) {
+                    state.height = value
+                }
+            }
+
+            line.contains("SYN_REPORT") -> {
+                if (state.isDown && !state.startPosSet) {
+                    state.startPosSet = true
+                    startGesture = true
+                }
+
+                detectGesture()
             }
         }
     }
@@ -224,7 +212,7 @@ class TrackpadActionHandler(
                 } else {
                     val scaledDx = dx * 2
                     val scaledDy = dy * 2
-                    drag(scaledDx, scaledDy)
+                    scroll(scaledDx, scaledDy)
                 }
             }
         }
@@ -261,7 +249,7 @@ class TrackpadActionHandler(
         }
     }
 
-    private fun drag(dx: Float, dy: Float) {
+    private fun scroll(dx: Float, dy: Float) {
         val fromX = dragStartX
         val fromY = dragStartY
         val toX = fromX + dx
@@ -299,27 +287,17 @@ class TrackpadActionHandler(
     }
 }
 
-sealed interface TrackpadEvent {
-    object TouchDown : TrackpadEvent
-    object TouchUp : TrackpadEvent
-    data class PositionX(val value: Int) : TrackpadEvent
-    data class PositionY(val value: Int) : TrackpadEvent
-    data class TouchMajor(val value: Int) : TrackpadEvent
-    data class TouchMinor(val value: Int) : TrackpadEvent
-    object SynReport : TrackpadEvent
-}
-
 data class TouchState(
-    val isDown: Boolean = false,
-    val startPosSet: Boolean = false,
-    val startTime: Long = 0L,
-    val endTime: Long = 0L,
+    var isDown: Boolean = false,
+    var startPosSet: Boolean = false,
+    var startTime: Long = 0L,
+    var endTime: Long = 0L,
 
     var startX: Int = 0,
     var startY: Int = 0,
-    val currentX: Int = 0,
-    val currentY: Int = 0,
+    var currentX: Int = 0,
+    var currentY: Int = 0,
 
-    val width: Int = 0,
-    val height: Int = 0,
+    var width: Int = 0,
+    var height: Int = 0,
 )

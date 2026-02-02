@@ -50,5 +50,6 @@ object Defaults {
         const val KEEP_CURRENT_GRID_TRANSPARENT = true
         const val DISABLE_TOUCHSCREEN = false
         const val TOUCH_WIDTH_THRESHOLD = 8
+        const val CLICK_DURATION = 100L
     }
 }

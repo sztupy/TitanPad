@@ -44,7 +44,8 @@ data class OverlaySettings(
     val checkClickable: Boolean = Defaults.Settings.CHECK_CLICKABLE,
     val keepCurrentGridTransparent: Boolean = Defaults.Settings.KEEP_CURRENT_GRID_TRANSPARENT,
     val disableTouchscreen: Boolean = Defaults.Settings.DISABLE_TOUCHSCREEN,
-    val touchWidthThreshold: Int = Defaults.Settings.TOUCH_WIDTH_THRESHOLD
+    val touchWidthThreshold: Int = Defaults.Settings.TOUCH_WIDTH_THRESHOLD,
+    val clickDuration: Long = Defaults.Settings.CLICK_DURATION
 ) {
     companion object {
         val DEFAULT = OverlaySettings()

@@ -78,6 +78,19 @@ fun CommonGestureSettingsScreen(
                         }
                     },
                 )
+
+                SliderPreferenceItem(
+                    title = "Click Duration",
+                    value = uiState.clickDuration.toFloat(),
+                    valueRange = 100.toFloat()..500.toFloat(),
+                    valueText = uiState.clickDuration.toString(),
+                    onValueChange = { value ->
+                        settingsState.updatePreference(value) { settings, v ->
+                            settings.copy(clickDuration = v.toLong())
+                        }
+                    },
+                    steps = 3,
+                )
             }
 
             PreferenceCategory(title = "Visualization") {

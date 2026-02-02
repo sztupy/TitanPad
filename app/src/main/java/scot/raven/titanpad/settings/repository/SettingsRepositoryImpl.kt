@@ -85,6 +85,7 @@ class SettingsRepositoryImpl(
         private val CHECK_CLICKABLE = booleanPreferencesKey("check_clickable")
         private val DISABLE_TOUCHSCREEN = booleanPreferencesKey("disable_touchscreen")
         private val TOUCH_WIDTH_THRESHOLD = intPreferencesKey("touch_width_threshold")
+        private val CLICK_DURATION = longPreferencesKey("CLICK_DURATION")
     }
 
     private inline fun <reified T : Enum<T>> getEnumPreference(
@@ -227,8 +228,10 @@ class SettingsRepositoryImpl(
                     checkClickable = preferences[CHECK_CLICKABLE]
                         ?: OverlaySettings.DEFAULT.checkClickable,
                     disableTouchscreen = preferences[DISABLE_TOUCHSCREEN] ?: OverlaySettings.DEFAULT.disableTouchscreen,
-                    touchWidthThreshold = preferences[TOUCH_WIDTH_THRESHOLD] ?: OverlaySettings.DEFAULT.touchWidthThreshold
-                    )
+                    touchWidthThreshold = preferences[TOUCH_WIDTH_THRESHOLD] ?: OverlaySettings.DEFAULT.touchWidthThreshold,
+                    clickDuration = preferences[CLICK_DURATION] ?: OverlaySettings.DEFAULT.clickDuration
+
+                )
 
                 settings
             }
@@ -269,6 +272,7 @@ class SettingsRepositoryImpl(
                 preferences[CHECK_CLICKABLE] = settings.checkClickable
                 preferences[DISABLE_TOUCHSCREEN] = settings.disableTouchscreen
                 preferences[TOUCH_WIDTH_THRESHOLD] = settings.touchWidthThreshold
+                preferences[CLICK_DURATION] = settings.clickDuration
 
                 if (settings.cursorImagePath != null) {
                     preferences[CURSOR_IMAGE_PATH] = settings.cursorImagePath

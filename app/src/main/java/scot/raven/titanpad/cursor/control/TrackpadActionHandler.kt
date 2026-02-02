@@ -219,12 +219,10 @@ class TrackpadActionHandler(
 
         if (!state.isDown && !state.startPosSet) {
             val durationMs = (state.endTime - state.startTime) / 1_000_000.0
-            if (durationMs < 100 || numFingers > 1) {
-                if (numFingers > 1) {
-                    endGesture()
-                } else {
-                    click()
-                }
+            if (durationMs < 100) {
+                click()
+            } else if (numFingers > 1) {
+                endGesture()
             }
         }
     }

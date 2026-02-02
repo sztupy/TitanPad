@@ -195,15 +195,17 @@ class TrackpadActionHandler(
     }
 
     private fun detectGesture() {
-        val numFingers = if (state.width <= settingsFlow.value.touchWidthThreshold) 1 else 2
+        val settings = settingsFlow.value
+        val numFingers = if (state.width <= settings.touchWidthThreshold) 1 else 2
 
         if (state.isDown && state.startPosSet) {
             val dx = (state.currentX - state.startX).toFloat()
             val dy = (state.currentY - state.startY).toFloat()
+            val inScrollArea = inScrollArea()
+            val multitouchScroll = settings.scrollMultitouchEnabled && numFingers > 1
+            val isScroll = inScrollArea || multitouchScroll
 
-            if (numFingers <= 1) {
-                moveCursor(dx, dy)
-            } else if (gestureManager.getGestureReady()) {
+            if (gestureManager.getGestureReady() && isScroll) {
                 state.startX = state.currentX
                 state.startY = state.currentY
 
@@ -214,6 +216,8 @@ class TrackpadActionHandler(
                     val scaledDy = dy * 2
                     scroll(scaledDx, scaledDy)
                 }
+            } else if (!isScroll) {
+                moveCursor(dx, dy)
             }
         }
 
@@ -275,8 +279,27 @@ class TrackpadActionHandler(
         }
     }
 
+    private fun inScrollArea(): Boolean {
+        val settings = settingsFlow.value
+
+        if (!settings.scrollAreaEnabled) {
+            return false
+        }
+
+        val left = DEFAULT_TRACKPAD_MAX_X * (settings.scrollAreaLeftPercent / 100.0)
+        val right = DEFAULT_TRACKPAD_MAX_X - DEFAULT_TRACKPAD_MAX_X * (settings.scrollAreaRightPercent / 100.0)
+        val top = DEFAULT_TRACKPAD_MAX_Y * (settings.scrollAreaTopPercent / 100.0)
+        val bottom = DEFAULT_TRACKPAD_MAX_Y - DEFAULT_TRACKPAD_MAX_Y * (settings.scrollAreaBottomPercent / 100.0)
+
+        return state.currentX <= left ||
+                state.currentX >= right ||
+                state.currentY <= top ||
+                state.currentY >= bottom
+    }
+
     companion object {
         const val DEFAULT_TRACKPAD_MAX_X = 1440
+        const val DEFAULT_TRACKPAD_MAX_Y = 720
         const val DEFAULT_SWIPE_UP_THRESHOLD = 300
         const val DEFAULT_MIN_VELOCITY_THRESHOLD = 2.0  // pixels per millisecond (e.g., 1.0 px/ms = 1000 px/s)
         const val DEFAULT_EVENT_DEVICE = "/dev/input/event7"

@@ -45,7 +45,13 @@ data class OverlaySettings(
     val keepCurrentGridTransparent: Boolean = Defaults.Settings.KEEP_CURRENT_GRID_TRANSPARENT,
     val disableTouchscreen: Boolean = Defaults.Settings.DISABLE_TOUCHSCREEN,
     val touchWidthThreshold: Int = Defaults.Settings.TOUCH_WIDTH_THRESHOLD,
-    val clickDuration: Long = Defaults.Settings.CLICK_DURATION
+    val clickDuration: Long = Defaults.Settings.CLICK_DURATION,
+    val scrollAreaTopPercent: Float = Defaults.Settings.SCROLL_AREA_TOP_PERCENT,
+    val scrollAreaBottomPercent: Float = Defaults.Settings.SCROLL_AREA_BOTTOM_PERCENT,
+    val scrollAreaRightPercent: Float = Defaults.Settings.SCROLL_AREA_RIGHT_PERCENT,
+    val scrollAreaLeftPercent: Float = Defaults.Settings.SCROLL_AREA_LEFT_PERCENT,
+    val scrollAreaEnabled: Boolean = Defaults.Settings.SCROLL_AREA_ENABLED,
+    val scrollMultitouchEnabled: Boolean = Defaults.Settings.SCROLL_MULTITOUCH_ENABLED
 ) {
     companion object {
         val DEFAULT = OverlaySettings()

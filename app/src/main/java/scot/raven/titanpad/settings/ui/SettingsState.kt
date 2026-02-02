@@ -85,7 +85,13 @@ class SettingsState(
                             checkClickable = settings.checkClickable,
                             disableTouchscreen = settings.disableTouchscreen,
                             touchWidthThreshold = settings.touchWidthThreshold,
-                            clickDuration = settings.clickDuration
+                            clickDuration = settings.clickDuration,
+                            scrollAreaEnabled = settings.scrollAreaEnabled,
+                            scrollMultitouchEnabled = settings.scrollMultitouchEnabled,
+                            scrollAreaTopPercent = settings.scrollAreaTopPercent,
+                            scrollAreaLeftPercent = settings.scrollAreaLeftPercent,
+                            scrollAreaRightPercent = settings.scrollAreaRightPercent,
+                            scrollAreaBottomPercent = settings.scrollAreaBottomPercent,
                         )
                     }
                 }
@@ -154,7 +160,13 @@ class SettingsState(
             checkClickable = _uiState.value.checkClickable,
             disableTouchscreen = _uiState.value.disableTouchscreen,
             touchWidthThreshold = _uiState.value.touchWidthThreshold,
-            clickDuration = _uiState.value.clickDuration
+            clickDuration = _uiState.value.clickDuration,
+            scrollAreaEnabled = _uiState.value.scrollAreaEnabled,
+            scrollMultitouchEnabled = _uiState.value.scrollMultitouchEnabled,
+            scrollAreaTopPercent = _uiState.value.scrollAreaTopPercent,
+            scrollAreaLeftPercent = _uiState.value.scrollAreaLeftPercent,
+            scrollAreaRightPercent = _uiState.value.scrollAreaRightPercent,
+            scrollAreaBottomPercent = _uiState.value.scrollAreaBottomPercent,
         )
     }
 
@@ -241,5 +253,11 @@ data class SettingsUiState(
     val checkClickable: Boolean = Defaults.Settings.CHECK_CLICKABLE,
     val disableTouchscreen: Boolean = Defaults.Settings.DISABLE_TOUCHSCREEN,
     val touchWidthThreshold: Int = Defaults.Settings.TOUCH_WIDTH_THRESHOLD,
-    val clickDuration: Long = Defaults.Settings.CLICK_DURATION
+    val clickDuration: Long = Defaults.Settings.CLICK_DURATION,
+    val scrollAreaTopPercent: Float = Defaults.Settings.SCROLL_AREA_TOP_PERCENT,
+    val scrollAreaBottomPercent: Float = Defaults.Settings.SCROLL_AREA_BOTTOM_PERCENT,
+    val scrollAreaRightPercent: Float = Defaults.Settings.SCROLL_AREA_RIGHT_PERCENT,
+    val scrollAreaLeftPercent: Float = Defaults.Settings.SCROLL_AREA_LEFT_PERCENT,
+    val scrollAreaEnabled: Boolean = Defaults.Settings.SCROLL_AREA_ENABLED,
+    val scrollMultitouchEnabled: Boolean = Defaults.Settings.SCROLL_MULTITOUCH_ENABLED
 )

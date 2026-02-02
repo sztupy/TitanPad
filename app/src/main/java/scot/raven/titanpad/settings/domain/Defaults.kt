@@ -51,5 +51,11 @@ object Defaults {
         const val DISABLE_TOUCHSCREEN = false
         const val TOUCH_WIDTH_THRESHOLD = 8
         const val CLICK_DURATION = 100L
+        const val SCROLL_AREA_TOP_PERCENT = 10F
+        const val SCROLL_AREA_BOTTOM_PERCENT = 10F
+        const val SCROLL_AREA_RIGHT_PERCENT = 10F
+        const val SCROLL_AREA_LEFT_PERCENT = 10F
+        const val SCROLL_AREA_ENABLED = false
+        const val SCROLL_MULTITOUCH_ENABLED = true
     }
 }

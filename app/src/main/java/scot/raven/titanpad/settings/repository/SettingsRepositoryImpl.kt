@@ -86,6 +86,12 @@ class SettingsRepositoryImpl(
         private val DISABLE_TOUCHSCREEN = booleanPreferencesKey("disable_touchscreen")
         private val TOUCH_WIDTH_THRESHOLD = intPreferencesKey("touch_width_threshold")
         private val CLICK_DURATION = longPreferencesKey("CLICK_DURATION")
+        private val SCROLL_AREA_ENABLED = booleanPreferencesKey("scroll_area_enabled")
+        private val SCROLL_MULTITOUCH_ENABLED = booleanPreferencesKey("scroll_multitouch_enabled")
+        private val SCROLL_AREA_TOP_PERCENT = floatPreferencesKey("scroll_area_top_percent")
+        private val SCROLL_AREA_BOTTOM_PERCENT = floatPreferencesKey("scroll_area_bottom_percent")
+        private val SCROLL_AREA_RIGHT_PERCENT = floatPreferencesKey("scroll_area_right_percent")
+        private val SCROLL_AREA_LEFT_PERCENT = floatPreferencesKey("scroll_area_left_percent")
     }
 
     private inline fun <reified T : Enum<T>> getEnumPreference(
@@ -229,9 +235,14 @@ class SettingsRepositoryImpl(
                         ?: OverlaySettings.DEFAULT.checkClickable,
                     disableTouchscreen = preferences[DISABLE_TOUCHSCREEN] ?: OverlaySettings.DEFAULT.disableTouchscreen,
                     touchWidthThreshold = preferences[TOUCH_WIDTH_THRESHOLD] ?: OverlaySettings.DEFAULT.touchWidthThreshold,
-                    clickDuration = preferences[CLICK_DURATION] ?: OverlaySettings.DEFAULT.clickDuration
-
-                )
+                    clickDuration = preferences[CLICK_DURATION] ?: OverlaySettings.DEFAULT.clickDuration,
+                    scrollAreaEnabled = preferences[SCROLL_AREA_ENABLED] ?: OverlaySettings.DEFAULT.scrollAreaEnabled,
+                    scrollMultitouchEnabled = preferences[SCROLL_MULTITOUCH_ENABLED] ?: OverlaySettings.DEFAULT.scrollMultitouchEnabled,
+                    scrollAreaTopPercent = preferences[SCROLL_AREA_TOP_PERCENT] ?: OverlaySettings.DEFAULT.scrollAreaTopPercent,
+                    scrollAreaBottomPercent = preferences[SCROLL_AREA_BOTTOM_PERCENT] ?: OverlaySettings.DEFAULT.scrollAreaBottomPercent,
+                    scrollAreaLeftPercent = preferences[SCROLL_AREA_LEFT_PERCENT] ?: OverlaySettings.DEFAULT.scrollAreaLeftPercent,
+                    scrollAreaRightPercent = preferences[SCROLL_AREA_RIGHT_PERCENT] ?: OverlaySettings.DEFAULT.scrollAreaRightPercent,
+                    )
 
                 settings
             }
@@ -273,6 +284,12 @@ class SettingsRepositoryImpl(
                 preferences[DISABLE_TOUCHSCREEN] = settings.disableTouchscreen
                 preferences[TOUCH_WIDTH_THRESHOLD] = settings.touchWidthThreshold
                 preferences[CLICK_DURATION] = settings.clickDuration
+                preferences[SCROLL_AREA_ENABLED] = settings.scrollAreaEnabled
+                preferences[SCROLL_MULTITOUCH_ENABLED] = settings.scrollMultitouchEnabled
+                preferences[SCROLL_AREA_TOP_PERCENT] = settings.scrollAreaTopPercent
+                preferences[SCROLL_AREA_BOTTOM_PERCENT] = settings.scrollAreaBottomPercent
+                preferences[SCROLL_AREA_LEFT_PERCENT] = settings.scrollAreaLeftPercent
+                preferences[SCROLL_AREA_RIGHT_PERCENT] = settings.scrollAreaRightPercent
 
                 if (settings.cursorImagePath != null) {
                     preferences[CURSOR_IMAGE_PATH] = settings.cursorImagePath

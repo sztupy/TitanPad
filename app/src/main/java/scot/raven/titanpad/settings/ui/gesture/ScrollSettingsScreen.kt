@@ -65,6 +65,86 @@ fun ScrollSettingsScreen(
                         }
                     }
                 )
+
+                SwitchPreferenceItem(
+                    title = "Multi-touch enabled",
+                    subtitle = "Use multi-touch for scrolling",
+                    checked = uiState.scrollMultitouchEnabled,
+                    onCheckedChange = { value ->
+                        settingsState.updatePreference(value) { settings, v ->
+                            settings.copy(scrollMultitouchEnabled = v)
+                        }
+                    },
+                )
+
+                SwitchPreferenceItem(
+                    title = "Scroll area enabled",
+                    subtitle = "Use scroll for scrolling",
+                    checked = uiState.scrollAreaEnabled,
+                    onCheckedChange = { value ->
+                        settingsState.updatePreference(value) { settings, v ->
+                            settings.copy(scrollAreaEnabled = v)
+                        }
+                    },
+                )
+            }
+
+            PreferenceCategory(title = "Scroll Area") {
+                SliderPreferenceItem(
+                    title = "Top",
+                    value = uiState.scrollAreaTopPercent,
+                    valueRange = 0.toFloat()..100.toFloat(),
+                    valueText = "${uiState.scrollAreaTopPercent.toInt()}%",
+                    onValueChange = { value ->
+                        settingsState.updatePreference(value) { settings, v ->
+                            settings.copy(scrollAreaTopPercent = v)
+                        }
+                    },
+                    steps = 9,
+                    enabled = uiState.scrollAreaEnabled
+                )
+
+                SliderPreferenceItem(
+                    title = "Left",
+                    value = uiState.scrollAreaLeftPercent,
+                    valueRange = 0.toFloat()..100.toFloat(),
+                    valueText = "${uiState.scrollAreaLeftPercent.toInt()}%",
+                    onValueChange = { value ->
+                        settingsState.updatePreference(value) { settings, v ->
+                            settings.copy(scrollAreaLeftPercent = v)
+                        }
+                    },
+                    steps = 9,
+                    enabled = uiState.scrollAreaEnabled
+                )
+
+                SliderPreferenceItem(
+                    title = "Bottom",
+                    value = uiState.scrollAreaBottomPercent,
+                    valueRange = 0.toFloat()..100.toFloat(),
+                    valueText = "${uiState.scrollAreaBottomPercent.toInt()}%",
+                    onValueChange = { value ->
+                        settingsState.updatePreference(value) { settings, v ->
+                            settings.copy(scrollAreaBottomPercent = v)
+                        }
+                    },
+                    steps = 9,
+                    enabled = uiState.scrollAreaEnabled
+                )
+
+                SliderPreferenceItem(
+                    title = "Right",
+                    value = uiState.scrollAreaRightPercent,
+                    valueRange = 0.toFloat()..100.toFloat(),
+                    valueText = "${uiState.scrollAreaRightPercent.toInt()}%",
+                    onValueChange = { value ->
+                        settingsState.updatePreference(value) { settings, v ->
+                            settings.copy(scrollAreaRightPercent = v)
+                        }
+                    },
+                    steps = 9,
+                    enabled = uiState.scrollAreaEnabled
+                )
             }
         }
     }

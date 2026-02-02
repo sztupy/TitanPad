@@ -67,8 +67,8 @@ fun ScrollSettingsScreen(
                 )
 
                 SwitchPreferenceItem(
-                    title = "Multi-touch enabled",
-                    subtitle = "Use multi-touch for scrolling",
+                    title = "Multi-touch Scrolling",
+                    subtitle = "Use two fingers to scroll",
                     checked = uiState.scrollMultitouchEnabled,
                     onCheckedChange = { value ->
                         settingsState.updatePreference(value) { settings, v ->
@@ -78,8 +78,8 @@ fun ScrollSettingsScreen(
                 )
 
                 SwitchPreferenceItem(
-                    title = "Scroll area enabled",
-                    subtitle = "Use scroll for scrolling",
+                    title = "Scroll Area",
+                    subtitle = "Use part of the touchpad for scrolling",
                     checked = uiState.scrollAreaEnabled,
                     onCheckedChange = { value ->
                         settingsState.updatePreference(value) { settings, v ->

@@ -149,7 +149,24 @@ fun CursorSettingsScreen(
 
             PreferenceCategory(title = "Behavior") {
                 SliderPreferenceItem(
-                    title = "Horizontal Sensitivity",
+                    title = "Click Sensitivity",
+                    value = clickDurationMsToSensitivity(uiState.clickDuration),
+                    valueRange = 0.1f..5.0f,
+                    valueText = "%.1f".format(
+                        clickDurationMsToSensitivity(uiState.clickDuration)
+                    ),
+                    onValueChange = { value ->
+                        val rounded = (value * 10).roundToInt() / 10f
+                        settingsState.updatePreference(rounded) { settings, v ->
+                            settings.copy(
+                                clickDuration = clickSensitivityToDurationMs(v)
+                            )
+                        }
+                    }
+                )
+
+                SliderPreferenceItem(
+                    title = "Horizontal Movement Sensitivity",
                     value = uiState.horizontalCursorSensitivity,
                     valueRange = 0.1.toFloat()..5.0.toFloat(),
                     valueText = "%.1f".format(uiState.horizontalCursorSensitivity),
@@ -162,7 +179,7 @@ fun CursorSettingsScreen(
                 )
 
                 SliderPreferenceItem(
-                    title = "Vertical Sensitivity",
+                    title = "Vertical Movement Sensitivity",
                     value = uiState.verticalCursorSensitivity,
                     valueRange = 0.1f..5.0f,
                     valueText = "%.1f".format(uiState.verticalCursorSensitivity),
@@ -450,4 +467,14 @@ class UnifiedImagePickerLauncher(
 
         Logger.e("No available image pickers found")
     }
+}
+
+private const val BASE_CLICK_DURATION_MS = 100f
+
+private fun clickSensitivityToDurationMs(sens: Float): Long {
+    return (BASE_CLICK_DURATION_MS * sens).toLong()
+}
+
+private fun clickDurationMsToSensitivity(ms: Long): Float {
+    return ms / BASE_CLICK_DURATION_MS
 }

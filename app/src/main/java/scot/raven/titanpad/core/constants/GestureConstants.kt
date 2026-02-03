@@ -60,5 +60,5 @@ object GestureConstants {
     }
 
     const val MIN_TOUCH_SIZE = 1
-    const val MAX_TOUCH_SIZE = 20
+    const val MAX_TOUCH_SIZE = 15
 }

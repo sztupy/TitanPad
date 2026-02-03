@@ -24,6 +24,7 @@ import scot.raven.titanpad.settings.ui.PreferenceCategory
 import scot.raven.titanpad.settings.ui.SettingsState
 import scot.raven.titanpad.settings.ui.SliderPreferenceItem
 import scot.raven.titanpad.settings.ui.SwitchPreferenceItem
+import kotlin.math.roundToInt
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -80,16 +81,20 @@ fun CommonGestureSettingsScreen(
                 )
 
                 SliderPreferenceItem(
-                    title = "Click Duration",
-                    value = uiState.clickDuration.toFloat(),
-                    valueRange = 100.toFloat()..500.toFloat(),
-                    valueText = uiState.clickDuration.toString(),
+                    title = "Multi-touch Sensitivity",
+                    value = multitouchWidthToSensitivity(uiState.touchWidthThreshold),
+                    valueRange = 0.1f..5.0f,
+                    valueText = "%.1f".format(
+                        multitouchWidthToSensitivity(uiState.touchWidthThreshold)
+                    ),
                     onValueChange = { value ->
-                        settingsState.updatePreference(value) { settings, v ->
-                            settings.copy(clickDuration = v.toLong())
+                        val rounded = (value * 10).roundToInt() / 10f
+                        settingsState.updatePreference(rounded) { settings, v ->
+                            settings.copy(
+                                touchWidthThreshold = multitouchSensitivityToWidth(v)
+                            )
                         }
-                    },
-                    steps = 3,
+                    }
                 )
             }
 
@@ -119,21 +124,16 @@ fun CommonGestureSettingsScreen(
                     enabled = uiState.showGestureVisualization
                 )
             }
-
-            PreferenceCategory(title = "Multi-touch") {
-                SliderPreferenceItem(
-                    title = "Touch Width Threshold",
-                    value = uiState.touchWidthThreshold.toFloat(),
-                    valueRange = GestureConstants.MIN_TOUCH_SIZE.toFloat()..GestureConstants.MAX_TOUCH_SIZE.toFloat(),
-                    valueText = uiState.touchWidthThreshold.toString(),
-                    onValueChange = { value ->
-                        settingsState.updatePreference(value) { settings, v ->
-                            settings.copy(touchWidthThreshold = v.toInt())
-                        }
-                    },
-                    steps = 18,
-                )
-            }
         }
     }
+}
+
+private const val BASE_MULTITOUCH_WIDTH = 10
+
+private fun multitouchSensitivityToWidth(sens: Float): Int {
+    return (BASE_MULTITOUCH_WIDTH / sens).toInt()
+}
+
+private fun multitouchWidthToSensitivity(width: Int): Float {
+    return BASE_MULTITOUCH_WIDTH.toFloat() / width.toFloat()
 }

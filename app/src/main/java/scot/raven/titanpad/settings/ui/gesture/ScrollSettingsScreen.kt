@@ -100,7 +100,6 @@ fun ScrollSettingsScreen(
                             settings.copy(scrollAreaTopPercent = v)
                         }
                     },
-                    steps = 9,
                     enabled = uiState.scrollAreaEnabled
                 )
 
@@ -114,7 +113,6 @@ fun ScrollSettingsScreen(
                             settings.copy(scrollAreaLeftPercent = v)
                         }
                     },
-                    steps = 9,
                     enabled = uiState.scrollAreaEnabled
                 )
 
@@ -128,7 +126,6 @@ fun ScrollSettingsScreen(
                             settings.copy(scrollAreaBottomPercent = v)
                         }
                     },
-                    steps = 9,
                     enabled = uiState.scrollAreaEnabled
                 )
 
@@ -142,7 +139,6 @@ fun ScrollSettingsScreen(
                             settings.copy(scrollAreaRightPercent = v)
                         }
                     },
-                    steps = 9,
                     enabled = uiState.scrollAreaEnabled
                 )
             }

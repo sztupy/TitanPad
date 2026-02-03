@@ -201,20 +201,17 @@ class TrackpadActionHandler(
         if (state.isDown && state.startPosSet) {
             val dx = (state.currentX - state.startX).toFloat()
             val dy = (state.currentY - state.startY).toFloat()
+            state.startX = state.currentX
+            state.startY = state.currentY
             val inScrollArea = inScrollArea()
             val multitouchScroll = settings.scrollMultitouchEnabled && numFingers > 1
             val isScroll = inScrollArea || multitouchScroll
 
             if (gestureManager.getGestureReady() && isScroll) {
-                state.startX = state.currentX
-                state.startY = state.currentY
-
                 if (startGesture) {
                     startGesture()
                 } else {
-                    val scaledDx = dx * 2
-                    val scaledDy = dy * 2
-                    scroll(scaledDx, scaledDy)
+                    scroll(dx, dy)
                 }
             } else if (!isScroll) {
                 moveCursor(dx, dy)
@@ -254,8 +251,8 @@ class TrackpadActionHandler(
     private fun scroll(dx: Float, dy: Float) {
         val fromX = dragStartX
         val fromY = dragStartY
-        val toX = fromX + dx
-        val toY = fromY + dy
+        val toX = fromX + dx * 2
+        val toY = fromY + dy * 2
 
         scope.launch {
             gestureManager.dragTap(fromX, fromY, toX, toY)

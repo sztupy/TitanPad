@@ -120,7 +120,7 @@ fun CommonGestureSettingsScreen(
                 )
             }
 
-            PreferenceCategory(title = "Multitouch") {
+            PreferenceCategory(title = "Multi-touch") {
                 SliderPreferenceItem(
                     title = "Touch Width Threshold",
                     value = uiState.touchWidthThreshold.toFloat(),

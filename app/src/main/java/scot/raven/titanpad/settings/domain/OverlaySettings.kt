@@ -51,8 +51,10 @@ data class OverlaySettings(
     val scrollAreaRightPercent: Float = Defaults.Settings.SCROLL_AREA_RIGHT_PERCENT,
     val scrollAreaLeftPercent: Float = Defaults.Settings.SCROLL_AREA_LEFT_PERCENT,
     val scrollAreaEnabled: Boolean = Defaults.Settings.SCROLL_AREA_ENABLED,
-    val scrollMultitouchEnabled: Boolean = Defaults.Settings.SCROLL_MULTITOUCH_ENABLED
-) {
+    val scrollMultitouchEnabled: Boolean = Defaults.Settings.SCROLL_MULTITOUCH_ENABLED,
+    var horizontalCursorSensitivity: Float = Defaults.Settings.HORIZONTAL_CURSOR_SENSITIVITY,
+    var verticalCursorSensitivity: Float = Defaults.Settings.VERTICAL_CURSOR_SENSITIVITY,
+    ) {
     companion object {
         val DEFAULT = OverlaySettings()
         const val KEY_NONE = ApplicationConstants.OVERLAY_DISABLED

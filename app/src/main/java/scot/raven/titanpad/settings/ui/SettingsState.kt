@@ -92,6 +92,8 @@ class SettingsState(
                             scrollAreaLeftPercent = settings.scrollAreaLeftPercent,
                             scrollAreaRightPercent = settings.scrollAreaRightPercent,
                             scrollAreaBottomPercent = settings.scrollAreaBottomPercent,
+                            horizontalCursorSensitivity = settings.horizontalCursorSensitivity,
+                            verticalCursorSensitivity = settings.verticalCursorSensitivity
                         )
                     }
                 }
@@ -167,6 +169,8 @@ class SettingsState(
             scrollAreaLeftPercent = _uiState.value.scrollAreaLeftPercent,
             scrollAreaRightPercent = _uiState.value.scrollAreaRightPercent,
             scrollAreaBottomPercent = _uiState.value.scrollAreaBottomPercent,
+            verticalCursorSensitivity = _uiState.value.verticalCursorSensitivity,
+            horizontalCursorSensitivity = _uiState.value.horizontalCursorSensitivity,
         )
     }
 
@@ -259,5 +263,7 @@ data class SettingsUiState(
     val scrollAreaRightPercent: Float = Defaults.Settings.SCROLL_AREA_RIGHT_PERCENT,
     val scrollAreaLeftPercent: Float = Defaults.Settings.SCROLL_AREA_LEFT_PERCENT,
     val scrollAreaEnabled: Boolean = Defaults.Settings.SCROLL_AREA_ENABLED,
-    val scrollMultitouchEnabled: Boolean = Defaults.Settings.SCROLL_MULTITOUCH_ENABLED
+    val scrollMultitouchEnabled: Boolean = Defaults.Settings.SCROLL_MULTITOUCH_ENABLED,
+    val horizontalCursorSensitivity: Float = Defaults.Settings.HORIZONTAL_CURSOR_SENSITIVITY,
+    val verticalCursorSensitivity: Float = Defaults.Settings.VERTICAL_CURSOR_SENSITIVITY,
 )

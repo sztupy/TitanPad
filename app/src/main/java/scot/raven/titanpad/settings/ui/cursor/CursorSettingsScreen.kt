@@ -57,6 +57,7 @@ import java.io.File
 import java.io.FileOutputStream
 import java.util.Locale
 import java.util.UUID
+import kotlin.math.roundToInt
 
 /**
  * Standard cursor settings screen.
@@ -144,6 +145,34 @@ fun CursorSettingsScreen(
                         showToast = { message -> settingsState.showToast(message) },
                     )
                 }
+            }
+
+            PreferenceCategory(title = "Behavior") {
+                SliderPreferenceItem(
+                    title = "Horizontal Sensitivity",
+                    value = uiState.horizontalCursorSensitivity,
+                    valueRange = 0.1.toFloat()..5.0.toFloat(),
+                    valueText = "%.1f".format(uiState.horizontalCursorSensitivity),
+                    onValueChange = { value ->
+                        val rounded = (value * 10).roundToInt() / 10f
+                        settingsState.updatePreference(rounded) { settings, v ->
+                            settings.copy(horizontalCursorSensitivity = v)
+                        }
+                    }
+                )
+
+                SliderPreferenceItem(
+                    title = "Vertical Sensitivity",
+                    value = uiState.verticalCursorSensitivity,
+                    valueRange = 0.1f..5.0f,
+                    valueText = "%.1f".format(uiState.verticalCursorSensitivity),
+                    onValueChange = { value ->
+                        val rounded = (value * 10).roundToInt() / 10f
+                        settingsState.updatePreference(rounded) { settings, v ->
+                            settings.copy(verticalCursorSensitivity = v)
+                        }
+                    },
+                )
             }
 
             PreferenceCategory(title = "Adaptive") {

@@ -229,8 +229,11 @@ class TrackpadActionHandler(
     }
 
     private fun moveCursor(dx: Float, dy: Float) {
+        val settings = settingsFlow.value;
+        val scaledDx = dx * settings.horizontalCursorSensitivity
+        val scaledDy = dy * settings.verticalCursorSensitivity
         val newPos = cursorStateManager.applyMovement(
-            Offset(dx, dy)
+            Offset(scaledDx, scaledDy)
         )
         cursorStateManager.updatePosition(newPos)
 

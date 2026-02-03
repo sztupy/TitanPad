@@ -92,6 +92,8 @@ class SettingsRepositoryImpl(
         private val SCROLL_AREA_BOTTOM_PERCENT = floatPreferencesKey("scroll_area_bottom_percent")
         private val SCROLL_AREA_RIGHT_PERCENT = floatPreferencesKey("scroll_area_right_percent")
         private val SCROLL_AREA_LEFT_PERCENT = floatPreferencesKey("scroll_area_left_percent")
+        private val HORIZONTAL_CURSOR_SENSITIVITY = floatPreferencesKey("horizonal_cursor_sensitivity")
+        private val VERTICAL_CURSOR_SENSITIVITY = floatPreferencesKey("vertical_cursor_sensitivity")
     }
 
     private inline fun <reified T : Enum<T>> getEnumPreference(
@@ -242,6 +244,8 @@ class SettingsRepositoryImpl(
                     scrollAreaBottomPercent = preferences[SCROLL_AREA_BOTTOM_PERCENT] ?: OverlaySettings.DEFAULT.scrollAreaBottomPercent,
                     scrollAreaLeftPercent = preferences[SCROLL_AREA_LEFT_PERCENT] ?: OverlaySettings.DEFAULT.scrollAreaLeftPercent,
                     scrollAreaRightPercent = preferences[SCROLL_AREA_RIGHT_PERCENT] ?: OverlaySettings.DEFAULT.scrollAreaRightPercent,
+                    horizontalCursorSensitivity = preferences[HORIZONTAL_CURSOR_SENSITIVITY] ?: OverlaySettings.DEFAULT.horizontalCursorSensitivity,
+                    verticalCursorSensitivity = preferences[VERTICAL_CURSOR_SENSITIVITY] ?: OverlaySettings.DEFAULT.verticalCursorSensitivity,
                     )
 
                 settings
@@ -290,6 +294,8 @@ class SettingsRepositoryImpl(
                 preferences[SCROLL_AREA_BOTTOM_PERCENT] = settings.scrollAreaBottomPercent
                 preferences[SCROLL_AREA_LEFT_PERCENT] = settings.scrollAreaLeftPercent
                 preferences[SCROLL_AREA_RIGHT_PERCENT] = settings.scrollAreaRightPercent
+                preferences[HORIZONTAL_CURSOR_SENSITIVITY] = settings.horizontalCursorSensitivity
+                preferences[VERTICAL_CURSOR_SENSITIVITY] = settings.verticalCursorSensitivity
 
                 if (settings.cursorImagePath != null) {
                     preferences[CURSOR_IMAGE_PATH] = settings.cursorImagePath

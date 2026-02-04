@@ -36,7 +36,7 @@ class TrackpadActionHandler(
     private var geteventJob: Job? = null
     private var dragStartX = 0.0f
     private var dragStartY = 0.0f
-    private var startGesture = false
+    private var gesturePhase = GesturePhase.ENDED
     private var state = TouchState()
 
     fun start() {
@@ -186,7 +186,7 @@ class TrackpadActionHandler(
             line.contains("SYN_REPORT") -> {
                 if (state.isDown && !state.startPosSet) {
                     state.startPosSet = true
-                    startGesture = true
+                    gesturePhase = GesturePhase.PENDING
                 }
 
                 detectGesture()
@@ -208,7 +208,7 @@ class TrackpadActionHandler(
             val isScroll = inScrollArea || multitouchScroll
 
             if (gestureManager.getGestureReady() && isScroll) {
-                if (startGesture) {
+                if (gesturePhase == GesturePhase.PENDING) {
                     startGesture()
                 } else {
                     scroll(dx, dy)
@@ -219,17 +219,19 @@ class TrackpadActionHandler(
         }
 
         if (!state.isDown && !state.startPosSet) {
-            val durationMs = (state.endTime - state.startTime) / 1_000_000.0
-            if (durationMs < settingsFlow.value.clickDuration) {
-                click()
-            } else {
+            if (gesturePhase == GesturePhase.PENDING || gesturePhase == GesturePhase.ENDED) {
+                val durationMs = (state.endTime - state.startTime) / 1_000_000.0
+                if (durationMs < settingsFlow.value.clickDuration) {
+                    click()
+                }
+            } else if (gesturePhase == GesturePhase.ACTIVE || gesturePhase == GesturePhase.STARTED) {
                 endGesture()
             }
         }
     }
 
     private fun moveCursor(dx: Float, dy: Float) {
-        val settings = settingsFlow.value;
+        val settings = settingsFlow.value
         val scaledDx = dx * settings.horizontalCursorSensitivity
         val scaledDy = dy * settings.verticalCursorSensitivity
         val newPos = cursorStateManager.applyMovement(
@@ -242,7 +244,7 @@ class TrackpadActionHandler(
     }
 
     private fun startGesture() {
-        startGesture = false
+        gesturePhase = GesturePhase.STARTED
         val pos = cursorStateManager.cursorState.value?.position ?: return
         dragStartX = pos.x
         dragStartY = pos.y
@@ -252,6 +254,7 @@ class TrackpadActionHandler(
     }
 
     private fun scroll(dx: Float, dy: Float) {
+        gesturePhase = GesturePhase.ACTIVE
         val fromX = dragStartX
         val fromY = dragStartY
         val toX = fromX + dx * 2
@@ -266,6 +269,7 @@ class TrackpadActionHandler(
     }
 
     private fun click() {
+        gesturePhase = GesturePhase.ENDED
         val pos = cursorStateManager.cursorState.value?.position ?: return
         scope.launch {
             gestureManager.startTap(pos.x, pos.y)
@@ -274,6 +278,7 @@ class TrackpadActionHandler(
     }
 
     private fun endGesture() {
+        gesturePhase = GesturePhase.ENDED
         scope.launch {
             gestureManager.endTap(dragStartX, dragStartY)
         }
@@ -322,3 +327,10 @@ data class TouchState(
     var width: Int = 0,
     var height: Int = 0,
 )
+
+enum class GesturePhase {
+    PENDING,
+    STARTED,
+    ACTIVE,
+    ENDED
+}

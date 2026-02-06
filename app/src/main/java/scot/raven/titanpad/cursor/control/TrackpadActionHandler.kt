@@ -216,6 +216,7 @@ class TrackpadActionHandler(
             touchState.startY = touchState.currentY
             val inScrollArea = inScrollArea()
             val multitouchScroll = settings.scrollMultitouchEnabled && numFingers > 1
+            forceScroll = forceScroll && settings.activateScrollByDoubleTap
             val isScroll = inScrollArea || multitouchScroll || forceScroll
 
             if (isScroll) {
@@ -234,7 +235,7 @@ class TrackpadActionHandler(
             val isClick = durationMs < settings.clickDuration
 
             if (isClick) {
-                if (isSecondTap()) {
+                if (firstTapPending()) {
                     doubleTap()
                 } else if (settings.activateScrollByDoubleTap) {
                     // delay only when there is need for it
@@ -253,14 +254,14 @@ class TrackpadActionHandler(
         }
     }
 
-    private fun isSecondTap(): Boolean {
+    private fun firstTapPending(): Boolean {
         return clickJob != null
     }
 
     private fun doubleTap() {
         clickJob?.cancel()
         clickJob = null
-        forceScroll = !forceScroll && settingsFlow.value.activateScrollByDoubleTap
+        forceScroll = !forceScroll
     }
 
     private fun moveCursor(dx: Float, dy: Float) {

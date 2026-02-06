@@ -53,6 +53,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import scot.raven.titanpad.core.constants.GestureConstants
 import java.io.File
 import java.io.FileOutputStream
 import java.util.Locale
@@ -147,16 +148,16 @@ fun CursorSettingsScreen(
                 }
             }
 
-            PreferenceCategory(title = "Behavior") {
+            PreferenceCategory(title = "Sensitivity") {
                 SliderPreferenceItem(
-                    title = "Click Sensitivity",
+                    title = "Click Duration",
                     value = clickDurationMsToSensitivity(uiState.clickDuration),
-                    valueRange = 0.1f..5.0f,
+                    valueRange = 0.1f..GestureConstants.MAX_SENSITIVITY,
                     valueText = "%.1f".format(
                         clickDurationMsToSensitivity(uiState.clickDuration)
                     ),
                     onValueChange = { value ->
-                        val rounded = (value * 10).roundToInt() / 10f
+                        val rounded = roundToTenth(value)
                         settingsState.updatePreference(rounded) { settings, v ->
                             settings.copy(
                                 clickDuration = clickSensitivityToDurationMs(v)
@@ -166,12 +167,29 @@ fun CursorSettingsScreen(
                 )
 
                 SliderPreferenceItem(
-                    title = "Horizontal Movement Sensitivity",
+                    title = "Multi-touch Threshold",
+                    value = multitouchWidthToSensitivity(uiState.touchWidthThreshold),
+                    valueRange = 0.1f..GestureConstants.MAX_SENSITIVITY,
+                    valueText = "%.1f".format(
+                        multitouchWidthToSensitivity(uiState.touchWidthThreshold)
+                    ),
+                    onValueChange = { value ->
+                        val rounded = roundToTenth(value)
+                        settingsState.updatePreference(rounded) { settings, v ->
+                            settings.copy(
+                                touchWidthThreshold = multitouchSensitivityToWidth(v)
+                            )
+                        }
+                    }
+                )
+
+                SliderPreferenceItem(
+                    title = "Horizontal Cursor Speed",
                     value = uiState.horizontalCursorSensitivity,
-                    valueRange = 0.1.toFloat()..5.0.toFloat(),
+                    valueRange = 0.1f..GestureConstants.MAX_SENSITIVITY,
                     valueText = "%.1f".format(uiState.horizontalCursorSensitivity),
                     onValueChange = { value ->
-                        val rounded = (value * 10).roundToInt() / 10f
+                        val rounded = roundToTenth(value)
                         settingsState.updatePreference(rounded) { settings, v ->
                             settings.copy(horizontalCursorSensitivity = v)
                         }
@@ -179,12 +197,12 @@ fun CursorSettingsScreen(
                 )
 
                 SliderPreferenceItem(
-                    title = "Vertical Movement Sensitivity",
+                    title = "Vertical Cursor Speed",
                     value = uiState.verticalCursorSensitivity,
-                    valueRange = 0.1f..5.0f,
+                    valueRange = 0.1f..GestureConstants.MAX_SENSITIVITY,
                     valueText = "%.1f".format(uiState.verticalCursorSensitivity),
                     onValueChange = { value ->
-                        val rounded = (value * 10).roundToInt() / 10f
+                        val rounded = roundToTenth(value)
                         settingsState.updatePreference(rounded) { settings, v ->
                             settings.copy(verticalCursorSensitivity = v)
                         }
@@ -469,12 +487,20 @@ class UnifiedImagePickerLauncher(
     }
 }
 
-private const val BASE_CLICK_DURATION_MS = 100f
+private fun roundToTenth(value: Float): Float = (value * 10).roundToInt() / 10f
 
 private fun clickSensitivityToDurationMs(sens: Float): Long {
-    return (BASE_CLICK_DURATION_MS * sens).toLong()
+    return (GestureConstants.BASE_CLICK_DURATION_MS * sens).toLong()
 }
 
 private fun clickDurationMsToSensitivity(ms: Long): Float {
-    return ms / BASE_CLICK_DURATION_MS
+    return ms / GestureConstants.BASE_CLICK_DURATION_MS
+}
+
+private fun multitouchSensitivityToWidth(sens: Float): Int {
+    return (GestureConstants.BASE_MULTITOUCH_WIDTH / sens).toInt()
+}
+
+private fun multitouchWidthToSensitivity(width: Int): Float {
+    return GestureConstants.BASE_MULTITOUCH_WIDTH.toFloat() / width.toFloat()
 }

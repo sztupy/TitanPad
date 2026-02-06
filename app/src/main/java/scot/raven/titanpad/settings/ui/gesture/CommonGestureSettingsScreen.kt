@@ -79,23 +79,6 @@ fun CommonGestureSettingsScreen(
                         }
                     },
                 )
-
-                SliderPreferenceItem(
-                    title = "Multi-touch Sensitivity",
-                    value = multitouchWidthToSensitivity(uiState.touchWidthThreshold),
-                    valueRange = 0.1f..5.0f,
-                    valueText = "%.1f".format(
-                        multitouchWidthToSensitivity(uiState.touchWidthThreshold)
-                    ),
-                    onValueChange = { value ->
-                        val rounded = (value * 10).roundToInt() / 10f
-                        settingsState.updatePreference(rounded) { settings, v ->
-                            settings.copy(
-                                touchWidthThreshold = multitouchSensitivityToWidth(v)
-                            )
-                        }
-                    }
-                )
             }
 
             PreferenceCategory(title = "Visualization") {
@@ -126,14 +109,4 @@ fun CommonGestureSettingsScreen(
             }
         }
     }
-}
-
-private const val BASE_MULTITOUCH_WIDTH = 10
-
-private fun multitouchSensitivityToWidth(sens: Float): Int {
-    return (BASE_MULTITOUCH_WIDTH / sens).toInt()
-}
-
-private fun multitouchWidthToSensitivity(width: Int): Float {
-    return BASE_MULTITOUCH_WIDTH.toFloat() / width.toFloat()
 }

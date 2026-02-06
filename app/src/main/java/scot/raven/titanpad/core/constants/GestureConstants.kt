@@ -59,6 +59,7 @@ object GestureConstants {
         return ((duration / FRAME_DURATION_MS).toInt()).coerceAtLeast(1)
     }
 
-    const val MIN_TOUCH_SIZE = 1
-    const val MAX_TOUCH_SIZE = 15
+    const val MAX_SENSITIVITY = 4.0f
+    const val BASE_CLICK_DURATION_MS = 100f
+    const val BASE_MULTITOUCH_WIDTH = 10
 }

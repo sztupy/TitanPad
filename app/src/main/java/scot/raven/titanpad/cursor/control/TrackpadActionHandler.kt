@@ -25,11 +25,7 @@ class TrackpadActionHandler(
     private val cursorStateManager: CursorStateManager,
     private val gestureManager: GestureManager,
     private val scope: CoroutineScope,
-    private val swipeUpThreshold: Int = DEFAULT_SWIPE_UP_THRESHOLD,
     private val logTag: String = DEFAULT_LOG_TAG,
-    private val shizukuPing: () -> Boolean = {
-        Shizuku.pingBinder() && Shizuku.checkSelfPermission() == PackageManager.PERMISSION_GRANTED
-    },
     private val settingsFlow: StateFlow<OverlaySettings>
     ) {
 
@@ -38,8 +34,8 @@ class TrackpadActionHandler(
     private var dragStartX = 0.0f
     private var dragStartY = 0.0f
     private var gesturePhase = GesturePhase.ENDED
-    private var state = TouchState()
-    private var scrollingMode  = false
+    private var touchState = TouchState()
+    private var forceScroll  = false
 
     fun start() {
         // Guard: if already running, do nothing
@@ -49,7 +45,7 @@ class TrackpadActionHandler(
         }
 
         val enabled = isEnabled()
-        Log.d(DEBUG_TAG, "start() called - isEnabled=$enabled, swipeUpThreshold=$swipeUpThreshold")
+        Log.d(DEBUG_TAG, "start() called - isEnabled=$enabled")
 
         if (!enabled) {
             Log.d(DEBUG_TAG, "start() ABORTED: gestures disabled in settings")
@@ -57,21 +53,16 @@ class TrackpadActionHandler(
             return
         }
 
-        val shizukuRunning = try { Shizuku.pingBinder() } catch (e: Exception) { false }
+        val shizukuRunning = try { Shizuku.pingBinder() } catch (_: Exception) { false }
         val shizukuAuthorized = try {
             Shizuku.checkSelfPermission() == PackageManager.PERMISSION_GRANTED
-        } catch (e: Exception) { false }
+        } catch (_: Exception) { false }
         val shizukuAvailable = shizukuRunning && shizukuAuthorized
         Log.d(DEBUG_TAG, "start() Shizuku status: running=$shizukuRunning, authorized=$shizukuAuthorized, available=$shizukuAvailable")
 
         if (!shizukuAvailable) {
-            val reason = when {
-                !shizukuRunning -> "Shizuku not running"
-                !shizukuAuthorized -> "App not authorized in Shizuku"
-                else -> "Unknown"
-            }
-            Log.d(DEBUG_TAG, "start() ABORTED: $reason")
-            Log.w(logTag, "Shizuku not available ($reason), trackpad gesture detection disabled")
+            Log.d(DEBUG_TAG, "start() ABORTED")
+            Log.w(logTag, "Shizuku not available, trackpad gesture detection disabled")
             return
         }
 
@@ -124,10 +115,10 @@ class TrackpadActionHandler(
                 BufferedReader(InputStreamReader(process.inputStream)).use { reader ->
                     while (isActive) {
                         val line = reader.readLine() ?: break
-                        state.device = when (eventDevice) {
+                        touchState.device = when (eventDevice) {
                             TOUCHPAD_EVENT_DEVICE -> EventDevice.TOUCHPAD
                             SUB_TOUCH_EVENT_DEVICE -> EventDevice.SUB_TOUCH
-                            else -> state.device
+                            else -> touchState.device
                         }
                         parseTrackpadEvent(line)
                     }
@@ -141,7 +132,7 @@ class TrackpadActionHandler(
     }
 
     private fun parseTrackpadEvent(line: String) {
-        if (state.device == EventDevice.SUB_TOUCH && !settingsFlow.value.subTouchEnabled) {
+        if (touchState.device == EventDevice.SUB_TOUCH && !settingsFlow.value.subTouchEnabled) {
             return
         }
 
@@ -151,28 +142,28 @@ class TrackpadActionHandler(
         when {
 
             line.contains("BTN_TOUCH") && line.contains("DOWN") -> {
-                state.isDown = true
-                state.startPosSet = false
-                state.startTime = System.nanoTime()
+                touchState.isDown = true
+                touchState.startPosSet = false
+                touchState.startTime = System.nanoTime()
             }
 
             line.contains("BTN_TOUCH") && line.contains("UP") -> {
-                if (state.isDown) {
-                    state.endTime = System.nanoTime()
+                if (touchState.isDown) {
+                    touchState.endTime = System.nanoTime()
                 }
-                state.startPosSet = false
-                state.isDown = false
-                state.device = EventDevice.NONE
+                touchState.startPosSet = false
+                touchState.isDown = false
+                touchState.device = EventDevice.NONE
             }
 
             line.contains("ABS_MT_POSITION_X") -> {
                 val value = parseValue()
 
                 if (value != null) {
-                    if (state.isDown && !state.startPosSet) {
-                        state.startX = value
+                    if (touchState.isDown && !touchState.startPosSet) {
+                        touchState.startX = value
                     }
-                    state.currentX = value
+                    touchState.currentX = value
                 }
             }
 
@@ -180,10 +171,10 @@ class TrackpadActionHandler(
                 val value = parseValue()
 
                 if (value != null) {
-                    if (state.isDown && !state.startPosSet) {
-                        state.startY = value
+                    if (touchState.isDown && !touchState.startPosSet) {
+                        touchState.startY = value
                     }
-                    state.currentY = value
+                    touchState.currentY = value
                 }
             }
 
@@ -191,7 +182,7 @@ class TrackpadActionHandler(
                 val value = parseValue()
 
                 if (value != null) {
-                    state.width = value
+                    touchState.width = value
                 }
             }
 
@@ -199,13 +190,13 @@ class TrackpadActionHandler(
                 val value = parseValue()
 
                 if (value != null) {
-                    state.height = value
+                    touchState.height = value
                 }
             }
 
             line.contains("SYN_REPORT") -> {
-                if (state.isDown && !state.startPosSet) {
-                    state.startPosSet = true
+                if (touchState.isDown && !touchState.startPosSet) {
+                    touchState.startPosSet = true
                     gesturePhase = GesturePhase.PENDING
                 }
 
@@ -216,46 +207,44 @@ class TrackpadActionHandler(
 
     private fun detectGesture() {
         val settings = settingsFlow.value
-        val numFingers = if (state.width <= settings.touchWidthThreshold) 1 else 2
+        val numFingers = if (touchState.width <= settings.touchWidthThreshold) 1 else 2
 
-        if (state.isDown && state.startPosSet) {
-            val dx = (state.currentX - state.startX).toFloat()
-            val dy = (state.currentY - state.startY).toFloat()
-            state.startX = state.currentX
-            state.startY = state.currentY
+        if (touchState.isDown && touchState.startPosSet && gestureManager.getGestureReady()) {
+            val dx = (touchState.currentX - touchState.startX).toFloat()
+            val dy = (touchState.currentY - touchState.startY).toFloat()
+            touchState.startX = touchState.currentX
+            touchState.startY = touchState.currentY
             val inScrollArea = inScrollArea()
             val multitouchScroll = settings.scrollMultitouchEnabled && numFingers > 1
-            val isScroll = inScrollArea || multitouchScroll || scrollingMode
+            val isScroll = inScrollArea || multitouchScroll || forceScroll
 
-            if (gestureManager.getGestureReady() && isScroll) {
+            if (isScroll) {
                 if (gesturePhase == GesturePhase.PENDING) {
                     startGesture()
                 } else {
                     scroll(dx, dy)
                 }
-            } else if (!isScroll) {
+            } else {
                 moveCursor(dx, dy)
             }
         }
 
-        if (!state.isDown && !state.startPosSet) {
-            val durationMs = (state.endTime - state.startTime) / 1_000_000.0
+        if (!touchState.isDown && !touchState.startPosSet) {
+            val durationMs = (touchState.endTime - touchState.startTime) / 1_000_000.0
             val isClick = durationMs < settings.clickDuration
 
             if (isClick) {
                 if (isSecondTap()) {
                     doubleTap()
-                } else {
-                    if (settings.activateScrollByDoubleTap) {
-                        // delay only when there is need for it
-                        clickJob = scope.launch {
-                            delay(250)
-                            clickJob = null
-                            click()
-                        }
-                    } else {
+                } else if (settings.activateScrollByDoubleTap) {
+                    // delay only when there is need for it
+                    clickJob = scope.launch {
+                        delay(250)
+                        clickJob = null
                         click()
                     }
+                } else {
+                    click()
                 }
             }
             else if (gesturePhase == GesturePhase.ACTIVE || gesturePhase == GesturePhase.STARTED) {
@@ -271,7 +260,7 @@ class TrackpadActionHandler(
     private fun doubleTap() {
         clickJob?.cancel()
         clickJob = null
-        scrollingMode = !scrollingMode && settingsFlow.value.activateScrollByDoubleTap
+        forceScroll = !forceScroll && settingsFlow.value.activateScrollByDoubleTap
     }
 
     private fun moveCursor(dx: Float, dy: Float) {
@@ -283,8 +272,8 @@ class TrackpadActionHandler(
         )
         cursorStateManager.updatePosition(newPos)
 
-        state.startX = state.currentX
-        state.startY = state.currentY
+        touchState.startX = touchState.currentX
+        touchState.startY = touchState.currentY
     }
 
     private fun startGesture() {
@@ -335,29 +324,27 @@ class TrackpadActionHandler(
             return false
         }
 
-        if (state.device == EventDevice.SUB_TOUCH) {
+        if (touchState.device == EventDevice.SUB_TOUCH) {
             return false
         }
 
-        val left = DEFAULT_TRACKPAD_MAX_X * (settings.scrollAreaLeftPercent / 100.0)
-        val right = DEFAULT_TRACKPAD_MAX_X - DEFAULT_TRACKPAD_MAX_X * (settings.scrollAreaRightPercent / 100.0)
-        val top = DEFAULT_TRACKPAD_MAX_Y * (settings.scrollAreaTopPercent / 100.0)
-        val bottom = DEFAULT_TRACKPAD_MAX_Y - DEFAULT_TRACKPAD_MAX_Y * (settings.scrollAreaBottomPercent / 100.0)
+        val left = TOUCHPAD_MAX_X * (settings.scrollAreaLeftPercent / 100.0)
+        val right = TOUCHPAD_MAX_X - TOUCHPAD_MAX_X * (settings.scrollAreaRightPercent / 100.0)
+        val top = TOUCHPAD_MAX_Y * (settings.scrollAreaTopPercent / 100.0)
+        val bottom = TOUCHPAD_MAX_Y - TOUCHPAD_MAX_Y * (settings.scrollAreaBottomPercent / 100.0)
 
-        return state.currentX <= left ||
-                state.currentX >= right ||
-                state.currentY <= top ||
-                state.currentY >= bottom
+        return touchState.currentX <= left ||
+                touchState.currentX >= right ||
+                touchState.currentY <= top ||
+                touchState.currentY >= bottom
     }
 
     companion object {
-        const val DEFAULT_TRACKPAD_MAX_X = 1440
-        const val DEFAULT_TRACKPAD_MAX_Y = 720
-        const val DEFAULT_SWIPE_UP_THRESHOLD = 300
-        const val DEFAULT_MIN_VELOCITY_THRESHOLD = 2.0  // pixels per millisecond (e.g., 1.0 px/ms = 1000 px/s)
+        const val TOUCHPAD_MAX_X = 1440
+        const val TOUCHPAD_MAX_Y = 720
         const val TOUCHPAD_EVENT_DEVICE = "/dev/input/event7"
         const val SUB_TOUCH_EVENT_DEVICE = "/dev/input/event5"
-        const val DEFAULT_LOG_TAG = "PastieraIME"
+        const val DEFAULT_LOG_TAG = "Trackpad"
         private const val DEBUG_TAG = "TrackpadDebug"
     }
 }

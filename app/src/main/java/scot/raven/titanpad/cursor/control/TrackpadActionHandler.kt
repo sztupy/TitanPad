@@ -25,7 +25,6 @@ class TrackpadActionHandler(
     private val cursorStateManager: CursorStateManager,
     private val gestureManager: GestureManager,
     private val scope: CoroutineScope,
-    private val eventDevice: String = DEFAULT_EVENT_DEVICE,
     private val swipeUpThreshold: Int = DEFAULT_SWIPE_UP_THRESHOLD,
     private val logTag: String = DEFAULT_LOG_TAG,
     private val shizukuPing: () -> Boolean = {
@@ -34,7 +33,7 @@ class TrackpadActionHandler(
     private val settingsFlow: StateFlow<OverlaySettings>
     ) {
 
-    private var geteventJob: Job? = null
+    private var geteventJobs = mutableListOf<Job>()
     private var clickJob: Job? = null
     private var dragStartX = 0.0f
     private var dragStartY = 0.0f
@@ -50,7 +49,7 @@ class TrackpadActionHandler(
         }
 
         val enabled = isEnabled()
-        Log.d(DEBUG_TAG, "start() called - isEnabled=$enabled, swipeUpThreshold=$swipeUpThreshold, eventDevice=$eventDevice")
+        Log.d(DEBUG_TAG, "start() called - isEnabled=$enabled, swipeUpThreshold=$swipeUpThreshold")
 
         if (!enabled) {
             Log.d(DEBUG_TAG, "start() ABORTED: gestures disabled in settings")
@@ -76,9 +75,33 @@ class TrackpadActionHandler(
             return
         }
 
-        geteventJob?.cancel()
-        Log.d(DEBUG_TAG, "start() launching getevent coroutine...")
-        geteventJob = scope.launch(Dispatchers.IO) {
+        geteventJobs.forEach { it.cancel() }
+        geteventJobs.clear()
+
+        Log.d(DEBUG_TAG, "start() launching getevent coroutines...")
+        geteventJobs += launchGeteventJob(TOUCHPAD_EVENT_DEVICE)
+        geteventJobs += launchGeteventJob(SUB_TOUCH_EVENT_DEVICE)
+
+        Log.d(DEBUG_TAG, "start() completed - getevent jobs launched")
+        Log.d(logTag, "Trackpad gesture detection started")
+    }
+
+    fun stop() {
+        Log.d(DEBUG_TAG, "stop() called - had active jobs: ${geteventJobs.size}")
+        geteventJobs.forEach { it.cancel() }
+        geteventJobs.clear()
+        Log.d(logTag, "Trackpad gesture detection stopped")
+    }
+
+    /**
+     * Returns true if the detector is currently running (has an active getevent job).
+     */
+    fun isRunning(): Boolean {
+        return geteventJobs.any { it.isActive }
+    }
+
+    private fun launchGeteventJob(eventDevice: String): Job {
+        return scope.launch(Dispatchers.IO) {
             try {
                 Log.d(DEBUG_TAG, "getevent coroutine started, getting Shizuku.newProcess method...")
                 val newProcessMethod = Shizuku::class.java.getDeclaredMethod(
@@ -101,34 +124,27 @@ class TrackpadActionHandler(
                 BufferedReader(InputStreamReader(process.inputStream)).use { reader ->
                     while (isActive) {
                         val line = reader.readLine() ?: break
+                        state.device = when (eventDevice) {
+                            TOUCHPAD_EVENT_DEVICE -> EventDevice.TOUCHPAD
+                            SUB_TOUCH_EVENT_DEVICE -> EventDevice.SUB_TOUCH
+                            else -> state.device
+                        }
                         parseTrackpadEvent(line)
                     }
                 }
-                Log.d(DEBUG_TAG, "getevent reader loop ended")
+                Log.d(DEBUG_TAG, "getevent -l $eventDevice reader loop ended")
             } catch (e: Exception) {
                 Log.e(DEBUG_TAG, "getevent coroutine FAILED: ${e.message}", e)
-                Log.e(logTag, "Trackpad getevent failed", e)
+                Log.e(logTag, "getevent -l $eventDevice failed", e)
             }
         }
-        Log.d(DEBUG_TAG, "start() completed - getevent job launched")
-        Log.d(logTag, "Trackpad gesture detection started")
-    }
-
-    fun stop() {
-        Log.d(DEBUG_TAG, "stop() called - had active job: ${geteventJob != null}")
-        geteventJob?.cancel()
-        geteventJob = null
-        Log.d(logTag, "Trackpad gesture detection stopped")
-    }
-
-    /**
-     * Returns true if the detector is currently running (has an active getevent job).
-     */
-    fun isRunning(): Boolean {
-        return geteventJob != null && geteventJob?.isActive == true
     }
 
     private fun parseTrackpadEvent(line: String) {
+        if (state.device == EventDevice.SUB_TOUCH && !settingsFlow.value.subTouchEnabled) {
+            return
+        }
+
         fun parseValue(): Int? =
             line.trim().split(Regex("\\s+")).lastOrNull()?.toIntOrNull(16)
 
@@ -146,6 +162,7 @@ class TrackpadActionHandler(
                 }
                 state.startPosSet = false
                 state.isDown = false
+                state.device = EventDevice.NONE
             }
 
             line.contains("ABS_MT_POSITION_X") -> {
@@ -318,6 +335,10 @@ class TrackpadActionHandler(
             return false
         }
 
+        if (state.device == EventDevice.SUB_TOUCH) {
+            return false
+        }
+
         val left = DEFAULT_TRACKPAD_MAX_X * (settings.scrollAreaLeftPercent / 100.0)
         val right = DEFAULT_TRACKPAD_MAX_X - DEFAULT_TRACKPAD_MAX_X * (settings.scrollAreaRightPercent / 100.0)
         val top = DEFAULT_TRACKPAD_MAX_Y * (settings.scrollAreaTopPercent / 100.0)
@@ -334,13 +355,15 @@ class TrackpadActionHandler(
         const val DEFAULT_TRACKPAD_MAX_Y = 720
         const val DEFAULT_SWIPE_UP_THRESHOLD = 300
         const val DEFAULT_MIN_VELOCITY_THRESHOLD = 2.0  // pixels per millisecond (e.g., 1.0 px/ms = 1000 px/s)
-        const val DEFAULT_EVENT_DEVICE = "/dev/input/event7"
+        const val TOUCHPAD_EVENT_DEVICE = "/dev/input/event7"
+        const val SUB_TOUCH_EVENT_DEVICE = "/dev/input/event5"
         const val DEFAULT_LOG_TAG = "PastieraIME"
         private const val DEBUG_TAG = "TrackpadDebug"
     }
 }
 
 data class TouchState(
+    var device: EventDevice = EventDevice.NONE,
     var isDown: Boolean = false,
     var startPosSet: Boolean = false,
     var startTime: Long = 0L,
@@ -360,4 +383,10 @@ enum class GesturePhase {
     STARTED,
     ACTIVE,
     ENDED
+}
+
+enum class EventDevice {
+    NONE,
+    TOUCHPAD,
+    SUB_TOUCH,
 }

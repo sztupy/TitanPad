@@ -60,5 +60,6 @@ object Defaults {
         const val HORIZONTAL_CURSOR_SENSITIVITY = 1.0F
         const val VERTICAL_CURSOR_SENSITIVITY = 1.0F
         const val ACTIVATE_SCROLL_BY_DOUBLE_TAP = false
+        const val SUB_TOUCH_ENABLED = false
     }
 }

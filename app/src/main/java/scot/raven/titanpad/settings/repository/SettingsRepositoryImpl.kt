@@ -95,6 +95,7 @@ class SettingsRepositoryImpl(
         private val HORIZONTAL_CURSOR_SENSITIVITY = floatPreferencesKey("horizonal_cursor_sensitivity")
         private val VERTICAL_CURSOR_SENSITIVITY = floatPreferencesKey("vertical_cursor_sensitivity")
         private val ACTIVATE_SCROLL_BY_DOUBLE_TAP = booleanPreferencesKey("activate_scroll_by_double_tap")
+        private val SUB_TOUCH_ENABLED = booleanPreferencesKey("sub_touch_enabled")
     }
 
     private inline fun <reified T : Enum<T>> getEnumPreference(
@@ -239,16 +240,26 @@ class SettingsRepositoryImpl(
                     disableTouchscreen = preferences[DISABLE_TOUCHSCREEN] ?: OverlaySettings.DEFAULT.disableTouchscreen,
                     touchWidthThreshold = preferences[TOUCH_WIDTH_THRESHOLD] ?: OverlaySettings.DEFAULT.touchWidthThreshold,
                     clickDuration = preferences[CLICK_DURATION] ?: OverlaySettings.DEFAULT.clickDuration,
-                    scrollAreaEnabled = preferences[SCROLL_AREA_ENABLED] ?: OverlaySettings.DEFAULT.scrollAreaEnabled,
-                    scrollMultitouchEnabled = preferences[SCROLL_MULTITOUCH_ENABLED] ?: OverlaySettings.DEFAULT.scrollMultitouchEnabled,
-                    scrollAreaTopPercent = preferences[SCROLL_AREA_TOP_PERCENT] ?: OverlaySettings.DEFAULT.scrollAreaTopPercent,
-                    scrollAreaBottomPercent = preferences[SCROLL_AREA_BOTTOM_PERCENT] ?: OverlaySettings.DEFAULT.scrollAreaBottomPercent,
-                    scrollAreaLeftPercent = preferences[SCROLL_AREA_LEFT_PERCENT] ?: OverlaySettings.DEFAULT.scrollAreaLeftPercent,
-                    scrollAreaRightPercent = preferences[SCROLL_AREA_RIGHT_PERCENT] ?: OverlaySettings.DEFAULT.scrollAreaRightPercent,
-                    horizontalCursorSensitivity = preferences[HORIZONTAL_CURSOR_SENSITIVITY] ?: OverlaySettings.DEFAULT.horizontalCursorSensitivity,
-                    verticalCursorSensitivity = preferences[VERTICAL_CURSOR_SENSITIVITY] ?: OverlaySettings.DEFAULT.verticalCursorSensitivity,
-                    activateScrollByDoubleTap = preferences[ACTIVATE_SCROLL_BY_DOUBLE_TAP] ?: OverlaySettings.DEFAULT.activateScrollByDoubleTap
-                    )
+                    scrollAreaEnabled = preferences[SCROLL_AREA_ENABLED]
+                        ?: OverlaySettings.DEFAULT.scrollAreaEnabled,
+                    scrollMultitouchEnabled = preferences[SCROLL_MULTITOUCH_ENABLED]
+                        ?: OverlaySettings.DEFAULT.scrollMultitouchEnabled,
+                    scrollAreaTopPercent = preferences[SCROLL_AREA_TOP_PERCENT]
+                        ?: OverlaySettings.DEFAULT.scrollAreaTopPercent,
+                    scrollAreaBottomPercent = preferences[SCROLL_AREA_BOTTOM_PERCENT]
+                        ?: OverlaySettings.DEFAULT.scrollAreaBottomPercent,
+                    scrollAreaLeftPercent = preferences[SCROLL_AREA_LEFT_PERCENT]
+                        ?: OverlaySettings.DEFAULT.scrollAreaLeftPercent,
+                    scrollAreaRightPercent = preferences[SCROLL_AREA_RIGHT_PERCENT]
+                        ?: OverlaySettings.DEFAULT.scrollAreaRightPercent,
+                    horizontalCursorSensitivity = preferences[HORIZONTAL_CURSOR_SENSITIVITY]
+                        ?: OverlaySettings.DEFAULT.horizontalCursorSensitivity,
+                    verticalCursorSensitivity = preferences[VERTICAL_CURSOR_SENSITIVITY]
+                        ?: OverlaySettings.DEFAULT.verticalCursorSensitivity,
+                    activateScrollByDoubleTap = preferences[ACTIVATE_SCROLL_BY_DOUBLE_TAP]
+                        ?: OverlaySettings.DEFAULT.activateScrollByDoubleTap,
+                    subTouchEnabled = preferences[SUB_TOUCH_ENABLED] ?: OverlaySettings.DEFAULT.subTouchEnabled,
+                )
 
                 settings
             }
@@ -299,6 +310,7 @@ class SettingsRepositoryImpl(
                 preferences[HORIZONTAL_CURSOR_SENSITIVITY] = settings.horizontalCursorSensitivity
                 preferences[VERTICAL_CURSOR_SENSITIVITY] = settings.verticalCursorSensitivity
                 preferences[ACTIVATE_SCROLL_BY_DOUBLE_TAP] = settings.activateScrollByDoubleTap
+                preferences[SUB_TOUCH_ENABLED] = settings.subTouchEnabled
 
                 if (settings.cursorImagePath != null) {
                     preferences[CURSOR_IMAGE_PATH] = settings.cursorImagePath

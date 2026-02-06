@@ -146,6 +146,17 @@ fun CursorSettingsScreen(
                         showToast = { message -> settingsState.showToast(message) },
                     )
                 }
+
+                SwitchPreferenceItem(
+                    title = "Sub-screen Control",
+                    subtitle = "Use the sub-screen to control the cursor",
+                    checked = uiState.subTouchEnabled,
+                    onCheckedChange = { value ->
+                        settingsState.updatePreference(value) { settings, v ->
+                            settings.copy(subTouchEnabled = v)
+                        }
+                    },
+                )
             }
 
             PreferenceCategory(title = "Sensitivity") {

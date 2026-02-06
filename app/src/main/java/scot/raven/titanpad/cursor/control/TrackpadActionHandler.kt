@@ -8,6 +8,7 @@ import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import android.content.pm.PackageManager
 import androidx.compose.ui.geometry.Offset
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.StateFlow
 import scot.raven.titanpad.gesture.api.GestureManager
 import rikka.shizuku.Shizuku
@@ -34,10 +35,12 @@ class TrackpadActionHandler(
     ) {
 
     private var geteventJob: Job? = null
+    private var clickJob: Job? = null
     private var dragStartX = 0.0f
     private var dragStartY = 0.0f
     private var gesturePhase = GesturePhase.ENDED
     private var state = TouchState()
+    private var scrollingMode  = false
 
     fun start() {
         // Guard: if already running, do nothing
@@ -205,7 +208,7 @@ class TrackpadActionHandler(
             state.startY = state.currentY
             val inScrollArea = inScrollArea()
             val multitouchScroll = settings.scrollMultitouchEnabled && numFingers > 1
-            val isScroll = inScrollArea || multitouchScroll
+            val isScroll = inScrollArea || multitouchScroll || scrollingMode
 
             if (gestureManager.getGestureReady() && isScroll) {
                 if (gesturePhase == GesturePhase.PENDING) {
@@ -219,15 +222,39 @@ class TrackpadActionHandler(
         }
 
         if (!state.isDown && !state.startPosSet) {
-            if (gesturePhase == GesturePhase.PENDING || gesturePhase == GesturePhase.ENDED) {
-                val durationMs = (state.endTime - state.startTime) / 1_000_000.0
-                if (durationMs < settingsFlow.value.clickDuration) {
-                    click()
+            val durationMs = (state.endTime - state.startTime) / 1_000_000.0
+            val isClick = durationMs < settings.clickDuration
+
+            if (isClick) {
+                if (isSecondTap()) {
+                    doubleTap()
+                } else {
+                    if (settings.activateScrollByDoubleTap) {
+                        // delay only when there is need for it
+                        clickJob = scope.launch {
+                            delay(250)
+                            clickJob = null
+                            click()
+                        }
+                    } else {
+                        click()
+                    }
                 }
-            } else if (gesturePhase == GesturePhase.ACTIVE || gesturePhase == GesturePhase.STARTED) {
+            }
+            else if (gesturePhase == GesturePhase.ACTIVE || gesturePhase == GesturePhase.STARTED) {
                 endGesture()
             }
         }
+    }
+
+    private fun isSecondTap(): Boolean {
+        return clickJob != null
+    }
+
+    private fun doubleTap() {
+        clickJob?.cancel()
+        clickJob = null
+        scrollingMode = !scrollingMode && settingsFlow.value.activateScrollByDoubleTap
     }
 
     private fun moveCursor(dx: Float, dy: Float) {

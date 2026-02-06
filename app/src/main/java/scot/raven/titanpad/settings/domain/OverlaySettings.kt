@@ -54,6 +54,7 @@ data class OverlaySettings(
     val scrollMultitouchEnabled: Boolean = Defaults.Settings.SCROLL_MULTITOUCH_ENABLED,
     var horizontalCursorSensitivity: Float = Defaults.Settings.HORIZONTAL_CURSOR_SENSITIVITY,
     var verticalCursorSensitivity: Float = Defaults.Settings.VERTICAL_CURSOR_SENSITIVITY,
+    var activateScrollByDoubleTap: Boolean = Defaults.Settings.ACTIVATE_SCROLL_BY_DOUBLE_TAP
     ) {
     companion object {
         val DEFAULT = OverlaySettings()

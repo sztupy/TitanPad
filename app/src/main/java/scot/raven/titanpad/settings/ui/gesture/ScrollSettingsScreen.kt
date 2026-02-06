@@ -78,6 +78,17 @@ fun ScrollSettingsScreen(
                 )
 
                 SwitchPreferenceItem(
+                    title = "Double-tap Scrolling",
+                    subtitle = "Activate scrolling by double-tapping",
+                    checked = uiState.activateScrollByDoubleTap,
+                    onCheckedChange = { value ->
+                        settingsState.updatePreference(value) { settings, v ->
+                            settings.copy(activateScrollByDoubleTap = v)
+                        }
+                    },
+                )
+
+                SwitchPreferenceItem(
                     title = "Scroll Area",
                     subtitle = "Use part of the touchpad for scrolling",
                     checked = uiState.scrollAreaEnabled,

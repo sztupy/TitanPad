@@ -59,5 +59,6 @@ object Defaults {
         const val SCROLL_MULTITOUCH_ENABLED = true
         const val HORIZONTAL_CURSOR_SENSITIVITY = 1.0F
         const val VERTICAL_CURSOR_SENSITIVITY = 1.0F
+        const val ACTIVATE_SCROLL_BY_DOUBLE_TAP = false
     }
 }

@@ -65,12 +65,8 @@ class TitanPad : Application() {
 
         settingsObserverJob = getSettingsFlow()
             .onEach { settings ->
-                if (settings.enableShizukuIntegration) {
-                    if (shizukuObserverJob == null) {
-                        initializeShizuku()
-                    }
-                } else {
-                    cleanupShizuku()
+                if (shizukuObserverJob == null) {
+                    initializeShizuku()
                 }
 
                 if (!settings.collectLogs) {

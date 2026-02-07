@@ -127,17 +127,33 @@ fun SettingsScreen(
                 },
             )
 
-            if (uiState.enableShizukuIntegration) {
-                val shizukuStatus = ShizukuConnection.statusFlow.collectAsState().value
-                PermissionStatusBanner(
-                    title = "Shizuku Service",
-                    status = shizukuStatus == ShizukuStatus.READY,
-                    onClickAction = {
-                        when (shizukuStatus) {
-                            ShizukuStatus.PERMISSION_REQUIRED -> ShizukuConnection.requestPermission()
-                            else -> {}
-                        }
+            val shizukuStatus = ShizukuConnection.statusFlow.collectAsState().value
+            PermissionStatusBanner(
+                title = "Shizuku Service",
+                status = shizukuStatus == ShizukuStatus.READY,
+                onClickAction = {
+                    when (shizukuStatus) {
+                        ShizukuStatus.PERMISSION_REQUIRED -> ShizukuConnection.requestPermission()
+                        else -> {}
                     }
+                }
+            )
+
+            Row(
+                modifier = Modifier.padding(8.dp),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Text(
+                    text = "WARNING! Shizuku's latest official version v13.6.0 doesn't work with MTK phones due to a bug. Either downgrade to v13.5.4, or use thedjchi's Shizuku fork which already contains a fix along with other improvements. Click here for the download link.",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier
+                        .clickable {
+                            openNewTabWindow(
+                                "https://github.com/thedjchi/Shizuku/releases",
+                                context
+                            )
+                        }
                 )
             }
 
@@ -198,6 +214,22 @@ fun SettingsScreen(
                             settings.copy(showNotification = v)
                         }
                     },
+                )
+
+                SimplePreferenceItem(
+                    title = "Hardware mouse display settings",
+                    subtitle = "Found under 'Display' -> 'Colour and Motion' -> 'Large mouse cursor'",
+                    onClick = {
+                        context.startActivity(Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS))
+                    }
+                )
+
+                SimplePreferenceItem(
+                    title = "Hardware mouse sensitivity settings",
+                    subtitle = "Found under 'System' -> 'Keyboard' -> 'Pointer Speed'",
+                    onClick = {
+                        context.startActivity(Intent(Settings.ACTION_SETTINGS))
+                    }
                 )
             }
 
@@ -607,7 +639,7 @@ fun NoteItem(
     title: String,
     icon: ImageVector,
     contentDescription: String,
-    color: Color? = null,
+    color: Color? = null
 ) {
     Surface(
         modifier =

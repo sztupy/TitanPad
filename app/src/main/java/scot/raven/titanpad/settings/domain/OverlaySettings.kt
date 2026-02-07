@@ -20,7 +20,6 @@ data class OverlaySettings(
     val cursorActivationKey: Int = Defaults.Settings.CURSOR_ACTIVATION_KEY,
     val gestureStyle: GestureStyle = Defaults.Settings.GESTURE_STYLE,
     val allowPassthrough: Boolean = Defaults.Settings.ALLOW_PASSTHROUGH,
-    val enableShizukuIntegration: Boolean = Defaults.Settings.ENABLE_SHIZUKU_INTEGRATION,
     val hideOnKeyboardOpen: Boolean = Defaults.Settings.HIDE_ON_KEYBOARD_OPEN,
     val hideOnLauncherOpen: Boolean = Defaults.Settings.HIDE_ON_LAUNCHER_OPEN,
     val hideOnLockScreen: Boolean = Defaults.Settings.HIDE_ON_LOCK_SCREEN,

@@ -1,17 +1,28 @@
 package scot.raven.titanpad.cursor.control
 
+import android.content.ComponentName
+import android.content.ServiceConnection
+import android.content.pm.PackageManager
+import android.os.IBinder
+import android.os.RemoteException
 import android.util.Log
+import androidx.compose.ui.geometry.Offset
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
-import android.content.pm.PackageManager
-import androidx.compose.ui.geometry.Offset
-import scot.raven.titanpad.gesture.api.GestureManager
 import rikka.shizuku.Shizuku
+import rikka.shizuku.Shizuku.UserServiceArgs
+import scot.raven.titanpad.BuildConfig
+import scot.raven.titanpad.core.control.HidService
+import scot.raven.titanpad.core.control.IHidService
+import scot.raven.titanpad.core.logs.Logger
+import scot.raven.titanpad.gesture.api.GestureManager
 import java.io.BufferedReader
 import java.io.InputStreamReader
+
 
 /**
  * Listens to trackpad events via Shizuku and triggers callbacks on swipe.
@@ -22,7 +33,7 @@ class TrackpadActionHandler(
     private val cursorStateManager: CursorStateManager,
     private val gestureManager: GestureManager,
     private val scope: CoroutineScope,
-    private val eventDevice: String = DEFAULT_EVENT_DEVICE,
+    private val trackpadEventDevice: String = DEFAULT_TRACKPAD_EVENT_DEVICE,
     private val swipeUpThreshold: Int = DEFAULT_SWIPE_UP_THRESHOLD,
     private val logTag: String = DEFAULT_LOG_TAG,
     private val shizukuPing: () -> Boolean = {
@@ -47,6 +58,8 @@ class TrackpadActionHandler(
     private var numFingers = 0
     private var startGesture = false
 
+    private var hidService: IHidService? = null
+
     fun start() {
         // Guard: if already running, do nothing
         if (isRunning()) {
@@ -55,7 +68,7 @@ class TrackpadActionHandler(
         }
 
         val enabled = isEnabled()
-        Log.d(DEBUG_TAG, "start() called - isEnabled=$enabled, swipeUpThreshold=$swipeUpThreshold, eventDevice=$eventDevice")
+        Log.d(DEBUG_TAG, "start() called - isEnabled=$enabled, swipeUpThreshold=$swipeUpThreshold")
 
         if (!enabled) {
             Log.d(DEBUG_TAG, "start() ABORTED: gestures disabled in settings")
@@ -83,7 +96,36 @@ class TrackpadActionHandler(
 
         geteventJob?.cancel()
         Log.d(DEBUG_TAG, "start() launching getevent coroutine...")
-        geteventJob = scope.launch(Dispatchers.IO) {
+        geteventJob = eventParser(trackpadEventDevice, ::parseTrackpadEvent)
+        Log.d(DEBUG_TAG, "start() completed - getevent job launched")
+        Log.d(logTag, "Trackpad gesture detection started")
+
+        scope.launch(Dispatchers.IO) {
+            Log.i(DEBUG_TAG, "hidService starting")
+            try {
+                bindUserService()
+                while (isActive) {
+                    delay(100);
+                }
+            } catch (e: Exception) {
+                Log.e(DEBUG_TAG, "hidService: ${e.message}", e)
+                Log.e(logTag, "Trackpad hidService failed", e)
+            }
+            Log.i(DEBUG_TAG, "hidService stopping")
+            hidService?.exit()
+            unbindUserService()
+        }
+    }
+
+    fun stop() {
+        Log.d(DEBUG_TAG, "stop() called - had active job: ${geteventJob != null}")
+        geteventJob?.cancel()
+        geteventJob = null
+        Log.d(logTag, "Trackpad gesture detection stopped")
+    }
+
+    fun eventParser(eventDevice: String, callback: (String) -> Unit): Job {
+        return scope.launch(Dispatchers.IO) {
             try {
                 Log.d(DEBUG_TAG, "getevent coroutine started, getting Shizuku.newProcess method...")
                 val newProcessMethod = Shizuku::class.java.getDeclaredMethod(
@@ -115,15 +157,6 @@ class TrackpadActionHandler(
                 Log.e(logTag, "Trackpad getevent failed", e)
             }
         }
-        Log.d(DEBUG_TAG, "start() completed - getevent job launched")
-        Log.d(logTag, "Trackpad gesture detection started")
-    }
-
-    fun stop() {
-        Log.d(DEBUG_TAG, "stop() called - had active job: ${geteventJob != null}")
-        geteventJob?.cancel()
-        geteventJob = null
-        Log.d(logTag, "Trackpad gesture detection stopped")
     }
 
     /**
@@ -188,7 +221,7 @@ class TrackpadActionHandler(
                 }
             }
 
-            line.contains("ABS_MT_TOUCH_MAJOR") -> {
+            line.contains("ABS_MT_TOUCH_MINOR") -> {
                 val parts = line.trim().split(Regex("\\s+"))
                 if (parts.size >= 3) {
                     val hexValue = parts.last()
@@ -215,6 +248,8 @@ class TrackpadActionHandler(
             val deltaX = currentX - startX + 0.0f
             val deltaY = currentY - startY + 0.0f
             Log.d(DEBUG_TAG, "X: ${deltaX}, Y: ${deltaY}, W: ${width}, NF: ${numFingers}, DSX: ${dragStartX} DSY: ${dragStartY}")
+
+            hidService?.setMousePosition(deltaX.toInt(), deltaY.toInt(), 0)
 
             if (numFingers <= 1) {
                 val newPosition = cursorStateManager.applyMovement(Offset(deltaX, deltaY))
@@ -270,6 +305,10 @@ class TrackpadActionHandler(
         if (!touchDown && !startPosSet) {
             val durationMs = (endTime - startTime) / 1_000_000.0
             if (durationMs < 100 || numFingers > 1) {
+                Log.d(DEBUG_TAG, "CLICK")
+//                hidService?.setMousePosition(0,0,1)
+//                hidService?.setMousePosition(0,0,0)
+
                 if (cursorStateManager.cursorState.value != null) {
                     val value = cursorStateManager.cursorState.value!!
                     val position = value.position
@@ -293,11 +332,85 @@ class TrackpadActionHandler(
         }
     }
 
+    private val userServiceConnection: ServiceConnection = object : ServiceConnection {
+        override fun onServiceConnected(componentName: ComponentName, binder: IBinder?) {
+            val res = StringBuilder()
+            res.append("onServiceConnected: ").append(componentName.getClassName()).append('\n')
+            if (binder != null && binder.pingBinder()) {
+                val service: IHidService = IHidService.Stub.asInterface(binder)
+                try {
+                    hidService = service
+                } catch (e: RemoteException) {
+                    e.printStackTrace()
+                    res.append(Log.getStackTraceString(e))
+                }
+            } else {
+                res.append("invalid binder for ").append(componentName).append(" received")
+            }
+            Logger.i(res.toString())
+        }
+
+        override fun onServiceDisconnected(componentName: ComponentName) {
+            hidService = null
+            Logger.i("onServiceDisconnected: " + '\n' + componentName.getClassName())
+        }
+    }
+
+    private val userServiceArgs: UserServiceArgs = UserServiceArgs(
+        ComponentName(
+            BuildConfig.APPLICATION_ID,
+            HidService::class.java.getName()
+        )
+    )
+        .daemon(false)
+        .processNameSuffix("service")
+        .debuggable(BuildConfig.DEBUG)
+        .version(BuildConfig.VERSION_CODE)
+
+    private fun bindUserService() {
+        val res = StringBuilder()
+        try {
+            if (Shizuku.getVersion() < 10) {
+                res.append("requires Shizuku API 10")
+            } else {
+                Shizuku.bindUserService(userServiceArgs, userServiceConnection)
+            }
+        } catch (tr: Throwable) {
+            tr.printStackTrace()
+            res.append(tr.toString())
+        }
+        Logger.i(res.toString().trim { it <= ' ' })
+    }
+
+    private fun unbindUserService() {
+        val res = StringBuilder()
+        try {
+            if (Shizuku.getVersion() < 10) {
+                res.append("requires Shizuku API 10")
+            } else {
+                Shizuku.unbindUserService(userServiceArgs, userServiceConnection, true)
+            }
+        } catch (tr: Throwable) {
+            tr.printStackTrace()
+            res.append(tr.toString())
+        }
+        Logger.i(res.toString().trim { it <= ' ' })
+    }
+
     companion object {
-        const val DEFAULT_TRACKPAD_MAX_X = 1440
         const val DEFAULT_SWIPE_UP_THRESHOLD = 300
-        const val DEFAULT_MIN_VELOCITY_THRESHOLD = 2.0  // pixels per millisecond (e.g., 1.0 px/ms = 1000 px/s)
-        const val DEFAULT_EVENT_DEVICE = "/dev/input/event7"
+
+        // Titan 2 event list
+        const val DEFAULT_VOLUME_EVENT_DEVICE = "/dev/input/event0" // volume up and down
+        const val DEFAULT_LEFT_TOP_EVENT_DEVICE = "/dev/input/event1" // left top button is event 00f9; Power button is also here
+        const val DEFAULT_MAIN_SCREEN_EVENT_DEVICE = "/dev/input/event2" // main screen touch
+        const val DEFAULT_LEFT_BOTTOM_EVENT_DEVICE = "/dev/input/event3" // left bottom button is event 00fa
+        // event4 would be the non-existent headphone jack sensor
+        const val DEFAULT_BACK_SCREEN_EVENT_DEVICE = "/dev/input/event5" // back screen touch
+        const val DEFAULT_KEYBOARD_EVENT_DEVICE = "/dev/input/event6" // keyboard buttons
+        const val DEFAULT_TRACKPAD_EVENT_DEVICE = "/dev/input/event7" // keyboard touch
+        // event8 has an unknown purpose
+
         const val DEFAULT_LOG_TAG = "PastieraIME"
         private const val DEBUG_TAG = "TrackpadDebug"
     }

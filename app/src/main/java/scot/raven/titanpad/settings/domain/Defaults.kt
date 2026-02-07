@@ -25,7 +25,6 @@ object Defaults {
         const val CURSOR_ACTIVATION_KEY = KeyEvent.KEYCODE_STAR
         val GESTURE_STYLE = GestureStyle.FIXED
         const val ALLOW_PASSTHROUGH = GestureConstants.ALLOW_PASSTHROUGH
-        const val ENABLE_SHIZUKU_INTEGRATION = true
         const val HIDE_ON_KEYBOARD_OPEN = false
         const val HIDE_ON_LAUNCHER_OPEN = false
         const val HIDE_ON_LOCK_SCREEN = false

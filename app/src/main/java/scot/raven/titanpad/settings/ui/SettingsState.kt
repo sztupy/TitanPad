@@ -1,6 +1,5 @@
 package scot.raven.titanpad.settings.ui
 
-import android.view.KeyEvent
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
@@ -60,7 +59,6 @@ class SettingsState(
                             cursorActivationKey = settings.cursorActivationKey,
                             gestureStyle = settings.gestureStyle,
                             allowPassthrough = settings.allowPassthrough,
-                            enableShizukuIntegration = settings.enableShizukuIntegration,
                             hideOnKeyboardOpen = settings.hideOnKeyboardOpen,
                             hideOnLauncherOpen = settings.hideOnLauncherOpen,
                             hideOnLockScreen = settings.hideOnLockScreen,
@@ -127,7 +125,6 @@ class SettingsState(
             cursorActivationKey = _uiState.value.cursorActivationKey,
             gestureStyle = _uiState.value.gestureStyle,
             allowPassthrough = _uiState.value.allowPassthrough,
-            enableShizukuIntegration = _uiState.value.enableShizukuIntegration,
             hideOnKeyboardOpen = _uiState.value.hideOnKeyboardOpen,
             hideOnLauncherOpen = _uiState.value.hideOnLauncherOpen,
             hideOnLockScreen = _uiState.value.hideOnLockScreen,
@@ -179,10 +176,6 @@ class SettingsState(
         updateSettings { it.copy(disableTouchscreen = disable) }
     }
 
-    fun updateEnableShizukuIntegration(integrate: Boolean) {
-        updateSettings { it.copy(enableShizukuIntegration = integrate) }
-    }
-
     class Factory(
         private val settingsRepository: SettingsRepository,
     ) : ViewModelProvider.Factory {
@@ -212,7 +205,6 @@ data class SettingsUiState(
     val cursorActivationKey: Int = Defaults.Settings.CURSOR_ACTIVATION_KEY,
     val gestureStyle: GestureStyle = Defaults.Settings.GESTURE_STYLE,
     val allowPassthrough: Boolean = Defaults.Settings.ALLOW_PASSTHROUGH,
-    val enableShizukuIntegration: Boolean = Defaults.Settings.ENABLE_SHIZUKU_INTEGRATION,
     val hideOnKeyboardOpen: Boolean = Defaults.Settings.HIDE_ON_KEYBOARD_OPEN,
     val hideOnLauncherOpen: Boolean = Defaults.Settings.HIDE_ON_LAUNCHER_OPEN,
     val hideOnLockScreen: Boolean = Defaults.Settings.HIDE_ON_LOCK_SCREEN,

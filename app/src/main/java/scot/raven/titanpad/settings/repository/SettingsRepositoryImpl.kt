@@ -28,37 +28,20 @@ class SettingsRepositoryImpl(
         private val USE_NATURAL_SCROLLING = booleanPreferencesKey("use_natural_scrolling")
         private val SHOW_GESTURE_VISUAL = booleanPreferencesKey("show_gesture_visual")
         private val VISUAL_SIZE = intPreferencesKey("visual_size")
-        private val CURSOR_SPEED = intPreferencesKey("cursor_speed")
-        private val CURSOR_ACCELERATION = intPreferencesKey("cursor_acceleration")
         private val CURSOR_SIZE = intPreferencesKey("cursor_size")
         private val CURSOR_ACCELERATION_START = longPreferencesKey("cursor_acceleration_start")
         private val CURSOR_ACCELERATION_DURATION = longPreferencesKey("cursor_acceleration_duration")
         private val CURSOR_ACTIVATION_KEY = intPreferencesKey("cursor_activation_key")
-        private val SCROLL_UP_KEY = intPreferencesKey("scroll_up_key")
-        private val SCROLL_DOWN_KEY = intPreferencesKey("scroll_down_key")
-        private val SCROLL_LEFT_KEY = intPreferencesKey("scroll_left_key")
-        private val SCROLL_RIGHT_KEY = intPreferencesKey("scroll_right_key")
-        private val CONTROL_SCHEME = stringPreferencesKey("control_scheme")
-        private val CURSOR_EDGE_BEHAVIOR = stringPreferencesKey("cursor_edge_behavior")
         private val GESTURE_STYLE = stringPreferencesKey("gesture_style")
-        private val TOGGLE_HOLD = booleanPreferencesKey("toggle_hold")
-        private val SCROLL_DURATION = longPreferencesKey("scroll_duration")
-        private val SCROLL_MULTIPLIER = floatPreferencesKey("scroll_multiplier")
-        private val ZOOM_DURATION = longPreferencesKey("zoom_duration")
-        private val ZOOM_FACTOR = floatPreferencesKey("zoom_factor")
         private val ALLOW_PASSTHROUGH = booleanPreferencesKey("allow_passthrough")
-        private val ENABLE_SHIZUKU_INTEGRATION = booleanPreferencesKey("enable_shizuku_integration")
-        private val OVERRIDE_ANDROID_7 = booleanPreferencesKey("override_android_7")
         private val HIDE_ON_KEYBOARD_OPEN = booleanPreferencesKey("hide_on_keyboard_open")
         private val HIDE_ON_LAUNCHER_OPEN = booleanPreferencesKey("hide_on_launcher_open")
         private val HIDE_ON_LOCK_SCREEN = booleanPreferencesKey("hide_on_lock_screen")
-        private val ROTATE_BUTTONS_WITH_ORIENTATION = booleanPreferencesKey("rotate_buttons_with_orientation")
         private val ROUNDED_CURSOR_CORNERS = booleanPreferencesKey("rounded_cursor_corners")
         private val USE_PHYSICAL_SIZE = booleanPreferencesKey("use_physical_size")
         private val STANDARD_CURSOR_HEX = stringPreferencesKey("standard_cursor_hex")
         private val STANDARD_CURSOR_MATCH_BORDER = booleanPreferencesKey("standard_cursor_match_border")
         private val ALLOW_OVERLAPPING_GESTURES = booleanPreferencesKey("allow_overlapping_gestures")
-        private val FORCE_SMOOTHER_GESTURES = booleanPreferencesKey("force_smoother_gestures")
         private val CURSOR_IMAGE_PATH = stringPreferencesKey("cursor_image_path")
         private val CLICKABLE_IMAGE_PATH = stringPreferencesKey("clickable_image_path")
         private val SCROLL_TOGGLE_IMAGE_PATH = stringPreferencesKey("scroll_toggle_image_path")
@@ -66,22 +49,12 @@ class SettingsRepositoryImpl(
         private val CURSOR_IMAGE_ALIGNMENT = stringPreferencesKey("cursor_image_alignment")
         private val CLICKABLE_IMAGE_ALIGNMENT = stringPreferencesKey("clickable_image_alignment")
         private val SCROLL_TOGGLE_IMAGE_ALIGNMENT = stringPreferencesKey("scroll_toggle_image_alignment")
-        private val USE_ADVANCED_SCROLLING = booleanPreferencesKey("use_advanced_scrolling")
-        private val CONTINUOUS_SCROLL_DURATION = longPreferencesKey("continuous_scroll_duration")
-        private val CONTINUOUS_SCROLL_MULTIPLIER = floatPreferencesKey("continuous_scroll_multiplier")
-        private val CONTINUOUS_SCROLL_ACCELERATION_START = longPreferencesKey("continuous_scroll_acceleration_start")
-        private val CONTINUOUS_SCROLL_ACCELERATION_DURATION = longPreferencesKey("continuous_scroll_acceleration_duration")
-        private val EDGE_SCROLL_DURATION = longPreferencesKey("edge_scroll_duration")
-        private val EDGE_SCROLL_MULTIPLIER = floatPreferencesKey("edge_scroll_multiplier")
-        private val EDGE_SCROLL_ACCELERATION_START = longPreferencesKey("edge_scroll_acceleration_start")
-        private val EDGE_SCROLL_ACCELERATION_DURATION = longPreferencesKey("edge_scroll_acceleration_duration")
         private val COLLECT_LOGS = booleanPreferencesKey("collect_logs")
         private val AUTO_HIDE_APPS = stringPreferencesKey("auto_hide_apps")
         private val CLICKABLE_APPS = stringPreferencesKey("clickable_apps")
         private val SHOW_NOTIFICATION = booleanPreferencesKey("show_notification")
         private val APPLICATION_LIST_TYPE = stringPreferencesKey("application_list_type")
         private val CLICKABLE_LIST_TYPE = stringPreferencesKey("clickable_list_type")
-        private val IGNORE_NUMPAD = booleanPreferencesKey("ignore_numpad")
         private val CHECK_CLICKABLE = booleanPreferencesKey("check_clickable")
         private val DISABLE_TOUCHSCREEN = booleanPreferencesKey("disable_touchscreen")
     }
@@ -186,8 +159,6 @@ class SettingsRepositoryImpl(
                     gestureStyle = gestureStyle,
                     allowPassthrough = preferences[ALLOW_PASSTHROUGH]
                         ?: OverlaySettings.DEFAULT.allowPassthrough,
-                    enableShizukuIntegration = preferences[ENABLE_SHIZUKU_INTEGRATION]
-                        ?: OverlaySettings.DEFAULT.enableShizukuIntegration,
                     hideOnKeyboardOpen = preferences[HIDE_ON_KEYBOARD_OPEN]
                         ?: OverlaySettings.DEFAULT.hideOnKeyboardOpen,
                     hideOnLauncherOpen = preferences[HIDE_ON_LAUNCHER_OPEN]
@@ -245,7 +216,6 @@ class SettingsRepositoryImpl(
                 preferences[CURSOR_ACTIVATION_KEY] = settings.cursorActivationKey
                 preferences[GESTURE_STYLE] = settings.gestureStyle.name
                 preferences[ALLOW_PASSTHROUGH] = settings.allowPassthrough
-                preferences[ENABLE_SHIZUKU_INTEGRATION] = settings.enableShizukuIntegration
                 preferences[HIDE_ON_KEYBOARD_OPEN] = settings.hideOnKeyboardOpen
                 preferences[HIDE_ON_LAUNCHER_OPEN] = settings.hideOnLauncherOpen
                 preferences[HIDE_ON_LOCK_SCREEN] = settings.hideOnLockScreen

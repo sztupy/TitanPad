@@ -34,7 +34,6 @@ fun DebugOptionsScreen(
     onNavigateBack: () -> Unit
 ) {
     val uiState by settingsState.uiState.collectAsState()
-    var showShizukuDialog by remember { mutableStateOf(false) }
     var showPassthroughDialog by remember { mutableStateOf(false) }
     var showTouchscreenDialog by remember { mutableStateOf(false) }
 
@@ -76,49 +75,6 @@ fun DebugOptionsScreen(
 //                    onClick = onNavigateToLogScreen,
 //                )
 //            }
-
-            PreferenceCategory(title = "Shizuku") {
-                SwitchPreferenceItem(
-                    title = "Enable Shizuku Integration",
-                    subtitle = "Required for certain Android devices",
-                    checked = uiState.enableShizukuIntegration,
-                    onCheckedChange = { newValue ->
-                        if (newValue && !uiState.enableShizukuIntegration) {
-                            showShizukuDialog = true
-                        } else {
-                            settingsState.updateEnableShizukuIntegration(newValue)
-                        }
-                    },
-                    enabled = !VersionUtil.belowVersion(Build.VERSION_CODES.O)
-                )
-            }
-
-            if (showShizukuDialog) {
-                AlertDialog(
-                    onDismissRequest = { showShizukuDialog = false },
-                    title = { Text("Enable Shizuku Integration") },
-                    text = {
-                        Text("Only enable this if gestures do not work. Shizuku will be used to dispatch gestures. After enabling this setting, use the banner on the main page to verify Shizuku authorization.")
-                    },
-                    confirmButton = {
-                        TextButton(
-                            onClick = {
-                                settingsState.updateEnableShizukuIntegration(true)
-                                showShizukuDialog = false
-                            }
-                        ) {
-                            Text("Enable")
-                        }
-                    },
-                    dismissButton = {
-                        TextButton(
-                            onClick = { showShizukuDialog = false }
-                        ) {
-                            Text("Cancel")
-                        }
-                    }
-                )
-            }
 
             PreferenceCategory(title = "Gestures") {
                 SwitchPreferenceItem(

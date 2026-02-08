@@ -154,8 +154,9 @@ public class Device {
                     mPtr = nativeOpenDevice(args.getString("name"), args.getInt("id"), args.getInt("vid"), args.getInt("pid"),
                             args.getByteArray("descriptor"), new DeviceCallback());
                 } else {
+                    getLooper();
                     mPtr = nativeOpenDevice(args.getString("name"), args.getInt("id"), args.getInt("vid"), args.getInt("pid"),
-                            args.getByteArray("descriptor"), getLooper().myQueue(), new DeviceCallback());
+                            args.getByteArray("descriptor"), Looper.myQueue(), new DeviceCallback());
                 }
                 pauseEvents();
             } else if (msg.what == MSG_SEND_REPORT) {

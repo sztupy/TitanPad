@@ -1,7 +1,7 @@
 package scot.raven.titanpad.core.logs
 
 import android.util.Log
-import rikka.shizuku.shared.BuildConfig
+import scot.raven.titanpad.BuildConfig
 
 object Logger {
     private const val TAG = "TitanPadApp"
@@ -23,7 +23,6 @@ object Logger {
         if (minLogLevel.ordinal <= Level.VERBOSE.ordinal) {
             Log.v(tag ?: TAG, message)
         }
-        LogManager.addLog(Level.VERBOSE, message, tag)
     }
 
     fun d(
@@ -33,7 +32,6 @@ object Logger {
         if (minLogLevel.ordinal <= Level.DEBUG.ordinal) {
             Log.d(tag ?: TAG, message)
         }
-        LogManager.addLog(Level.DEBUG, message, tag)
     }
 
     fun i(
@@ -43,7 +41,6 @@ object Logger {
         if (minLogLevel.ordinal <= Level.INFO.ordinal) {
             Log.i(tag ?: TAG, message)
         }
-        LogManager.addLog(Level.INFO, message, tag)
     }
 
     fun w(
@@ -55,12 +52,10 @@ object Logger {
             if (minLogLevel.ordinal <= Level.WARNING.ordinal) {
                 Log.w(tag ?: TAG, message, throwable)
             }
-            LogManager.addLog(Level.WARNING, "$message: ${throwable.message}", tag)
         } else {
             if (minLogLevel.ordinal <= Level.WARNING.ordinal) {
                 Log.w(tag ?: TAG, message)
             }
-            LogManager.addLog(Level.WARNING, message, tag)
         }
     }
 
@@ -73,12 +68,10 @@ object Logger {
             if (minLogLevel.ordinal <= Level.ERROR.ordinal) {
                 Log.e(tag ?: TAG, message, throwable)
             }
-            LogManager.addLog(Level.ERROR, "$message: ${throwable.message}", tag)
         } else {
             if (minLogLevel.ordinal <= Level.ERROR.ordinal) {
                 Log.e(tag ?: TAG, message)
             }
-            LogManager.addLog(Level.ERROR, message, tag)
         }
     }
 }

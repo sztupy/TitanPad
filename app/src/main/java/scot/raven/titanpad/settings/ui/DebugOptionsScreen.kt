@@ -58,36 +58,6 @@ fun DebugOptionsScreen(
                 .padding(paddingValues)
                 .verticalScroll(rememberScrollState())
         ) {
-//            PreferenceCategory(title = "Logging") {
-//                SwitchPreferenceItem(
-//                    title = "Collect Logs",
-//                    subtitle = "Logs will be written to the log screen",
-//                    checked = uiState.collectLogs,
-//                    onCheckedChange = { value ->
-//                        settingsState.updatePreference(value) { settings, v ->
-//                            settings.copy(collectLogs = v)
-//                        }
-//                    }
-//                )
-//                SimplePreferenceItem(
-//                    title = "Log Screen",
-//                    subtitle = "View application logs",
-//                    onClick = onNavigateToLogScreen,
-//                )
-//            }
-
-            PreferenceCategory(title = "Gestures") {
-                SwitchPreferenceItem(
-                    title = "Overlapping Gestures",
-                    subtitle = "Allow manual scrolls and zooms to overlap",
-                    checked = uiState.allowOverlappingGestures,
-                    onCheckedChange = { value ->
-                        settingsState.updatePreference(value) { settings, v ->
-                            settings.copy(allowOverlappingGestures = v)
-                        }
-                    },
-                )
-            }
 
             PreferenceCategory(title = "Display") {
                 SwitchPreferenceItem(

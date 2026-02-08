@@ -29,20 +29,18 @@ class NotificationManager(private val context: Context) {
     }
 
     private fun createNotificationChannel() {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            val channel = NotificationChannel(
-                CHANNEL_ID,
-                "Active Cursor",
-                NotificationManager.IMPORTANCE_LOW
-            ).apply {
-                description = "Shows when a cursor mode is active"
-                setShowBadge(false)
-                enableLights(false)
-                enableVibration(false)
-                setSound(null, null)
-            }
-            notificationManager.createNotificationChannel(channel)
+        val channel = NotificationChannel(
+            CHANNEL_ID,
+            "Active Cursor",
+            NotificationManager.IMPORTANCE_LOW
+        ).apply {
+            description = "Shows when a cursor mode is active"
+            setShowBadge(false)
+            enableLights(false)
+            enableVibration(false)
+            setSound(null, null)
         }
+        notificationManager.createNotificationChannel(channel)
     }
 
     fun showNotification(mode: ModeCoordinator.OverlayMode) {
@@ -73,7 +71,7 @@ class NotificationManager(private val context: Context) {
                 0,
                 settingsIntent,
                 PendingIntent.FLAG_UPDATE_CURRENT or
-                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) PendingIntent.FLAG_IMMUTABLE else 0
+                        PendingIntent.FLAG_IMMUTABLE
             )
 
             val notification = NotificationCompat.Builder(context, CHANNEL_ID)

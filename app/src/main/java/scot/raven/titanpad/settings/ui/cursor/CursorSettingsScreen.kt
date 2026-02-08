@@ -380,22 +380,18 @@ class UnifiedImagePickerLauncher(
     private val pickVisualMediaLauncher: ActivityResultLauncher<PickVisualMediaRequest>
 ) {
     fun launch(context: Context) {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            try {
-                Logger.d("Launching PickVisualMedia")
-                pickVisualMediaLauncher.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly))
-                return
-            } catch (e: Exception) {
-                Logger.e("PickVisualMedia launch failed, falling back to Intent", e)
-            }
+        try {
+            Logger.d("Launching PickVisualMedia")
+            pickVisualMediaLauncher.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly))
+            return
+        } catch (e: Exception) {
+            Logger.e("PickVisualMedia launch failed, falling back to Intent", e)
         }
 
         val intents = mutableListOf<Intent>()
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            intents += Intent(MediaStore.ACTION_PICK_IMAGES).apply {
-                type = "image/*"
-                putExtra(MediaStore.EXTRA_PICK_IMAGES_MAX, 1)
-            }
+        intents += Intent(MediaStore.ACTION_PICK_IMAGES).apply {
+            type = "image/*"
+            putExtra(MediaStore.EXTRA_PICK_IMAGES_MAX, 1)
         }
         intents += listOf(
             Intent(Intent.ACTION_GET_CONTENT).apply {

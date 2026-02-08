@@ -96,7 +96,6 @@ fun SettingsScreen(
     onNavigateToDebugOptions: () -> Unit,
     onNavigateToAutoHideSettings: () -> Unit,
     onNavigateToCommonGestureSettings: () -> Unit,
-    onNavigateToScrollSettings: () -> Unit
 ) {
     val uiState by settingsState.uiState.collectAsState()
     val context = LocalContext.current
@@ -239,12 +238,6 @@ fun SettingsScreen(
                     subtitle = "Settings that apply to both scrolls and zooms",
                     onClick = onNavigateToCommonGestureSettings
                 )
-
-                SimplePreferenceItem(
-                    title = "Scroll Options",
-                    subtitle = "Settings specific to scrolling",
-                    onClick = onNavigateToScrollSettings
-                )
             }
 
             PreferenceCategory(title = "Advanced") {
@@ -259,8 +252,7 @@ fun SettingsScreen(
                 Surface(
                     modifier = Modifier.fillMaxWidth(),
                 ) {
-                    Column(
-                    ) {
+                    Column {
                         Row(
                             modifier =
                             Modifier

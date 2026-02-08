@@ -158,6 +158,7 @@ class CoreManager(
 
     fun activateCursorMode(keymapToggle: Boolean = false): Boolean {
         try {
+            Logger.d("Activating cursor mode")
             if ((!cursorStateManager.isCursorVisible() || keymapToggle) && modeCoordinator.requestActivation(
                     ModeCoordinator.OverlayMode.CURSOR
                 )) {

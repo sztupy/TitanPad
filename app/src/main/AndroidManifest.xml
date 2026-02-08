@@ -59,18 +59,6 @@
             android:parentActivityName=".settings.ui.cursor.CursorSettingsActivity" />
 
         <activity
-            android:name=".settings.ui.cursor.AssignScrollActivity"
-            android:exported="false"
-            android:theme="@style/Theme.TitanPad"
-            android:parentActivityName=".settings.ui.cursor.CursorSettingsActivity" />
-
-        <activity
-            android:name=".settings.ui.cursor.ScrollToggleIconActivity"
-            android:exported="false"
-            android:theme="@style/Theme.TitanPad"
-            android:parentActivityName=".settings.ui.cursor.CursorSettingsActivity" />
-
-        <activity
             android:name=".settings.ui.autohide.AutoHideSettingsActivity"
             android:exported="false"
             android:theme="@style/Theme.TitanPad"
@@ -78,18 +66,6 @@
 
         <activity
             android:name=".settings.ui.gesture.CommonGestureSettingsActivity"
-            android:exported="false"
-            android:theme="@style/Theme.TitanPad"
-            android:parentActivityName=".settings.ui.SettingsActivity" />
-
-        <activity
-            android:name=".settings.ui.gesture.ScrollSettingsActivity"
-            android:exported="false"
-            android:theme="@style/Theme.TitanPad"
-            android:parentActivityName=".settings.ui.SettingsActivity" />
-
-        <activity
-            android:name=".settings.ui.gesture.ZoomSettingsActivity"
             android:exported="false"
             android:theme="@style/Theme.TitanPad"
             android:parentActivityName=".settings.ui.SettingsActivity" />
@@ -135,7 +111,8 @@
             android:name=".accessibility.AppAccessibilityService"
             android:exported="false"
             android:label="@string/accessibility_service_label"
-            android:permission="android.permission.BIND_ACCESSIBILITY_SERVICE">
+            android:permission="android.permission.BIND_ACCESSIBILITY_SERVICE"
+            tools:ignore="AccessibilityPolicy">
             <intent-filter>
                 <action android:name="android.accessibilityservice.AccessibilityService" />
             </intent-filter>

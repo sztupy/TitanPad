@@ -40,8 +40,8 @@ import kotlin.math.sqrt
 @Composable
 fun CursorOverlay(
     cursorState: CursorState,
-    settings: OverlaySettings? = null,
     modifier: Modifier = Modifier,
+    settings: OverlaySettings? = null,
     dimensions: ScreenDimensions
 ) {
     var cursorSize = settings?.cursorSize?.toFloat() ?: CursorConstants.DEFAULT_SIZE.toFloat()

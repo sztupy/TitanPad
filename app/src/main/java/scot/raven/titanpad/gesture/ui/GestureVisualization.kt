@@ -39,8 +39,8 @@ enum class GestureType {
 fun GestureVisualization(
     gesturePaths: List<GesturePath>,
     dimensions: ScreenDimensions,
-    settings: OverlaySettings? = null,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    settings: OverlaySettings? = null
 ) {
     var visualSize = settings?.visualSize?.toFloat() ?: GestureConstants.DEFAULT_SIZE.toFloat()
     visualSize *= GestureConstants.SIZE_MULTIPLIER * dimensions.getScreenScaleFactor()

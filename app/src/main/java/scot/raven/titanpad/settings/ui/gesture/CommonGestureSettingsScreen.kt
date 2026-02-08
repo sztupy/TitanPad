@@ -18,7 +18,6 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import scot.raven.titanpad.core.constants.GestureConstants
-import scot.raven.titanpad.core.domain.GestureStyle
 import scot.raven.titanpad.settings.ui.DropdownPreferenceItem
 import scot.raven.titanpad.settings.ui.PreferenceCategory
 import scot.raven.titanpad.settings.ui.SettingsState
@@ -54,28 +53,6 @@ fun CommonGestureSettingsScreen(
                 .padding(paddingValues)
                 .verticalScroll(rememberScrollState())
         ) {
-            PreferenceCategory(title = "Behavior") {
-                DropdownPreferenceItem(
-                    title = "Gesture Style",
-                    subtitle =
-                    when (uiState.gestureStyle) {
-                        GestureStyle.FIXED -> "Fixed distance, implementation 1"
-                        GestureStyle.FIXED_2 -> "Fixed distance, implementation 2"
-                        GestureStyle.INERTIA -> "Momentum-based"
-                    },
-                    selectedOption = uiState.gestureStyle,
-                    options = listOf(
-                        GestureStyle.FIXED to "Fixed 1",
-                        GestureStyle.INERTIA to "Inertia",
-                    ),
-                    onOptionSelected = { value ->
-                        settingsState.updatePreference(value) { settings, v ->
-                            settings.copy(gestureStyle = v)
-                        }
-                    },
-                )
-            }
-
             PreferenceCategory(title = "Visualization") {
                 SwitchPreferenceItem(
                     title = "Gesture Visualization",

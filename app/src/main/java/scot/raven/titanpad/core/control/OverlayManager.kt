@@ -167,7 +167,6 @@ class OverlayManager(
             overlayView?.setContent {
                 val currentSettings by settingsFlow.collectAsState()
                 val currentGesturePaths by coreManager.getGesturePaths().collectAsState()
-                val currentOrientation by orientationHandler.currentOrientation.collectAsState()
                 val dimensions by orientationHandler.screenDimensions.collectAsState()
 
                 AppTheme {
@@ -283,11 +282,7 @@ class OverlayManager(
     private fun createOverlayLayoutParams(touchEnabled: Boolean? = null): WindowManager.LayoutParams {
         val settings = settingsFlow.value
         val insets = if (!settings.usePhysicalSize) {
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-                orientationHandler.getSystemInsets()
-            } else {
-                getInsetsFromView()
-            }
+            orientationHandler.getSystemInsets()
         } else {
             Rect(0, 0, 0, 0)
         }

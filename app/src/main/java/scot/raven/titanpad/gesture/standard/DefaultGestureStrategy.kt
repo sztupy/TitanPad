@@ -8,7 +8,6 @@ import android.os.Handler
 import android.os.Looper
 import androidx.annotation.RequiresApi
 import scot.raven.titanpad.core.constants.GestureConstants
-import scot.raven.titanpad.core.domain.GestureStyle
 import scot.raven.titanpad.core.logs.Logger
 import scot.raven.titanpad.gesture.api.GestureCompletionListener
 import scot.raven.titanpad.gesture.api.GestureStrategy
@@ -68,101 +67,6 @@ class DefaultGestureStrategy(
         }
     }
 
-    private fun pauseGestureCallback(
-        stroke: GestureDescription.StrokeDescription,
-        endX: Float,
-        endY: Float,
-        willContinue: Boolean,
-        completionListener: GestureCompletionListener?
-    ): AccessibilityService.GestureResultCallback {
-        return object : AccessibilityService.GestureResultCallback() {
-            @RequiresApi(Build.VERSION_CODES.O)
-            override fun onCompleted(gestureDescription: GestureDescription?) {
-                val settings = settingsFlow.value
-                if (willContinue) {
-                    val pausePath = Path().apply {
-                        when (settings.gestureStyle) {
-                            GestureStyle.FIXED -> moveTo(endX, endY)
-                            GestureStyle.FIXED_2 -> moveTo(endX / 2, endY / 2)
-                            else -> moveTo(endX, endY)
-                        }
-                    }
-
-                    val pauseStrokeDescription = stroke.continueStroke(
-                        pausePath,
-                        0,
-                        GestureConstants.GESTURE_PAUSE,
-                        false
-                    )
-
-                    val pauseGesture = GestureDescription.Builder()
-                        .addStroke(pauseStrokeDescription)
-                        .build()
-
-                    service.dispatchGesture(pauseGesture, completeGestureCallback(completionListener), null)
-                } else {
-                    completionListener?.onGestureCompleted(true)
-                }
-            }
-
-            override fun onCancelled(gestureDescription: GestureDescription?) {
-                completionListener?.onGestureCompleted(true)
-            }
-        }
-    }
-
-    private fun pauseGestureCallback(
-        stroke1: GestureDescription.StrokeDescription,
-        stroke2: GestureDescription.StrokeDescription,
-        endX1: Float, endY1: Float,
-        endX2: Float, endY2: Float,
-        willContinue: Boolean,
-        completionListener: GestureCompletionListener?
-    ): AccessibilityService.GestureResultCallback {
-        return object : AccessibilityService.GestureResultCallback() {
-            @RequiresApi(Build.VERSION_CODES.O)
-            override fun onCompleted(gestureDescription: GestureDescription?) {
-                if (willContinue) {
-                    val finger1PausePath = Path().apply {
-                        moveTo(endX1, endY1)
-                    }
-
-                    val finger2PausePath = Path().apply {
-                        moveTo(endX2, endY2)
-                    }
-
-                    val stroke1Pause = stroke1.continueStroke(
-                        finger1PausePath,
-                        0,
-                        GestureConstants.GESTURE_PAUSE,
-                        false
-                    )
-
-                    val stroke2Pause = stroke2.continueStroke(
-                        finger2PausePath,
-                        0,
-                        GestureConstants.GESTURE_PAUSE,
-                        false
-                    )
-
-                    val pauseGesture = GestureDescription.Builder()
-                        .addStroke(stroke1Pause)
-                        .addStroke(stroke2Pause)
-                        .build()
-
-                    service.dispatchGesture(pauseGesture, completeGestureCallback(completionListener), null)
-                } else {
-                    completionListener?.onGestureCompleted(true)
-                }
-            }
-
-            override fun onCancelled(gestureDescription: GestureDescription?) {
-                completionListener?.onGestureCompleted(true)
-            }
-        }
-    }
-
-    @RequiresApi(Build.VERSION_CODES.O)
     override suspend fun startTap(x: Float, y: Float, completionListener: GestureCompletionListener?): Boolean {
         try {
             Logger.d("DefaultGestureStrategy: starting tap at ($x, $y)")
@@ -202,7 +106,6 @@ class DefaultGestureStrategy(
         }
     }
 
-    @RequiresApi(Build.VERSION_CODES.O)
     override suspend fun dragTap(fromX: Float, fromY: Float, toX: Float, toY: Float, completionListener: GestureCompletionListener?): Boolean {
         try {
             Logger.d("DefaultGestureStrategy: dragging from ($fromX, $fromY) to ($toX, $toY)")
@@ -251,7 +154,6 @@ class DefaultGestureStrategy(
         }
     }
 
-    @RequiresApi(Build.VERSION_CODES.O)
     override suspend fun endTap(finalX: Float, finalY: Float, completionListener: GestureCompletionListener?): Boolean {
         try {
             Logger.d("DefaultGestureStrategy: ending tap at ($finalX, $finalY)")

@@ -4,7 +4,6 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import scot.raven.titanpad.accessibility.AppAccessibilityService
-import scot.raven.titanpad.core.domain.GestureStyle
 import scot.raven.titanpad.core.logs.Logger
 import scot.raven.titanpad.cursor.domain.IconAlignment
 import scot.raven.titanpad.settings.domain.AppListType
@@ -50,14 +49,12 @@ class SettingsState(
                     _uiState.update { currentState ->
                         currentState.copy(
                             activationDuration = settings.activationDuration,
-                            useNaturalScrolling = settings.useNaturalScrolling,
                             showGestureVisualization = settings.showGestureVisualization,
                             visualSize = settings.visualSize,
                             cursorSize = settings.cursorSize,
                             cursorAccelerationStart = settings.cursorAccelerationStart,
                             cursorAccelerationDuration = settings.cursorAccelerationDuration,
                             cursorActivationKey = settings.cursorActivationKey,
-                            gestureStyle = settings.gestureStyle,
                             allowPassthrough = settings.allowPassthrough,
                             hideOnKeyboardOpen = settings.hideOnKeyboardOpen,
                             hideOnLauncherOpen = settings.hideOnLauncherOpen,
@@ -66,7 +63,6 @@ class SettingsState(
                             usePhysicalSize = settings.usePhysicalSize,
                             standardCursorHex = settings.standardCursorHex,
                             standardCursorMatchBorder = settings.standardCursorMatchBorder,
-                            allowOverlappingGestures = settings.allowOverlappingGestures,
                             cursorImagePath = settings.cursorImagePath,
                             clickableImagePath = settings.clickableImagePath,
                             scrollToggleImagePath = settings.scrollToggleImagePath,
@@ -74,7 +70,6 @@ class SettingsState(
                             cursorImageAlignment = settings.cursorImageAlignment,
                             clickableImageAlignment = settings.clickableImageAlignment,
                             scrollToggleImageAlignment = settings.scrollToggleImageAlignment,
-                            collectLogs = settings.collectLogs,
                             autoHideApps = settings.autoHideApps,
                             clickableApps = settings.clickableApps,
                             showNotification = settings.showNotification,
@@ -116,14 +111,12 @@ class SettingsState(
     private fun createSettingsFromUiState(): OverlaySettings {
         return OverlaySettings(
             activationDuration = _uiState.value.activationDuration,
-            useNaturalScrolling = _uiState.value.useNaturalScrolling,
             showGestureVisualization = _uiState.value.showGestureVisualization,
             visualSize = _uiState.value.visualSize,
             cursorSize = _uiState.value.cursorSize,
             cursorAccelerationStart = _uiState.value.cursorAccelerationStart,
             cursorAccelerationDuration = _uiState.value.cursorAccelerationDuration,
             cursorActivationKey = _uiState.value.cursorActivationKey,
-            gestureStyle = _uiState.value.gestureStyle,
             allowPassthrough = _uiState.value.allowPassthrough,
             hideOnKeyboardOpen = _uiState.value.hideOnKeyboardOpen,
             hideOnLauncherOpen = _uiState.value.hideOnLauncherOpen,
@@ -132,7 +125,6 @@ class SettingsState(
             usePhysicalSize = _uiState.value.usePhysicalSize,
             standardCursorHex = _uiState.value.standardCursorHex,
             standardCursorMatchBorder = _uiState.value.standardCursorMatchBorder,
-            allowOverlappingGestures = _uiState.value.allowOverlappingGestures,
             cursorImagePath = _uiState.value.cursorImagePath,
             clickableImagePath = _uiState.value.clickableImagePath,
             scrollToggleImagePath = _uiState.value.scrollToggleImagePath,
@@ -140,7 +132,6 @@ class SettingsState(
             cursorImageAlignment = _uiState.value.cursorImageAlignment,
             clickableImageAlignment = _uiState.value.clickableImageAlignment,
             scrollToggleImageAlignment = _uiState.value.scrollToggleImageAlignment,
-            collectLogs = _uiState.value.collectLogs,
             autoHideApps = _uiState.value.autoHideApps,
             clickableApps = _uiState.value.clickableApps,
             showNotification = _uiState.value.showNotification,
@@ -194,7 +185,6 @@ data class SettingsUiState(
     val isAccessibilityServiceEnabled: Boolean = false,
     val showInvalidSettingError: Boolean = false,
     val isServiceRunning: Boolean = false,
-    val useNaturalScrolling: Boolean = Defaults.Settings.USE_NATURAL_SCROLLING,
     val showGestureVisualization: Boolean = Defaults.Settings.SHOW_GESTURE_VISUAL,
     val visualSize: Int = Defaults.Settings.VISUAL_SIZE,
     val showError: Boolean = false,
@@ -203,7 +193,6 @@ data class SettingsUiState(
     val cursorAccelerationStart: Long = Defaults.Settings.CURSOR_ACCELERATION_START,
     val cursorAccelerationDuration: Long = Defaults.Settings.CURSOR_ACCELERATION_DURATION,
     val cursorActivationKey: Int = Defaults.Settings.CURSOR_ACTIVATION_KEY,
-    val gestureStyle: GestureStyle = Defaults.Settings.GESTURE_STYLE,
     val allowPassthrough: Boolean = Defaults.Settings.ALLOW_PASSTHROUGH,
     val hideOnKeyboardOpen: Boolean = Defaults.Settings.HIDE_ON_KEYBOARD_OPEN,
     val hideOnLauncherOpen: Boolean = Defaults.Settings.HIDE_ON_LAUNCHER_OPEN,
@@ -212,7 +201,6 @@ data class SettingsUiState(
     val usePhysicalSize: Boolean = Defaults.Settings.USE_PHYSICAL_SIZE,
     val standardCursorHex: String = Defaults.Settings.STANDARD_CURSOR_HEX,
     val standardCursorMatchBorder: Boolean = Defaults.Settings.STANDARD_CURSOR_MATCH_BORDER,
-    val allowOverlappingGestures: Boolean = Defaults.Settings.ALLOW_OVERLAPPING_GESTURES,
     val cursorImagePath: String? = Defaults.Settings.CURSOR_IMAGE_PATH,
     val clickableImagePath: String? = Defaults.Settings.CLICKABLE_IMAGE_PATH,
     val scrollToggleImagePath: String? = Defaults.Settings.SCROLL_TOGGLE_IMAGE_PATH,
@@ -220,7 +208,6 @@ data class SettingsUiState(
     val cursorImageAlignment: IconAlignment = Defaults.Settings.CURSOR_IMAGE_ALIGNMENT,
     val clickableImageAlignment: IconAlignment = Defaults.Settings.CLICKABLE_IMAGE_ALIGNMENT,
     val scrollToggleImageAlignment: IconAlignment = Defaults.Settings.SCROLL_TOGGLE_IMAGE_ALIGNMENT,
-    val collectLogs: Boolean = Defaults.Settings.COLLECT_LOGS,
     val autoHideApps: Set<String> = Defaults.Settings.AUTO_HIDE_APPS,
     val clickableApps: Set<String> = Defaults.Settings.CLICKABLE_APPS,
     val showNotification: Boolean = Defaults.Settings.SHOW_NOTIFICATION,

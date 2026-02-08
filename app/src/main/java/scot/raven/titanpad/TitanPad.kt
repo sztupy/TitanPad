@@ -8,7 +8,6 @@ import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.preferencesDataStore
 import scot.raven.titanpad.accessibility.AppAccessibilityService
-import scot.raven.titanpad.core.logs.LogManager
 import scot.raven.titanpad.core.logs.Logger
 import scot.raven.titanpad.core.shizuku.ShizukuConnection
 import scot.raven.titanpad.core.shizuku.ShizukuStatus
@@ -67,10 +66,6 @@ class TitanPad : Application() {
             .onEach { settings ->
                 if (shizukuObserverJob == null) {
                     initializeShizuku()
-                }
-
-                if (!settings.collectLogs) {
-                    LogManager.clear()
                 }
             }
             .flowOn(Dispatchers.IO)
@@ -139,7 +134,7 @@ class TitanPad : Application() {
         fun isAccessibilityServiceEnabled(context: Context): Boolean {
             try {
                 val am =
-                    context.getSystemService(Context.ACCESSIBILITY_SERVICE) as AccessibilityManager
+                    context.getSystemService(ACCESSIBILITY_SERVICE) as AccessibilityManager
                 val enabledServices =
                     am.getEnabledAccessibilityServiceList(
                         AccessibilityServiceInfo.FEEDBACK_ALL_MASK,

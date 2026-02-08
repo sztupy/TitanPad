@@ -1,6 +1,7 @@
 package scot.raven.titanpad.accessibility
 
 import android.accessibilityservice.AccessibilityService
+import android.annotation.SuppressLint
 import android.app.KeyguardManager
 import android.content.BroadcastReceiver
 import android.content.Context
@@ -46,6 +47,7 @@ import kotlinx.coroutines.launch
 /**
  * Receives key events, displays overlays, and performs gestures.
  */
+@SuppressLint("AccessibilityPolicy")
 class AppAccessibilityService : AccessibilityService(), LifecycleOwner,
     SavedStateRegistryOwner {
     private var windowManager: WindowManager? = null
@@ -86,8 +88,8 @@ class AppAccessibilityService : AccessibilityService(), LifecycleOwner,
     private var lastAppState = false
     private var lastStateChanged = false
     private var autoHideJob: Job? = null
-    private val keyguardManager by lazy { getSystemService(Context.KEYGUARD_SERVICE) as KeyguardManager }
-    private val imm by lazy { getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager }
+    private val keyguardManager by lazy { getSystemService(KEYGUARD_SERVICE) as KeyguardManager }
+    private val imm by lazy { getSystemService(INPUT_METHOD_SERVICE) as InputMethodManager }
     private val windowHeightMethod by lazy { InputMethodManager::class.java.getMethod("getInputMethodWindowVisibleHeight")}
 
     private val receiver = object : BroadcastReceiver() {
@@ -114,11 +116,7 @@ class AppAccessibilityService : AccessibilityService(), LifecycleOwner,
         fun activateStandardCursor(context: Context) {
             val intent = Intent(ACTION_ACTIVATE_CURSOR)
             intent.setPackage(context.packageName)
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-                context.sendBroadcast(intent, null)
-            } else {
-                context.sendBroadcast(intent)
-            }
+            context.sendBroadcast(intent, null)
         }
     }
 
@@ -199,12 +197,7 @@ class AppAccessibilityService : AccessibilityService(), LifecycleOwner,
             val filter = IntentFilter().apply {
                 addAction(ACTION_ACTIVATE_CURSOR)
             }
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
-                registerReceiver(receiver, filter, Context.RECEIVER_NOT_EXPORTED)
-            } else {
-                @Suppress("UnspecifiedRegisterReceiverFlag")
-                registerReceiver(receiver, filter)
-            }
+            registerReceiver(receiver, filter, RECEIVER_NOT_EXPORTED)
 
             lifecycleRegistry.handleLifecycleEvent(Lifecycle.Event.ON_RESUME)
 
@@ -243,7 +236,7 @@ class AppAccessibilityService : AccessibilityService(), LifecycleOwner,
         Logger.d("Restoring cursor overlay")
         val settings = TitanPad.getInstance().getSettingsFlow().value
         val cursorMapped = settings.cursorActivationKey != ApplicationConstants.OVERLAY_DISABLED
-        val cursorLost = (lastOverlayType == ModeCoordinator.OverlayMode.CURSOR) && !cursorMapped
+        (lastOverlayType == ModeCoordinator.OverlayMode.CURSOR) && !cursorMapped
 
         // Edge case: cursor previously autohidden and then cleared
         // Commenting out for now; always triggers for a user with keymapper and both internally unmapped

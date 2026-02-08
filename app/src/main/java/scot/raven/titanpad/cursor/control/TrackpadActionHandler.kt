@@ -105,7 +105,7 @@ class TrackpadActionHandler(
             try {
                 bindUserService()
                 while (isActive) {
-                    delay(100);
+                    delay(100)
                 }
             } catch (e: Exception) {
                 Log.e(DEBUG_TAG, "hidService: ${e.message}", e)
@@ -314,8 +314,8 @@ class TrackpadActionHandler(
                     val position = value.position
                     Log.d(DEBUG_TAG, "CLICK ${durationMs} X: ${position.x}, Y: ${position.y}, DX: ${dragStartX}, DY: ${dragStartY}")
 
-                    val fromX = dragStartX
-                    val fromY = dragStartY
+                    dragStartX
+                    dragStartY
                     var oldFingers = numFingers
 
                     scope.launch {
@@ -335,7 +335,7 @@ class TrackpadActionHandler(
     private val userServiceConnection: ServiceConnection = object : ServiceConnection {
         override fun onServiceConnected(componentName: ComponentName, binder: IBinder?) {
             val res = StringBuilder()
-            res.append("onServiceConnected: ").append(componentName.getClassName()).append('\n')
+            res.append("onServiceConnected: ").append(componentName.className).append('\n')
             if (binder != null && binder.pingBinder()) {
                 val service: IHidService = IHidService.Stub.asInterface(binder)
                 try {
@@ -352,14 +352,14 @@ class TrackpadActionHandler(
 
         override fun onServiceDisconnected(componentName: ComponentName) {
             hidService = null
-            Logger.i("onServiceDisconnected: " + '\n' + componentName.getClassName())
+            Logger.i("onServiceDisconnected: " + '\n' + componentName.className)
         }
     }
 
     private val userServiceArgs: UserServiceArgs = UserServiceArgs(
         ComponentName(
             BuildConfig.APPLICATION_ID,
-            HidService::class.java.getName()
+            HidService::class.java.name
         )
     )
         .daemon(false)

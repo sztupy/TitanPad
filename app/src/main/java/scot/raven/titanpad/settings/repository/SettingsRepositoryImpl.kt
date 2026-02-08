@@ -25,14 +25,12 @@ class SettingsRepositoryImpl(
 ) : SettingsRepository {
     companion object {
         private val ACTIVATION_DURATION = longPreferencesKey("activation_duration")
-        private val USE_NATURAL_SCROLLING = booleanPreferencesKey("use_natural_scrolling")
         private val SHOW_GESTURE_VISUAL = booleanPreferencesKey("show_gesture_visual")
         private val VISUAL_SIZE = intPreferencesKey("visual_size")
         private val CURSOR_SIZE = intPreferencesKey("cursor_size")
         private val CURSOR_ACCELERATION_START = longPreferencesKey("cursor_acceleration_start")
         private val CURSOR_ACCELERATION_DURATION = longPreferencesKey("cursor_acceleration_duration")
         private val CURSOR_ACTIVATION_KEY = intPreferencesKey("cursor_activation_key")
-        private val GESTURE_STYLE = stringPreferencesKey("gesture_style")
         private val ALLOW_PASSTHROUGH = booleanPreferencesKey("allow_passthrough")
         private val HIDE_ON_KEYBOARD_OPEN = booleanPreferencesKey("hide_on_keyboard_open")
         private val HIDE_ON_LAUNCHER_OPEN = booleanPreferencesKey("hide_on_launcher_open")
@@ -85,13 +83,6 @@ class SettingsRepositoryImpl(
                 emit(emptyPreferences())
             }
             .map { preferences ->
-                val gestureStyle = getEnumPreference(
-                    preferences,
-                    GESTURE_STYLE,
-                    OverlaySettings.DEFAULT.gestureStyle,
-                    "gesture style"
-                )
-
                 val cursorImageAlignment = getEnumPreference(
                     preferences,
                     CURSOR_IMAGE_ALIGNMENT,
@@ -144,8 +135,6 @@ class SettingsRepositoryImpl(
                 val settings = OverlaySettings(
                     activationDuration = preferences[ACTIVATION_DURATION]
                         ?: OverlaySettings.DEFAULT.activationDuration,
-                    useNaturalScrolling = preferences[USE_NATURAL_SCROLLING]
-                        ?: OverlaySettings.DEFAULT.useNaturalScrolling,
                     showGestureVisualization = preferences[SHOW_GESTURE_VISUAL]
                         ?: OverlaySettings.DEFAULT.showGestureVisualization,
                     visualSize = preferences[VISUAL_SIZE] ?: OverlaySettings.DEFAULT.visualSize,
@@ -156,7 +145,6 @@ class SettingsRepositoryImpl(
                         ?: OverlaySettings.DEFAULT.cursorAccelerationDuration,
                     cursorActivationKey = preferences[CURSOR_ACTIVATION_KEY]
                         ?: OverlaySettings.DEFAULT.cursorActivationKey,
-                    gestureStyle = gestureStyle,
                     allowPassthrough = preferences[ALLOW_PASSTHROUGH]
                         ?: OverlaySettings.DEFAULT.allowPassthrough,
                     hideOnKeyboardOpen = preferences[HIDE_ON_KEYBOARD_OPEN]
@@ -173,8 +161,6 @@ class SettingsRepositoryImpl(
                         ?: OverlaySettings.DEFAULT.standardCursorHex,
                     standardCursorMatchBorder = preferences[STANDARD_CURSOR_MATCH_BORDER]
                         ?: OverlaySettings.DEFAULT.standardCursorMatchBorder,
-                    allowOverlappingGestures = preferences[ALLOW_OVERLAPPING_GESTURES]
-                        ?: OverlaySettings.DEFAULT.allowOverlappingGestures,
                     cursorImagePath = preferences[CURSOR_IMAGE_PATH]
                         ?: OverlaySettings.DEFAULT.cursorImagePath,
                     clickableImagePath = preferences[CLICKABLE_IMAGE_PATH]
@@ -186,8 +172,6 @@ class SettingsRepositoryImpl(
                     cursorImageAlignment = cursorImageAlignment,
                     clickableImageAlignment = clickableImageAlignment,
                     scrollToggleImageAlignment = scrollToggleImageAlignment,
-                    collectLogs = preferences[COLLECT_LOGS]
-                        ?: OverlaySettings.DEFAULT.collectLogs,
                     autoHideApps = autoHideApps,
                     clickableApps = clickableApps,
                     showNotification = preferences[SHOW_NOTIFICATION]
@@ -207,14 +191,12 @@ class SettingsRepositoryImpl(
         try {
             dataStore.edit { preferences ->
                 preferences[ACTIVATION_DURATION] = settings.activationDuration
-                preferences[USE_NATURAL_SCROLLING] = settings.useNaturalScrolling
                 preferences[SHOW_GESTURE_VISUAL] = settings.showGestureVisualization
                 preferences[VISUAL_SIZE] = settings.visualSize
                 preferences[CURSOR_SIZE] = settings.cursorSize
                 preferences[CURSOR_ACCELERATION_START] = settings.cursorAccelerationStart
                 preferences[CURSOR_ACCELERATION_DURATION] = settings.cursorAccelerationDuration
                 preferences[CURSOR_ACTIVATION_KEY] = settings.cursorActivationKey
-                preferences[GESTURE_STYLE] = settings.gestureStyle.name
                 preferences[ALLOW_PASSTHROUGH] = settings.allowPassthrough
                 preferences[HIDE_ON_KEYBOARD_OPEN] = settings.hideOnKeyboardOpen
                 preferences[HIDE_ON_LAUNCHER_OPEN] = settings.hideOnLauncherOpen
@@ -223,12 +205,10 @@ class SettingsRepositoryImpl(
                 preferences[USE_PHYSICAL_SIZE] = settings.usePhysicalSize
                 preferences[STANDARD_CURSOR_HEX] = settings.standardCursorHex
                 preferences[STANDARD_CURSOR_MATCH_BORDER] = settings.standardCursorMatchBorder
-                preferences[ALLOW_OVERLAPPING_GESTURES] = settings.allowOverlappingGestures
                 preferences[USE_CUSTOM_CURSOR_ICON] = settings.useCustomCursorIcon
                 preferences[CURSOR_IMAGE_ALIGNMENT] = settings.cursorImageAlignment.name
                 preferences[CLICKABLE_IMAGE_ALIGNMENT] = settings.clickableImageAlignment.name
                 preferences[SCROLL_TOGGLE_IMAGE_ALIGNMENT] = settings.scrollToggleImageAlignment.name
-                preferences[COLLECT_LOGS] = settings.collectLogs
                 preferences[AUTO_HIDE_APPS] = settings.autoHideApps.joinToString(",")
                 preferences[CLICKABLE_APPS] = settings.clickableApps.joinToString(",")
                 preferences[SHOW_NOTIFICATION] = settings.showNotification

@@ -18,7 +18,6 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import scot.raven.titanpad.core.constants.GestureConstants
-import scot.raven.titanpad.settings.ui.DropdownPreferenceItem
 import scot.raven.titanpad.settings.ui.PreferenceCategory
 import scot.raven.titanpad.settings.ui.SettingsState
 import scot.raven.titanpad.settings.ui.SliderPreferenceItem

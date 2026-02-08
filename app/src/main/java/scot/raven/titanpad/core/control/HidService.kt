@@ -66,6 +66,6 @@ class HidService : IHidService.Stub() {
     }
 
     companion object {
-        val LOG_TAG = "HidService"
+        const val LOG_TAG = "HidService"
     }
 }

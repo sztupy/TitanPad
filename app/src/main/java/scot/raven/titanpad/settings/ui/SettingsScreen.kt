@@ -4,7 +4,6 @@ import android.content.Context
 import android.content.Intent
 import android.content.pm.ApplicationInfo
 import android.content.pm.PackageManager
-import android.net.Uri
 import android.os.Bundle
 import android.provider.Settings
 import android.view.KeyEvent
@@ -84,6 +83,7 @@ import scot.raven.titanpad.core.shizuku.ShizukuStatus
 import scot.raven.titanpad.settings.domain.OverlaySettings
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import androidx.core.net.toUri
 
 /**
  * Main settings screen.
@@ -938,12 +938,7 @@ suspend fun loadInstalledApps(packageManager: PackageManager, includeSystemApps:
             }
                 .distinctBy { it.packageName }
                 .sortedWith(
-                    compareBy<AppInfo>
-//                        { !it.isHomeLauncher }
-//                        .thenBy { !it.hasLauncherActivity }
-//                        .thenBy { it.isSystemApp }
-//                        .thenBy
-                    { it.appName.lowercase() }
+                    compareBy { it.appName.lowercase() }
                 )
         } catch (e: Exception) {
             emptyList()
@@ -1070,7 +1065,7 @@ fun ColorPickerDialog(
 }
 
 fun openNewTabWindow(urls: String, context: Context) {
-    val uris = Uri.parse(urls)
+    val uris = urls.toUri()
     val intents = Intent(Intent.ACTION_VIEW, uris)
     val b = Bundle()
     b.putBoolean("new_window", true)

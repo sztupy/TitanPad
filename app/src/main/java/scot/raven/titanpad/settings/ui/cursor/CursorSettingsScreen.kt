@@ -1,11 +1,10 @@
 package scot.raven.titanpad.settings.ui.cursor
 
-import KeyCaptureOverlay
+import scot.raven.titanpad.core.ui.KeyCaptureOverlay
 import android.app.Activity
 import android.content.Context
 import android.content.Intent
 import android.net.Uri
-import android.os.Build
 import android.provider.MediaStore
 import android.webkit.MimeTypeMap
 import androidx.activity.compose.rememberLauncherForActivityResult

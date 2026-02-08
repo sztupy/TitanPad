@@ -61,7 +61,7 @@ object ShizukuConnection {
 
     private var lastPermissionRequestTime = 0L
     private var permissionRetryCount = 0
-    private val maxRetries = 3
+    private const val maxRetries = 3
 
     fun initialize(): Boolean {
         if (!initialized.compareAndSet(false, true)) {
@@ -212,19 +212,6 @@ object ShizukuConnection {
             Logger.e("Shizuku permission verification failed", e)
             return false
         }
-    }
-
-    fun isReady(forceRefresh: Boolean = false): Boolean {
-        if (forceRefresh) {
-            val currentStatus = checkPermissionAndUpdateStatus()
-            return currentStatus == ShizukuStatus.READY
-        }
-        return _statusFlow.value == ShizukuStatus.READY
-    }
-
-    fun refreshStatus(): ShizukuStatus {
-        Logger.d("Manually refreshing Shizuku status")
-        return checkPermissionAndUpdateStatus()
     }
 
     fun observeStatus(observer: (ShizukuStatus) -> Unit): Job {

@@ -16,6 +16,7 @@ import kotlinx.coroutines.launch
 import rikka.shizuku.Shizuku
 import rikka.shizuku.Shizuku.UserServiceArgs
 import scot.raven.titanpad.BuildConfig
+import scot.raven.titanpad.accessibility.AppAccessibilityService
 import scot.raven.titanpad.core.control.HidService
 import scot.raven.titanpad.core.control.IHidService
 import scot.raven.titanpad.core.logs.Logger
@@ -36,9 +37,6 @@ class TrackpadActionHandler(
     private val trackpadEventDevice: String = DEFAULT_TRACKPAD_EVENT_DEVICE,
     private val swipeUpThreshold: Int = DEFAULT_SWIPE_UP_THRESHOLD,
     private val logTag: String = DEFAULT_LOG_TAG,
-    private val shizukuPing: () -> Boolean = {
-        Shizuku.pingBinder() && Shizuku.checkSelfPermission() == PackageManager.PERMISSION_GRANTED
-    }
 ) {
 
     private var geteventJob: Job? = null
@@ -247,7 +245,6 @@ class TrackpadActionHandler(
         if (touchDown && startPosSet) {
             val deltaX = currentX - startX + 0.0f
             val deltaY = currentY - startY + 0.0f
-            Log.d(DEBUG_TAG, "X: ${deltaX}, Y: ${deltaY}, W: ${width}, NF: ${numFingers}, DSX: ${dragStartX} DSY: ${dragStartY}")
 
             hidService?.setMousePosition(deltaX.toInt(), deltaY.toInt(), 0)
 
@@ -303,6 +300,10 @@ class TrackpadActionHandler(
         }
 
         if (!touchDown && !startPosSet) {
+            val service = AppAccessibilityService.getInstance()
+            val clickable = service?.isNodeClickable(cursorStateManager.cursorState.value?.position) == true && service.showClickableInCurrentApp()
+            cursorStateManager.updateClickable(clickable)
+
             val durationMs = (endTime - startTime) / 1_000_000.0
             if (durationMs < 100 || numFingers > 1) {
                 Log.d(DEBUG_TAG, "CLICK")
@@ -312,11 +313,11 @@ class TrackpadActionHandler(
                 if (cursorStateManager.cursorState.value != null) {
                     val value = cursorStateManager.cursorState.value!!
                     val position = value.position
-                    Log.d(DEBUG_TAG, "CLICK ${durationMs} X: ${position.x}, Y: ${position.y}, DX: ${dragStartX}, DY: ${dragStartY}")
+                    Log.d(DEBUG_TAG, "CLICK $durationMs X: ${position.x}, Y: ${position.y}, DX: $dragStartX, DY: $dragStartY")
 
                     dragStartX
                     dragStartY
-                    var oldFingers = numFingers
+                    val oldFingers = numFingers
 
                     scope.launch {
                         if (oldFingers<=1) {
@@ -401,13 +402,13 @@ class TrackpadActionHandler(
         const val DEFAULT_SWIPE_UP_THRESHOLD = 300
 
         // Titan 2 event list
-        const val DEFAULT_VOLUME_EVENT_DEVICE = "/dev/input/event0" // volume up and down
-        const val DEFAULT_LEFT_TOP_EVENT_DEVICE = "/dev/input/event1" // left top button is event 00f9; Power button is also here
-        const val DEFAULT_MAIN_SCREEN_EVENT_DEVICE = "/dev/input/event2" // main screen touch
-        const val DEFAULT_LEFT_BOTTOM_EVENT_DEVICE = "/dev/input/event3" // left bottom button is event 00fa
-        // event4 would be the non-existent headphone jack sensor
-        const val DEFAULT_BACK_SCREEN_EVENT_DEVICE = "/dev/input/event5" // back screen touch
-        const val DEFAULT_KEYBOARD_EVENT_DEVICE = "/dev/input/event6" // keyboard buttons
+//        const val DEFAULT_VOLUME_EVENT_DEVICE = "/dev/input/event0" // volume up and down
+//        const val DEFAULT_LEFT_TOP_EVENT_DEVICE = "/dev/input/event1" // left top button is event 00f9; Power button is also here
+//        const val DEFAULT_MAIN_SCREEN_EVENT_DEVICE = "/dev/input/event2" // main screen touch
+//        const val DEFAULT_LEFT_BOTTOM_EVENT_DEVICE = "/dev/input/event3" // left bottom button is event 00fa
+//        // event4 would be the non-existent headphone jack sensor
+//        const val DEFAULT_BACK_SCREEN_EVENT_DEVICE = "/dev/input/event5" // back screen touch
+//        const val DEFAULT_KEYBOARD_EVENT_DEVICE = "/dev/input/event6" // keyboard buttons
         const val DEFAULT_TRACKPAD_EVENT_DEVICE = "/dev/input/event7" // keyboard touch
         // event8 has an unknown purpose
 

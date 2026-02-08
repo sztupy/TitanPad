@@ -3,16 +3,11 @@ package scot.raven.titanpad.gesture.standard
 import android.accessibilityservice.AccessibilityService
 import android.accessibilityservice.GestureDescription
 import android.graphics.Path
-import android.os.Build
 import android.os.Handler
 import android.os.Looper
-import androidx.annotation.RequiresApi
-import scot.raven.titanpad.core.constants.GestureConstants
 import scot.raven.titanpad.core.logs.Logger
 import scot.raven.titanpad.gesture.api.GestureCompletionListener
 import scot.raven.titanpad.gesture.api.GestureStrategy
-import scot.raven.titanpad.settings.domain.OverlaySettings
-import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlin.coroutines.resume
 
@@ -20,11 +15,8 @@ import kotlin.coroutines.resume
  * Implements gestures using the AccessibilityService API.
  */
 class DefaultGestureStrategy(
-    private val service: AccessibilityService,
-    private val settingsFlow: StateFlow<OverlaySettings>
+    private val service: AccessibilityService
 ) : GestureStrategy {
-
-    private val scrollPath = Path()
     private val tapPath = Path()
     private var activeStroke: GestureDescription.StrokeDescription? = null
 
@@ -53,19 +45,6 @@ class DefaultGestureStrategy(
                 // dispatchGesture(gesture, null, handler) ?
             }
         }
-
-    // Callbacks to pause for fixed gesture style
-    private fun completeGestureCallback(completionListener: GestureCompletionListener?): AccessibilityService.GestureResultCallback {
-        return object : AccessibilityService.GestureResultCallback () {
-            override fun onCompleted(gestureDescription: GestureDescription?) {
-                completionListener?.onGestureCompleted(true)
-            }
-
-            override fun onCancelled(gestureDescription: GestureDescription?) {
-                completionListener?.onGestureCompleted(true)
-            }
-        }
-    }
 
     override suspend fun startTap(x: Float, y: Float, completionListener: GestureCompletionListener?): Boolean {
         try {

@@ -87,7 +87,7 @@ class CoreManager(
             modeCoordinator = ModeCoordinator()
             notificationManager = NotificationManager(service)
 
-            val defaultStrategy = DefaultGestureStrategy(service, settingsFlow)
+            val defaultStrategy = DefaultGestureStrategy(service)
 
             gestureManager = GestureManager(
                 defaultStrategy,
@@ -97,7 +97,6 @@ class CoreManager(
 
             // Cursor components
             cursorStateManager = CursorStateManager(
-                settingsFlow,
                 screenDimensionsFlow
             )
             cursorActionHandler = CursorActionHandler(

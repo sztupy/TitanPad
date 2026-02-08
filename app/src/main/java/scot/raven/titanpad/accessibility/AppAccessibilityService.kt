@@ -8,7 +8,6 @@ import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
 import android.graphics.Rect
-import android.os.Build
 import android.view.KeyEvent
 import android.view.WindowManager
 import android.view.accessibility.AccessibilityEvent
@@ -73,7 +72,7 @@ class AppAccessibilityService : AccessibilityService(), LifecycleOwner,
 
     private var lastOverlayType: ModeCoordinator.OverlayMode = ModeCoordinator.OverlayMode.OFF
 
-    private val _keysPressed = MutableStateFlow<Int>(0)
+    private val _keysPressed = MutableStateFlow(0)
     private val keysPressed: StateFlow<Int> = _keysPressed.asStateFlow()
     private val _layoutApplied = MutableSharedFlow<Unit>(
         replay = 0,
@@ -237,12 +236,6 @@ class AppAccessibilityService : AccessibilityService(), LifecycleOwner,
         val settings = TitanPad.getInstance().getSettingsFlow().value
         val cursorMapped = settings.cursorActivationKey != ApplicationConstants.OVERLAY_DISABLED
         (lastOverlayType == ModeCoordinator.OverlayMode.CURSOR) && !cursorMapped
-
-        // Edge case: cursor previously autohidden and then cleared
-        // Commenting out for now; always triggers for a user with keymapper and both internally unmapped
-//        if (cursorLost) {
-//            lastOverlayType = ModeCoordinator.OverlayMode.OFF
-//        }
 
         // If no previous overlay type, default to any mapped cursor
         if (lastOverlayType == ModeCoordinator.OverlayMode.OFF) {

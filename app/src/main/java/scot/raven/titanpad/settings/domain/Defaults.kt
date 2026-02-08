@@ -1,6 +1,5 @@
 package scot.raven.titanpad.settings.domain
 
-import android.os.Build
 import android.view.KeyEvent
 import scot.raven.titanpad.core.constants.ApplicationConstants
 import scot.raven.titanpad.core.constants.CursorConstants

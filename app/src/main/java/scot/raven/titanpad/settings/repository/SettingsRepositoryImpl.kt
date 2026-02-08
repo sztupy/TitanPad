@@ -5,7 +5,6 @@ import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.emptyPreferences
-import androidx.datastore.preferences.core.floatPreferencesKey
 import androidx.datastore.preferences.core.intPreferencesKey
 import androidx.datastore.preferences.core.longPreferencesKey
 import androidx.datastore.preferences.core.stringPreferencesKey
@@ -13,9 +12,7 @@ import scot.raven.titanpad.core.logs.Logger
 import scot.raven.titanpad.settings.domain.OverlaySettings
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.catch
-import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.runBlocking
 
 /**
  * Persists user settings.
@@ -39,7 +36,6 @@ class SettingsRepositoryImpl(
         private val USE_PHYSICAL_SIZE = booleanPreferencesKey("use_physical_size")
         private val STANDARD_CURSOR_HEX = stringPreferencesKey("standard_cursor_hex")
         private val STANDARD_CURSOR_MATCH_BORDER = booleanPreferencesKey("standard_cursor_match_border")
-        private val ALLOW_OVERLAPPING_GESTURES = booleanPreferencesKey("allow_overlapping_gestures")
         private val CURSOR_IMAGE_PATH = stringPreferencesKey("cursor_image_path")
         private val CLICKABLE_IMAGE_PATH = stringPreferencesKey("clickable_image_path")
         private val SCROLL_TOGGLE_IMAGE_PATH = stringPreferencesKey("scroll_toggle_image_path")
@@ -47,7 +43,6 @@ class SettingsRepositoryImpl(
         private val CURSOR_IMAGE_ALIGNMENT = stringPreferencesKey("cursor_image_alignment")
         private val CLICKABLE_IMAGE_ALIGNMENT = stringPreferencesKey("clickable_image_alignment")
         private val SCROLL_TOGGLE_IMAGE_ALIGNMENT = stringPreferencesKey("scroll_toggle_image_alignment")
-        private val COLLECT_LOGS = booleanPreferencesKey("collect_logs")
         private val AUTO_HIDE_APPS = stringPreferencesKey("auto_hide_apps")
         private val CLICKABLE_APPS = stringPreferencesKey("clickable_apps")
         private val SHOW_NOTIFICATION = booleanPreferencesKey("show_notification")
@@ -261,25 +256,6 @@ class SettingsRepositoryImpl(
                 isValid = false,
                 errors = listOf("Error updating settings: ${e.message}"),
             )
-        }
-    }
-
-    fun exportSettings(): String {
-        return try {
-            runBlocking {
-                val preferences = dataStore.data.first()
-                val sb = StringBuilder()
-                val sortedKeys = preferences.asMap().keys.sortedBy { it.name }
-                for (key in sortedKeys) {
-                    val value = preferences[key]
-                    sb.appendLine("${key.name}=$value")
-                }
-
-                sb.toString()
-            }
-        } catch (e: Exception) {
-            Logger.e("Failed to export DataStore contents", e)
-            "Failed to export settings: ${e.message}"
         }
     }
 }

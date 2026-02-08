@@ -1,5 +1,7 @@
 [versions]
 agp = "8.13.2"
+coilCompose = "3.3.0"
+coilGif = "3.3.0"
 datastorePreferences = "1.2.0"
 kotlin = "2.3.10"
 coreKtx = "1.17.0"
@@ -9,8 +11,6 @@ espressoCore = "3.7.0"
 lifecycleRuntimeKtx = "2.10.0"
 activityCompose = "1.12.3"
 composeBom = "2026.01.01"
-materialIconsCore = "1.7.8"
-materialIconsExtended = "1.7.8"
 savedstateKtx = "1.4.0"
 
 [libraries]
@@ -18,6 +18,8 @@ androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = 
 androidx-datastore-preferences = { module = "androidx.datastore:datastore-preferences", version.ref = "datastorePreferences" }
 androidx-lifecycle-viewmodel-compose = { module = "androidx.lifecycle:lifecycle-viewmodel-compose" }
 androidx-savedstate-ktx = { module = "androidx.savedstate:savedstate-ktx", version.ref = "savedstateKtx" }
+coil-compose = { module = "io.coil-kt.coil3:coil-compose", version.ref = "coilCompose" }
+coil-gif = { module = "io.coil-kt.coil3:coil-gif", version.ref = "coilGif" }
 compose-material-icons = { group = "androidx.compose.material", name = "material-icons-core" }
 junit = { group = "junit", name = "junit", version.ref = "junit" }
 androidx-junit = { group = "androidx.test.ext", name = "junit", version.ref = "junitVersion" }

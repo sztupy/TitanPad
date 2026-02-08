@@ -26,7 +26,6 @@ class SettingsState(
     val uiState: StateFlow<SettingsUiState> = _uiState.asStateFlow()
 
     private val _validationErrors = MutableStateFlow<List<String>>(emptyList())
-    val validationErrors: StateFlow<List<String>> = _validationErrors.asStateFlow()
 
     private var toastFunction: ((String) -> Unit)? = null
 

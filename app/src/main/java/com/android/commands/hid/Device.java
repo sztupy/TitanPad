@@ -1,5 +1,6 @@
 package com.android.commands.hid;
 
+import android.annotation.SuppressLint;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
@@ -21,13 +22,17 @@ import java.nio.ByteBuffer;
 import java.util.Arrays;
 import java.util.Map;
 
+@SuppressWarnings({"FieldCanBeLocal", "unused", "ReplaceNullCheck"})
+@SuppressLint("ObsoleteSdkInt")
 public class Device {
     private static final String TAG = "HidDevice";
 
     private static final int MSG_OPEN_DEVICE = 1;
     private static final int MSG_SEND_REPORT = 2;
     private static final int MSG_SEND_GET_FEATURE_REPORT_REPLY = 3;
+    @SuppressLint("ObsoleteSdkInt")
     private static final int MSG_SEND_SET_REPORT_REPLY = Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU ? 4 : -1;
+    @SuppressLint("ObsoleteSdkInt")
     private static final int MSG_CLOSE_DEVICE = Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU ? 5 : 4;
 
     // Sync with linux uhid_event_type::UHID_OUTPUT
@@ -139,6 +144,7 @@ public class Device {
             super(looper);
         }
 
+        @SuppressLint("ObsoleteSdkInt")
         @Override
         public void handleMessage(Message msg) {
 
@@ -203,6 +209,7 @@ public class Device {
         }
     }
 
+    @SuppressWarnings("unused")
     private class DeviceCallback {
         public void onDeviceOpen() {
             mHandler.resumeEvents();

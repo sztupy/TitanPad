@@ -9,13 +9,9 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.drawscope.Stroke
 import scot.raven.titanpad.core.constants.GestureConstants
 import scot.raven.titanpad.core.domain.ScreenDimensions
-import scot.raven.titanpad.core.logs.Logger
 import scot.raven.titanpad.settings.domain.OverlaySettings
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.update
-import kotlinx.coroutines.launch
 
 data class GesturePath(
     val id: String,
@@ -25,11 +21,7 @@ data class GesturePath(
 )
 
 enum class GestureType {
-    TAP,
-    SCROLL,
-    ZOOM_FINGER1,
-    ZOOM_FINGER2,
-    LONG_PRESS,
+    TAP
 }
 
 /**
@@ -62,77 +54,6 @@ fun GestureVisualization(
         }
     }
 }
-
-fun calculateInterpolatedPosition(
-    startPosition: Offset,
-    endPosition: Offset,
-    fraction: Float,
-): Offset {
-    val x = startPosition.x + (endPosition.x - startPosition.x) * fraction
-    val y = startPosition.y + (endPosition.y - startPosition.y) * fraction
-    return Offset(x, y)
-}
-
-fun animateGesturePath(
-    gestureId: String,
-    startPosition: Offset,
-    endPosition: Offset,
-    duration: Long,
-    type: GestureType,
-    pathsFlow: MutableStateFlow<List<GesturePath>>,
-    coroutineScope: CoroutineScope,
-) {
-    val path =
-        GesturePath(
-            id = gestureId,
-            currentPosition = startPosition,
-            type = type,
-            startTime = System.currentTimeMillis(),
-        )
-    pathsFlow.update { it + path }
-
-    coroutineScope.launch {
-        val startTimeMs = System.currentTimeMillis()
-
-        try {
-            while (System.currentTimeMillis() - startTimeMs < duration) {
-                val elapsedFraction =
-                    (System.currentTimeMillis() - startTimeMs).toFloat() / duration
-                val currentPosition =
-                    calculateInterpolatedPosition(
-                        startPosition,
-                        endPosition,
-                        elapsedFraction,
-                    )
-
-                pathsFlow.update { currentPaths ->
-                    currentPaths.map {
-                        if (it.id == gestureId) it.copy(currentPosition = currentPosition) else it
-                    }
-                }
-
-                delay(16)
-            }
-
-            pathsFlow.update { currentPaths ->
-                currentPaths.map {
-                    if (it.id == gestureId) it.copy(currentPosition = endPosition) else it
-                }
-            }
-
-            delay(50)
-            pathsFlow.update { currentPaths ->
-                currentPaths.filter { it.id != gestureId }
-            }
-        } catch (e: Exception) {
-            Logger.e("Error updating gesture position", e)
-            pathsFlow.update { currentPaths ->
-                currentPaths.filter { it.id != gestureId }
-            }
-        }
-    }
-}
-
 fun showStationaryGesture(
     gestureId: String,
     position: Offset,

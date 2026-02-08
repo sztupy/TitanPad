@@ -1,5 +1,6 @@
+<!--suppress CheckImageSize, CheckImageSize -->eckImageSize -->eckImageSize -->
 <div align="center">
-<img src='./app/src/main/ic_launcher-playstore.png' width=100>
+<img src='./app/src/main/ic_launcher-playstore.png' width=100 alt='Application icon'>
 </div>
 
 ---
@@ -9,7 +10,7 @@
 ![GitHub release (latest by date)](https://img.shields.io/github/v/release/sztupy/TitanPad) ![Android Version](https://img.shields.io/badge/Android-15.0%2B-brightgreen) ![GitHub all releases](https://img.shields.io/github/downloads/sztupy/TitanPad/total) ![License](https://img.shields.io/github/license/sztupy/TitanPad)
 
 <div align="center">
-<img src='./docs/gifs/demo.webp' width=450>
+<img src='./docs/gifs/demo.webp' width=450 alt='Application demo'>
 </div>
 
 TitanPad is an Accessibility service for Unihertz Titan 2 allowing you to use the keyboard's capacitive sensor as a trackpad moving a virtual mouse around the screen
@@ -73,9 +74,9 @@ Multi finger features are currently calibrated to my fingers which are fairly bi
 ### Verifying Shizuku authorization
 A green banner on the main page indicates that Shizuku authorization has been granted to TitanPad. Only the third screenshot below indicates successful authorization.
 <div align="center">
-<img src='./docs/imgs/Screenshot_20250328_194724.png' width=200>
-<img src='./docs/imgs/Screenshot_20250328_194745.png' width=200>
-<img src='./docs/imgs/Screenshot_20250328_194815.png' width=200>
+<img src='./docs/imgs/Screenshot_20250328_194724.png' width=200 alt='Screenshot showing shizuku settings missing'>
+<img src='./docs/imgs/Screenshot_20250328_194745.png' width=200 alt='Screenshot showing shizuku not being enabled'>
+<img src='./docs/imgs/Screenshot_20250328_194815.png' width=200 alt='Screenshot showing both accessibility and shizuku enabled'>
 </div>
 
 **WARNING!** Also note that due to a bug in Shizuku v13.6.0 (the latest official release as of February 2026) it does not work fully on MTK phones. You either have to downgrade to v13.5.4, or use [thedjchi's Shizuku fork](https://github.com/thedjchi/Shizuku/releases), which also contain other fixes and improvements. 

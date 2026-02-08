@@ -3,9 +3,7 @@ package scot.raven.titanpad.cursor.control
 import android.view.KeyEvent
 import scot.raven.titanpad.core.control.CoreManager.ChannelMessage
 import scot.raven.titanpad.core.control.ModeCoordinator
-import scot.raven.titanpad.core.domain.ScrollDirection
 import scot.raven.titanpad.core.logs.Logger
-import scot.raven.titanpad.cursor.domain.CursorDirection
 import scot.raven.titanpad.gesture.api.GestureManager
 import scot.raven.titanpad.settings.domain.OverlaySettings
 import kotlinx.coroutines.CoroutineScope
@@ -28,14 +26,12 @@ class CursorActionHandler(
     private var activationKeyPressStartTime: Long = -1
     private var isActivationKeyPressed: Boolean = false
     private var wasActivated: Boolean = false
-    private var currentScrollDirection: ScrollDirection? = null
     private var currentZoomDirection: Boolean? = null
     private var activationJob: Job? = null
     private var continuousGestureJob: Job? = null
     private var movementJob: Job? = null
     private var slowScrollJob: Job? = null
 
-    private val activeDirections = mutableSetOf<CursorDirection>()
     private var lastScrollTime: Long? = null
 
     private fun cancelActivationJob() {
@@ -44,7 +40,6 @@ class CursorActionHandler(
     }
 
     private fun cancelContinuousGesture() {
-        currentScrollDirection = null
         currentZoomDirection = null
         continuousGestureJob?.cancel()
         continuousGestureJob = null
@@ -54,7 +49,6 @@ class CursorActionHandler(
     private fun cancelMovementJob() {
         movementJob?.cancel()
         movementJob = null
-        activeDirections.clear()
     }
 
     fun cleanup() {

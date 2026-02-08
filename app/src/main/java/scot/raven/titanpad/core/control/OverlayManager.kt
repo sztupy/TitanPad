@@ -52,7 +52,6 @@ class OverlayManager(
 ) {
     private var overlayView: ComposeView? = null
     private var currentPaths: Int? = null
-    private var isOrientationChanging = false
 
     fun initialize() {
         try {
@@ -257,25 +256,6 @@ class OverlayManager(
         } catch (e: Exception) {
             Logger.e("Failed to remove overlay view", e)
             overlayView = null
-        }
-    }
-
-    @SuppressLint("ObsoleteSdkInt")
-    @Suppress("Deprecation")
-    fun getInsetsFromView(): Rect {
-        val view = overlayView ?: return Rect(0, 0, 0, 0)
-
-        return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            view.rootWindowInsets?.let {
-                Rect(
-                    it.systemWindowInsetLeft,
-                    it.systemWindowInsetTop,
-                    it.systemWindowInsetRight,
-                    it.systemWindowInsetBottom
-                )
-            } ?: Rect(0, 0, 0, 0)
-        } else {
-            Rect(0, 0, 0, 0)
         }
     }
 

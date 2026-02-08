@@ -3,10 +3,8 @@ package scot.raven.titanpad.core.domain
 import android.content.Context
 import android.graphics.Rect
 import android.hardware.display.DisplayManager
-import android.os.Build
 import android.os.Handler
 import android.os.Looper
-import android.util.DisplayMetrics
 import android.view.Choreographer
 import android.view.Display
 import android.view.WindowInsets
@@ -79,7 +77,6 @@ class OrientationHandler(
         }
     }
 
-    @Suppress("Deprecation")
     private fun getPhysicalDimensions(): ScreenDimensions {
         val bounds = windowManager.currentWindowMetrics.bounds
         return ScreenDimensions(bounds.width(), bounds.height())
@@ -92,7 +89,6 @@ class OrientationHandler(
         return Rect(insets.left, insets.top, insets.right, insets.bottom)
     }
 
-    @Suppress("Deprecation")
     private fun getUsableDimensions(): ScreenDimensions {
         val windowMetrics = windowManager.currentWindowMetrics
         val insets = windowMetrics.windowInsets
@@ -112,7 +108,6 @@ class OrientationHandler(
 
     private fun getOrientation(): OrientationUtil.Orientation {
         val windowManager = context.getSystemService(Context.WINDOW_SERVICE) as WindowManager
-        @Suppress("Deprecation")
         val defaultRotation = windowManager.defaultDisplay.rotation
 
         val rotation = runCatching {

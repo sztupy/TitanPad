@@ -2,7 +2,6 @@ package scot.raven.titanpad.settings.domain
 
 import scot.raven.titanpad.core.constants.ApplicationConstants
 import scot.raven.titanpad.core.constants.CursorConstants
-import scot.raven.titanpad.core.constants.GestureConstants
 import scot.raven.titanpad.cursor.domain.IconAlignment
 
 /**

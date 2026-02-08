@@ -2,16 +2,11 @@ package scot.raven.titanpad.gesture.api
 
 import android.os.Build
 import androidx.compose.ui.geometry.Offset
-import scot.raven.titanpad.core.constants.GestureConstants
-import scot.raven.titanpad.core.domain.ScreenDimensions
-import scot.raven.titanpad.core.domain.ScrollDirection
 import scot.raven.titanpad.core.logs.Logger
 import scot.raven.titanpad.core.shizuku.ShizukuConnection
-import scot.raven.titanpad.core.util.OrientationUtil
 import scot.raven.titanpad.core.util.VersionUtil
 import scot.raven.titanpad.gesture.ui.GesturePath
 import scot.raven.titanpad.gesture.ui.GestureType
-import scot.raven.titanpad.gesture.ui.animateGesturePath
 import scot.raven.titanpad.gesture.ui.endStationaryGesture
 import scot.raven.titanpad.gesture.ui.showStationaryGesture
 import scot.raven.titanpad.settings.domain.OverlaySettings
@@ -40,7 +35,6 @@ class GestureManager(
     private var shizukuObserverJob: Job? = null
 
     private val _isReady = MutableStateFlow(true)
-    val isReady: StateFlow<Boolean> = _isReady.asStateFlow()
     private var currentTapVisual: String = ""
 
     fun setGestureReady(ready: Boolean) {

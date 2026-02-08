@@ -5,7 +5,6 @@ import android.app.NotificationManager
 import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
-import android.os.Build
 import androidx.core.app.NotificationCompat
 import scot.raven.titanpad.R
 import scot.raven.titanpad.core.control.ModeCoordinator
@@ -101,9 +100,5 @@ class NotificationManager(private val context: Context) {
         } catch (e: Exception) {
             Logger.e("Error hiding cursor notification", e)
         }
-    }
-
-    fun cleanup() {
-        hideNotification()
     }
 }

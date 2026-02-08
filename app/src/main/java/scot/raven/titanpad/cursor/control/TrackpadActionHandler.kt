@@ -35,11 +35,15 @@ class TrackpadActionHandler(
     private val gestureManager: GestureManager,
     private val scope: CoroutineScope,
     private val trackpadEventDevice: String = DEFAULT_TRACKPAD_EVENT_DEVICE,
+    private val topButtonEventDevice: String = DEFAULT_LEFT_TOP_EVENT_DEVICE,
+    private val bottomButtonEventDevice: String = DEFAULT_LEFT_BOTTOM_EVENT_DEVICE,
     private val swipeUpThreshold: Int = DEFAULT_SWIPE_UP_THRESHOLD,
     private val logTag: String = DEFAULT_LOG_TAG,
 ) {
 
-    private var geteventJob: Job? = null
+    private var getTrackpadEventJob: Job? = null
+    private var getTopButtonEventJob: Job? = null
+    private var getBottomButtonEventJob: Job? = null
     private var touchDown = false
     private var startX = 0
     private var startY = 0
@@ -92,9 +96,13 @@ class TrackpadActionHandler(
             return
         }
 
-        geteventJob?.cancel()
+        getTrackpadEventJob?.cancel()
+        getBottomButtonEventJob?.cancel()
+        getTopButtonEventJob?.cancel()
         Log.d(DEBUG_TAG, "start() launching getevent coroutine...")
-        geteventJob = eventParser(trackpadEventDevice, ::parseTrackpadEvent)
+        getTrackpadEventJob = eventParser(trackpadEventDevice, ::parseTrackpadEvent)
+        getBottomButtonEventJob = eventParser(topButtonEventDevice, ::parseKeyboardEvent)
+        getTopButtonEventJob = eventParser(bottomButtonEventDevice, ::parseKeyboardEvent)
         Log.d(DEBUG_TAG, "start() completed - getevent job launched")
         Log.d(logTag, "Trackpad gesture detection started")
 
@@ -116,9 +124,13 @@ class TrackpadActionHandler(
     }
 
     fun stop() {
-        Log.d(DEBUG_TAG, "stop() called - had active job: ${geteventJob != null}")
-        geteventJob?.cancel()
-        geteventJob = null
+        Log.d(DEBUG_TAG, "stop() called - had active job: ${getTrackpadEventJob != null}")
+        getTrackpadEventJob?.cancel()
+        getBottomButtonEventJob?.cancel()
+        getTopButtonEventJob?.cancel()
+        getTrackpadEventJob = null
+        getBottomButtonEventJob = null
+        getTopButtonEventJob = null
         Log.d(logTag, "Trackpad gesture detection stopped")
     }
 
@@ -146,7 +158,7 @@ class TrackpadActionHandler(
                 BufferedReader(InputStreamReader(process.inputStream)).use { reader ->
                     while (isActive) {
                         val line = reader.readLine() ?: break
-                        parseTrackpadEvent(line)
+                        callback(line)
                     }
                 }
                 Log.d(DEBUG_TAG, "getevent reader loop ended")
@@ -161,7 +173,39 @@ class TrackpadActionHandler(
      * Returns true if the detector is currently running (has an active getevent job).
      */
     fun isRunning(): Boolean {
-        return geteventJob != null && geteventJob?.isActive == true
+        return getTrackpadEventJob != null && getTrackpadEventJob?.isActive == true
+    }
+
+    private fun parseKeyboardEvent(line: String) {
+        when {
+            line.contains("EV_KEY") && line.contains("DOWN") -> {
+                val parts = line.trim().split(Regex("\\s+"))
+                when(parts[1]) {
+                    "00f9" -> {
+                        Logger.d("0xf9 key down")
+                        hidService?.keyDown(0x44)
+                    }
+                    "00fa" -> {
+                        Logger.d("0xfa key down")
+                        hidService?.keyDown(0x45)
+                    }
+                }
+            }
+
+            line.contains("EV_KEY") && line.contains("UP") -> {
+                val parts = line.trim().split(Regex("\\s+"))
+                when(parts[1]) {
+                    "00f9" -> {
+                        Logger.d("0xf9 key up")
+                        hidService?.keyUp(0x44)
+                    }
+                    "00fa" -> {
+                        Logger.d("0xfa key up")
+                        hidService?.keyUp(0x45)
+                    }
+                }
+            }
+        }
     }
 
     private fun parseTrackpadEvent(line: String) {
@@ -403,9 +447,9 @@ class TrackpadActionHandler(
 
         // Titan 2 event list
 //        const val DEFAULT_VOLUME_EVENT_DEVICE = "/dev/input/event0" // volume up and down
-//        const val DEFAULT_LEFT_TOP_EVENT_DEVICE = "/dev/input/event1" // left top button is event 00f9; Power button is also here
+        const val DEFAULT_LEFT_TOP_EVENT_DEVICE = "/dev/input/event1" // left top button is event 00f9; Power button is also here
 //        const val DEFAULT_MAIN_SCREEN_EVENT_DEVICE = "/dev/input/event2" // main screen touch
-//        const val DEFAULT_LEFT_BOTTOM_EVENT_DEVICE = "/dev/input/event3" // left bottom button is event 00fa
+        const val DEFAULT_LEFT_BOTTOM_EVENT_DEVICE = "/dev/input/event3" // left bottom button is event 00fa
 //        // event4 would be the non-existent headphone jack sensor
 //        const val DEFAULT_BACK_SCREEN_EVENT_DEVICE = "/dev/input/event5" // back screen touch
 //        const val DEFAULT_KEYBOARD_EVENT_DEVICE = "/dev/input/event6" // keyboard buttons

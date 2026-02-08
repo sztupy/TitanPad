@@ -182,11 +182,11 @@ class TrackpadActionHandler(
                 val parts = line.trim().split(Regex("\\s+"))
                 when(parts[1]) {
                     "00f9" -> {
-                        Logger.d("0xf9 key down")
+                        Logger.d("Func1 key down")
                         hidService?.keyDown(0x44)
                     }
                     "00fa" -> {
-                        Logger.d("0xfa key down")
+                        Logger.d("Func2 key down")
                         hidService?.keyDown(0x45)
                     }
                 }
@@ -196,11 +196,11 @@ class TrackpadActionHandler(
                 val parts = line.trim().split(Regex("\\s+"))
                 when(parts[1]) {
                     "00f9" -> {
-                        Logger.d("0xf9 key up")
+                        Logger.d("Func1 key up")
                         hidService?.keyUp(0x44)
                     }
                     "00fa" -> {
-                        Logger.d("0xfa key up")
+                        Logger.d("Func2 key up")
                         hidService?.keyUp(0x45)
                     }
                 }

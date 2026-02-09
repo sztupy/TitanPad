@@ -1,8 +1,10 @@
 package scot.raven.titanpad.core.control
 
 import android.accessibilityservice.AccessibilityService
+import android.content.Intent
 import android.view.KeyEvent
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.platform.LocalContext
 import scot.raven.titanpad.TitanPad
 import scot.raven.titanpad.core.domain.OrientationHandler
 import scot.raven.titanpad.core.domain.ScreenDimensions
@@ -26,6 +28,8 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
+import scot.raven.titanpad.accessibility.AppAccessibilityService.Companion.BROADCAST_CURSOR_ACTIVATED
+import scot.raven.titanpad.accessibility.AppAccessibilityService.Companion.BROADCAST_CURSOR_ACTIVATED_EXTRA_KEY
 
 /**
  * Manages standard cursor modes.
@@ -33,6 +37,7 @@ import kotlinx.coroutines.launch
 class CoreManager(
     private val service: AccessibilityService,
     private val settingsFlow: StateFlow<UsageConfig>,
+    private val modeCoordinator: ModeCoordinator,
     private val orientationHandler: OrientationHandler,
     private val backgroundScope: CoroutineScope,
     private val keysPressed: MutableStateFlow<Int>,
@@ -41,7 +46,6 @@ class CoreManager(
     private lateinit var gestureManager: GestureManager
     lateinit var cursorStateManager: CursorStateManager
     private lateinit var cursorActionHandler: CursorActionHandler
-    lateinit var modeCoordinator: ModeCoordinator
     private lateinit var notificationManager: NotificationManager
     private lateinit var trackpadActionHandler: TrackpadActionHandler
 
@@ -84,7 +88,6 @@ class CoreManager(
         try {
             Logger.i("Initializing CoreManager")
 
-            modeCoordinator = ModeCoordinator()
             notificationManager = NotificationManager(service)
 
             val defaultStrategy = DefaultGestureStrategy(service)
@@ -100,6 +103,7 @@ class CoreManager(
                 screenDimensionsFlow
             )
             cursorActionHandler = CursorActionHandler(
+                service,
                 cursorStateManager,
                 gestureManager,
                 settingsFlow,
@@ -162,6 +166,12 @@ class CoreManager(
                     ModeCoordinator.OverlayMode.CURSOR
                 )) {
                 cursorStateManager.toggleCursorVisibility()
+
+                val intent = Intent(BROADCAST_CURSOR_ACTIVATED)
+                intent.setPackage(service.packageName)
+                intent.putExtra(BROADCAST_CURSOR_ACTIVATED_EXTRA_KEY, "default")
+                service.sendBroadcast(intent)
+
                 return cursorStateManager.isCursorVisible()
             }
             return false

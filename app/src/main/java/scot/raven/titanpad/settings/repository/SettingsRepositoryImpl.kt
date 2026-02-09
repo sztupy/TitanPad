@@ -21,6 +21,8 @@ class SettingsRepositoryImpl(
     private val dataStore: DataStore<Preferences>,
 ) : SettingsRepository {
     companion object {
+        private val CONFIG_ID = stringPreferencesKey("config_id")
+        private val CONFIG_NAME = stringPreferencesKey("config_name")
         private val ACTIVATION_DURATION = longPreferencesKey("activation_duration")
         private val SHOW_GESTURE_VISUAL = booleanPreferencesKey("show_gesture_visual")
         private val VISUAL_SIZE = intPreferencesKey("visual_size")
@@ -128,6 +130,8 @@ class SettingsRepositoryImpl(
                 )
 
                 val settings = UsageConfig(
+                    configId = preferences[CONFIG_ID] ?: UsageConfig.DEFAULT.configId,
+                    configName = preferences[CONFIG_NAME] ?: UsageConfig.DEFAULT.configName,
                     activationDuration = preferences[ACTIVATION_DURATION]
                         ?: UsageConfig.DEFAULT.activationDuration,
                     showGestureVisualization = preferences[SHOW_GESTURE_VISUAL]
@@ -185,6 +189,8 @@ class SettingsRepositoryImpl(
     override suspend fun updateSettings(settings: UsageConfig) {
         try {
             dataStore.edit { preferences ->
+                preferences[CONFIG_ID] = settings.configId
+                preferences[CONFIG_NAME] = settings.configName
                 preferences[ACTIVATION_DURATION] = settings.activationDuration
                 preferences[SHOW_GESTURE_VISUAL] = settings.showGestureVisualization
                 preferences[VISUAL_SIZE] = settings.visualSize

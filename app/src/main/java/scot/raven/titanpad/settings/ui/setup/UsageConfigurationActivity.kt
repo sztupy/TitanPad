@@ -1,4 +1,4 @@
-package scot.raven.titanpad.settings.ui.cursor
+package scot.raven.titanpad.settings.ui.setup
 
 import android.content.Context
 import android.content.Intent
@@ -9,13 +9,19 @@ import androidx.activity.compose.setContent
 import androidx.core.app.ActivityOptionsCompat
 import androidx.lifecycle.ViewModelProvider
 import scot.raven.titanpad.TitanPad
+import scot.raven.titanpad.accessibility.AppAccessibilityService
 import scot.raven.titanpad.core.ui.AppTheme
 import scot.raven.titanpad.settings.ui.SettingsState
+import scot.raven.titanpad.settings.ui.autohide.AutoHideSettingsActivity
+import scot.raven.titanpad.settings.ui.cursor.ClickableAppsActivity
+import scot.raven.titanpad.settings.ui.cursor.CursorIconActivity
+import scot.raven.titanpad.settings.ui.cursor.LocationClickableIconActivity
+import scot.raven.titanpad.settings.ui.gesture.CommonGestureSettingsActivity
 
 /**
  * Standard cursor settings screen.
  */
-class CursorSettingsActivity : ComponentActivity() {
+class UsageConfigurationActivity : ComponentActivity() {
     private lateinit var settingsState: SettingsState
 
     private fun startCustomActivity(context: Context, activityClass: Class<*>) {
@@ -43,6 +49,9 @@ class CursorSettingsActivity : ComponentActivity() {
                     onNavigateToCursorIcon = { startCustomActivity(this, CursorIconActivity::class.java) },
                     onNavigateToLocationClickableIcon = { startCustomActivity(this, LocationClickableIconActivity::class.java) },
                     onNavigateToClickableAppsScreen = { startCustomActivity(this, ClickableAppsActivity::class.java) },
+                    onNavigateToDebugOptions = { startCustomActivity(this, DebugOptionsActivity::class.java) },
+                    onNavigateToAutoHideSettings = { startCustomActivity(this, AutoHideSettingsActivity::class.java) },
+                    onNavigateToCommonGestureSettings = { startCustomActivity(this, CommonGestureSettingsActivity::class.java) },
                     onNavigateBack = {
                         finish()
                     },

@@ -299,7 +299,7 @@ class TrackpadActionHandler(
 
             //hidService?.tapScreen(currentX, currentY*2)
 
-            hidService?.setJoystick(currentX - centerX, currentY - centerY)
+            //hidService?.setJoystick(currentX - centerX, currentY - centerY)
 
             if (numFingers <= 1) {
                 val newPosition = cursorStateManager.applyMovement(Offset(deltaX, deltaY))

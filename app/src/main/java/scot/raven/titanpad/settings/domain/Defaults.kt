@@ -13,6 +13,8 @@ import scot.raven.titanpad.cursor.domain.IconAlignment
 // Maybe reference constants file directly
 object Defaults {
     object Settings {
+        const val DEFAULT_CONFIG_ID = "default"
+        const val DEFAULT_CONFIG_NAME = "Main Config"
         const val ACTIVATION_DURATION = ApplicationConstants.DEFAULT_ACTIVATION_HOLD_DURATION
         const val SHOW_GESTURE_VISUAL = GestureConstants.SHOW_GESTURE_VISUAL
         const val VISUAL_SIZE = GestureConstants.DEFAULT_SIZE

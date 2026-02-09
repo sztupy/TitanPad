@@ -7,6 +7,7 @@ import android.content.pm.PackageManager
 import android.os.Bundle
 import android.provider.Settings
 import android.view.KeyEvent
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -63,6 +64,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
@@ -77,14 +79,15 @@ import androidx.core.graphics.drawable.toBitmap
 import androidx.core.graphics.toColorInt
 import scot.raven.titanpad.BuildConfig
 import scot.raven.titanpad.R
-import scot.raven.titanpad.core.constants.ApplicationConstants
 import scot.raven.titanpad.core.shizuku.ShizukuConnection
 import scot.raven.titanpad.core.shizuku.ShizukuStatus
 import scot.raven.titanpad.settings.domain.UsageConfig
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import androidx.core.net.toUri
+import kotlinx.coroutines.flow.StateFlow
 import rikka.shizuku.Shizuku
+import scot.raven.titanpad.accessibility.AppAccessibilityService
 import scot.raven.titanpad.core.logs.Logger
 
 /**
@@ -94,15 +97,14 @@ import scot.raven.titanpad.core.logs.Logger
 @Composable
 fun SettingsScreen(
     settingsState: SettingsState,
+    activeConfiguration: StateFlow<String>,
     onNavigateToCursorSettings: () -> Unit,
-    onNavigateToDebugOptions: () -> Unit,
-    onNavigateToAutoHideSettings: () -> Unit,
-    onNavigateToCommonGestureSettings: () -> Unit,
-    onNavigateToSetupOptions: () -> Unit
+    onNavigateToSetupOptions: () -> Unit,
 ) {
     val uiState by settingsState.uiState.collectAsState()
     val context = LocalContext.current
     var shizukuVersionValid by remember { mutableStateOf(false) }
+    var accessibilityService : AppAccessibilityService? = null
 
     LaunchedEffect(shizukuVersionValid) {
         shizukuVersionValid = withContext(Dispatchers.IO) {
@@ -202,99 +204,27 @@ fun SettingsScreen(
                 )
             }
 
-            PreferenceCategory(title = "Input Modes") {
-                SimplePreferenceItem(
-                    title = "Standard Cursor",
-                    subtitle =
-                    if (uiState.cursorActivationKey == UsageConfig.KEY_NONE) {
-                        "Unmapped"
-                    } else {
-                        "Mapped"
-                    },
-                    onClick = onNavigateToCursorSettings,
-                )
-            }
-
-            PreferenceCategory(title = "Behavior") {
-                SimplePreferenceItem(
-                    title = "Auto-Hide Cursor Options",
-                    subtitle = "Automatically hide and restore the cursor",
-                    onClick = onNavigateToAutoHideSettings
-                )
-
-                SliderPreferenceItem(
-                    title = "Activation Duration",
-                    value = uiState.activationDuration.toFloat(),
-                    valueRange = ApplicationConstants.MIN_ACTIVATION_HOLD_DURATION.toFloat()..ApplicationConstants.MAX_ACTIVATION_HOLD_DURATION.toFloat(),
-                    valueText = "${uiState.activationDuration} ms",
-                    onValueChange = { value ->
-                        settingsState.updatePreference(value) { settings, v ->
-                            settings.copy(activationDuration = v.toLong())
-                        }
-                    },
-                    steps = 4,
-                )
-
-                if (uiState.activationDuration == 0L) {
-                    NoteItem(
-                        title = "Activation keys will be fully intercepted",
-                        icon = Icons.Default.Warning,
-                        contentDescription = "Warning",
-                        color = Color(0xFFFFF4E6),
-                    )
-                    NoteItem(
-                        title = "Standard cursor control scheme toggle will be disabled",
-                        icon = Icons.Default.Warning,
-                        contentDescription = "Warning",
-                        color = Color(0xFFFFF4E6),
-                    )
-                }
-
+            val configurationStatus = activeConfiguration.collectAsState()
+            PreferenceCategory(title = "Configurations") {
                 SwitchPreferenceItem(
-                    title = "Show Notification Icon",
-                    subtitle = "Show icon when cursor is activated",
-                    checked = uiState.showNotification,
-                    onCheckedChange = { value ->
-                        settingsState.updatePreference(value) { settings, v ->
-                            settings.copy(showNotification = v)
+                    title = uiState.configName,
+                    subtitle = uiState.configId,
+                    onClick = onNavigateToCursorSettings,
+                    onCheckedChange = { state ->
+                        if (accessibilityService == null) {
+                            accessibilityService = AppAccessibilityService.getInstance()
+                        }
+
+                        if (accessibilityService == null) {
+                            settingsState.showToast("Background system not running, enable Accessibility Services")
+                        } else {
+                            if (state)
+                                accessibilityService?.setActiveCursorConfig("default")
+                            else
+                                accessibilityService?.setActiveCursorConfig("")
                         }
                     },
-                )
-
-                SimplePreferenceItem(
-                    title = "Hardware mouse display settings",
-                    subtitle = "Found under 'Display' -> 'Colour and Motion' -> 'Large mouse cursor'",
-                    onClick = {
-                        if (!startActivity("com.android.settings/.Settings\$ColorAndMotionActivity")) {
-                            context.startActivity(Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS))
-                        }
-                    }
-                )
-
-                SimplePreferenceItem(
-                    title = "Hardware mouse sensitivity settings",
-                    subtitle = "Found under 'System' -> 'Keyboard' -> 'Pointer Speed'",
-                    onClick = {
-                        if (!startActivity("com.android.settings/.Settings\$KeyboardSettingsActivity")) {
-                            context.startActivity(Intent(Settings.ACTION_SETTINGS))
-                        }
-                    }
-                )
-            }
-
-            PreferenceCategory(title = "Gestures") {
-                SimplePreferenceItem(
-                    title = "Common Gesture Options",
-                    subtitle = "Settings that apply to both scrolls and zooms",
-                    onClick = onNavigateToCommonGestureSettings
-                )
-            }
-
-            PreferenceCategory(title = "Advanced") {
-                SimplePreferenceItem(
-                    title = "Developer Options",
-                    subtitle = "Additional configurable features",
-                    onClick = onNavigateToDebugOptions
+                    checked = configurationStatus.value == "default"
                 )
             }
 
@@ -421,10 +351,11 @@ fun SwitchPreferenceItem(
     subtitle: String? = null,
     checked: Boolean,
     onCheckedChange: (Boolean) -> Unit,
+    onClick: (() -> Unit)? = null,
     enabled: Boolean = true
 ) {
     Surface(
-        onClick = { onCheckedChange(!checked) },
+        onClick = { if (onClick == null) onCheckedChange(!checked) else onClick() },
         modifier = Modifier.fillMaxWidth(),
     ) {
         Row(
@@ -450,6 +381,103 @@ fun SwitchPreferenceItem(
             )
         }
     }
+}
+
+@Composable
+fun TextFieldDialog(
+    initialValue: String,
+    onUpdate: (String) -> Unit,
+    onDismiss: () -> Unit,
+    title: String,
+    subtitle: String,
+    label: String
+) {
+    var value by remember {
+        mutableStateOf(
+            TextFieldValue(
+                text = initialValue,
+                selection = TextRange(initialValue.length)
+            )
+        )
+    }
+    var isError by remember { mutableStateOf(false) }
+
+    val saveAction = {
+        if (!isError) {
+            onUpdate(value.text)
+            onDismiss()
+        }
+    }
+
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text(title) },
+        text = {
+            Column {
+                Text(subtitle)
+                Spacer(modifier = Modifier.height(16.dp))
+                OutlinedTextField(
+                    value = value,
+                    onValueChange = { input ->
+                        val filtered = input.text
+                        val newSelection = TextRange(
+                            start = minOf(filtered.length, input.selection.start),
+                            end = minOf(filtered.length, input.selection.end)
+                        )
+
+                        value = TextFieldValue(
+                            text = filtered,
+                            selection = newSelection,
+                            composition = input.composition
+                        )
+
+                        if (filtered.isEmpty()) {
+                            isError = true
+                        } else {
+                            isError = false
+                        }
+                    },
+                    label = { Text(label) },
+                    singleLine = true,
+                    isError = isError,
+                    supportingText = {
+                        if (isError) {
+                            Text(
+                                text = "Invalid value",
+                                color = Color.Red,
+                                modifier = Modifier.padding(top = 4.dp)
+                            )
+                        }
+                    },
+                    keyboardOptions = KeyboardOptions(
+                        imeAction = ImeAction.Done
+                    ),
+                    keyboardActions = KeyboardActions(
+                        onDone = {
+                            if (!isError) {
+                                saveAction()
+                            }
+                        }
+                    )
+                )
+            }
+        },
+        confirmButton = {
+            TextButton(
+                onClick = {
+                    if (!isError) saveAction()
+                },
+                enabled = !isError
+            ) {
+                Text("Save")
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) {
+                Text("Cancel")
+            }
+        }
+    )
 }
 
 @Composable
@@ -751,36 +779,6 @@ fun AppListScreen(
                 .fillMaxSize()
                 .padding(paddingValues)
         ) {
-//            Column(
-//                modifier = Modifier
-//                    .fillMaxWidth()
-//                    .padding(16.dp)
-//            ) {
-//                Row(
-//                    modifier = Modifier.fillMaxWidth(),
-//                    verticalAlignment = Alignment.CenterVertically
-//                ) {
-//                    Text(
-//                        text = "Show system apps",
-//                        modifier = Modifier.weight(1f),
-//                        style = MaterialTheme.typography.bodyMedium
-//                    )
-//                    Switch(
-//                        checked = showSystemApps,
-//                        onCheckedChange = { showSystemApps = it }
-//                    )
-//                }
-//
-//                Text(
-//                    text = "Showing ${installedApps.size} apps",
-//                    style = MaterialTheme.typography.bodySmall,
-//                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-//                    modifier = Modifier.padding(top = 4.dp)
-//                )
-//            }
-//
-//            HorizontalDivider()
-
             if (isLoading) {
                 Box(
                     modifier = Modifier.fillMaxSize(),
@@ -822,7 +820,7 @@ fun AppItem(
     onSelectionChanged: (Boolean) -> Unit
 ) {
     val context = LocalContext.current
-    var appIcon by remember { mutableStateOf<androidx.compose.ui.graphics.ImageBitmap?>(null) }
+    var appIcon by remember { mutableStateOf<ImageBitmap?>(null) }
 
     LaunchedEffect(app.packageName) {
         withContext(Dispatchers.IO) {
@@ -845,7 +843,7 @@ fun AppItem(
             verticalAlignment = Alignment.CenterVertically
         ) {
             if (appIcon != null) {
-                androidx.compose.foundation.Image(
+                Image(
                     bitmap = appIcon!!,
                     contentDescription = null,
                     modifier = Modifier.size(32.dp)

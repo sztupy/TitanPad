@@ -8,6 +8,8 @@ import scot.raven.titanpad.cursor.domain.IconAlignment
  * Represents default user preferences.
  */
 data class UsageConfig(
+    val configId: String = Defaults.Settings.DEFAULT_CONFIG_ID,
+    val configName: String = Defaults.Settings.DEFAULT_CONFIG_NAME,
     val activationDuration: Long = Defaults.Settings.ACTIVATION_DURATION,
     val showGestureVisualization: Boolean = Defaults.Settings.SHOW_GESTURE_VISUAL,
     val visualSize: Int = Defaults.Settings.VISUAL_SIZE,
@@ -42,6 +44,11 @@ data class UsageConfig(
         val DEFAULT = UsageConfig()
         const val KEY_NONE = ApplicationConstants.OVERLAY_DISABLED
         val RESTRICTED_KEYS = emptySet<Int>()
+
+        fun randomId() : String {
+            val allowedChars = ('a'..'z')
+            return (1..10).map {allowedChars.random()}.joinToString("")
+        }
     }
 
     private fun isValidRemappableKey(keyCode: Int): Boolean {

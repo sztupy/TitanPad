@@ -69,6 +69,7 @@ class AppAccessibilityService : AccessibilityService(), LifecycleOwner,
     private lateinit var coreManager: CoreManager
     private lateinit var overlayManager: OverlayManager
     private lateinit var orientationHandler: OrientationHandler
+    private lateinit var modeCoordinator: ModeCoordinator
 
     private var lastOverlayType: ModeCoordinator.OverlayMode = ModeCoordinator.OverlayMode.OFF
 
@@ -111,6 +112,8 @@ class AppAccessibilityService : AccessibilityService(), LifecycleOwner,
         }
 
         const val ACTION_ACTIVATE_CURSOR = "scot.raven.titanpad.ACTION_ACTIVATE_CURSOR"
+        const val BROADCAST_CURSOR_ACTIVATED = "scot.raven.titanpad.BROADCAST_CURSOR_ACTIVATED"
+        const val BROADCAST_CURSOR_ACTIVATED_EXTRA_KEY = "activeConfiguration"
 
         fun activateStandardCursor(context: Context) {
             val intent = Intent(ACTION_ACTIVATE_CURSOR)
@@ -159,6 +162,8 @@ class AppAccessibilityService : AccessibilityService(), LifecycleOwner,
             savedStateRegistryController.performRestore(null)
             lifecycleRegistry.handleLifecycleEvent(Lifecycle.Event.ON_CREATE)
 
+            modeCoordinator = ModeCoordinator()
+
             serviceJob = SupervisorJob()
             backgroundScope = CoroutineScope(Dispatchers.Default + serviceJob + coroutineExceptionHandler)
             mainScope = CoroutineScope(Dispatchers.Main + serviceJob + coroutineExceptionHandler)
@@ -174,7 +179,8 @@ class AppAccessibilityService : AccessibilityService(), LifecycleOwner,
                 orientationHandler = orientationHandler,
                 backgroundScope = backgroundScope,
                 keysPressed = _keysPressed,
-                layoutApplied = layoutApplied
+                layoutApplied = layoutApplied,
+                modeCoordinator = modeCoordinator
             )
             coreManager.initialize()
 
@@ -196,7 +202,7 @@ class AppAccessibilityService : AccessibilityService(), LifecycleOwner,
             val filter = IntentFilter().apply {
                 addAction(ACTION_ACTIVATE_CURSOR)
             }
-            registerReceiver(receiver, filter, RECEIVER_NOT_EXPORTED)
+            registerReceiver(receiver, filter, RECEIVER_EXPORTED)
 
             lifecycleRegistry.handleLifecycleEvent(Lifecycle.Event.ON_RESUME)
 
@@ -210,7 +216,7 @@ class AppAccessibilityService : AccessibilityService(), LifecycleOwner,
     }
 
     private fun autoHideCursor() {
-        val currentOverlay = coreManager.modeCoordinator.activeMode.value
+        val currentOverlay = modeCoordinator.activeMode.value
         val cursorOff = currentOverlay == ModeCoordinator.OverlayMode.OFF
         val cursorAlreadyHidden = currentOverlay == ModeCoordinator.OverlayMode.AUTOHIDDEN
         if (cursorOff || cursorAlreadyHidden)
@@ -228,7 +234,7 @@ class AppAccessibilityService : AccessibilityService(), LifecycleOwner,
     }
 
     private fun attemptCursorRestore() {
-        val currentOverlay = coreManager.modeCoordinator.activeMode.value
+        val currentOverlay = modeCoordinator.activeMode.value
         if (currentOverlay != ModeCoordinator.OverlayMode.AUTOHIDDEN)
             return
 
@@ -346,6 +352,23 @@ class AppAccessibilityService : AccessibilityService(), LifecycleOwner,
             }
         }
         return showByDefault
+    }
+
+    fun getActiveCursorConfig() : String {
+        val currentOverlay = modeCoordinator.activeMode.value
+        if (currentOverlay == ModeCoordinator.OverlayMode.OFF) {
+            return ""
+        } else {
+            return "default"
+        }
+    }
+
+    fun setActiveCursorConfig(newConfig: String) {
+        if (newConfig == "default") {
+            coreManager.activateCursorMode()
+        } else {
+            modeCoordinator.deactivate(ModeCoordinator.OverlayMode.OFF, false)
+        }
     }
 
     private fun checkLockScreenVisibility() {

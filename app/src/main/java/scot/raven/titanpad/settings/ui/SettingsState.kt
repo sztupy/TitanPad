@@ -47,8 +47,9 @@ class SettingsState(
                 settingsRepository.getSettings().collect { settings ->
                     _uiState.update { currentState ->
                         currentState.copy(
+                            configId = settings.configId,
+                            configName = settings.configName,
                             activationDuration = settings.activationDuration,
-                            showGestureVisualization = settings.showGestureVisualization,
                             visualSize = settings.visualSize,
                             cursorSize = settings.cursorSize,
                             cursorAccelerationStart = settings.cursorAccelerationStart,
@@ -109,6 +110,8 @@ class SettingsState(
 
     private fun createSettingsFromUiState(): UsageConfig {
         return UsageConfig(
+            configId = _uiState.value.configId,
+            configName = _uiState.value.configName,
             activationDuration = _uiState.value.activationDuration,
             showGestureVisualization = _uiState.value.showGestureVisualization,
             visualSize = _uiState.value.visualSize,
@@ -180,14 +183,16 @@ class SettingsState(
 }
 
 data class SettingsUiState(
-    val activationDuration: Long = Defaults.Settings.ACTIVATION_DURATION,
     val isAccessibilityServiceEnabled: Boolean = false,
     val showInvalidSettingError: Boolean = false,
-    val isServiceRunning: Boolean = false,
-    val showGestureVisualization: Boolean = Defaults.Settings.SHOW_GESTURE_VISUAL,
-    val visualSize: Int = Defaults.Settings.VISUAL_SIZE,
     val showError: Boolean = false,
     val errorMessage: String = "",
+
+    val configId: String = Defaults.Settings.DEFAULT_CONFIG_ID,
+    val configName: String = Defaults.Settings.DEFAULT_CONFIG_NAME,
+    val activationDuration: Long = Defaults.Settings.ACTIVATION_DURATION,
+    val showGestureVisualization: Boolean = Defaults.Settings.SHOW_GESTURE_VISUAL,
+    val visualSize: Int = Defaults.Settings.VISUAL_SIZE,
     val cursorSize: Int = Defaults.Settings.CURSOR_SIZE,
     val cursorAccelerationStart: Long = Defaults.Settings.CURSOR_ACCELERATION_START,
     val cursorAccelerationDuration: Long = Defaults.Settings.CURSOR_ACCELERATION_DURATION,

@@ -1,5 +1,7 @@
 package scot.raven.titanpad.cursor.control
 
+import android.accessibilityservice.AccessibilityService
+import android.content.Intent
 import android.view.KeyEvent
 import scot.raven.titanpad.core.control.CoreManager.ChannelMessage
 import scot.raven.titanpad.core.control.ModeCoordinator
@@ -12,11 +14,15 @@ import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
+import scot.raven.titanpad.accessibility.AppAccessibilityService.Companion.BROADCAST_CURSOR_ACTIVATED
+import scot.raven.titanpad.accessibility.AppAccessibilityService.Companion.BROADCAST_CURSOR_ACTIVATED_EXTRA_KEY
+import kotlin.reflect.KProperty
 
 /**
  * Handles key events for the standard cursor mode.
  */
 class CursorActionHandler(
+    private val service: AccessibilityService,
     private val cursorStateManager: CursorStateManager,
     private val gestureManager: GestureManager,
     private val settingsFlow: StateFlow<UsageConfig>,
@@ -102,6 +108,16 @@ class CursorActionHandler(
                             if (!wasActivated) {
                                 modeCoordinator.deactivate(ModeCoordinator.OverlayMode.CURSOR, false)
                                 gestureManager.setGestureReady(true)
+
+                                val intent = Intent(BROADCAST_CURSOR_ACTIVATED)
+                                intent.setPackage(service.packageName)
+                                intent.putExtra(BROADCAST_CURSOR_ACTIVATED_EXTRA_KEY, "")
+                                service.sendBroadcast(intent)
+                            } else {
+                                val intent = Intent(BROADCAST_CURSOR_ACTIVATED)
+                                intent.setPackage(service.packageName)
+                                intent.putExtra(BROADCAST_CURSOR_ACTIVATED_EXTRA_KEY, "default")
+                                service.sendBroadcast(intent)
                             }
                         }
                     }

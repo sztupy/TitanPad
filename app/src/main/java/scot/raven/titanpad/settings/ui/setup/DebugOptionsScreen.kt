@@ -1,4 +1,4 @@
-package scot.raven.titanpad.settings.ui
+package scot.raven.titanpad.settings.ui.setup
 
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
@@ -22,6 +22,9 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import scot.raven.titanpad.settings.ui.PreferenceCategory
+import scot.raven.titanpad.settings.ui.SettingsState
+import scot.raven.titanpad.settings.ui.SwitchPreferenceItem
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable

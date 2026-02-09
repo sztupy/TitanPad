@@ -9,7 +9,7 @@ import scot.raven.titanpad.gesture.ui.GesturePath
 import scot.raven.titanpad.gesture.ui.GestureType
 import scot.raven.titanpad.gesture.ui.endStationaryGesture
 import scot.raven.titanpad.gesture.ui.showStationaryGesture
-import scot.raven.titanpad.settings.domain.OverlaySettings
+import scot.raven.titanpad.settings.domain.UsageConfig
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
@@ -25,7 +25,7 @@ import kotlin.math.pow
  */
 class GestureManager(
     private val defaultStrategy: GestureStrategy,
-    private val settingsFlow: StateFlow<OverlaySettings>,
+    private val settingsFlow: StateFlow<UsageConfig>,
     private val serviceScope: CoroutineScope
 ) {
     private val _gesturePaths = MutableStateFlow<List<GesturePath>>(emptyList())

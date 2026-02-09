@@ -37,7 +37,7 @@ import androidx.datastore.core.IOException
 import scot.raven.titanpad.core.constants.CursorConstants
 import scot.raven.titanpad.core.logs.Logger
 import scot.raven.titanpad.settings.domain.AppListType
-import scot.raven.titanpad.settings.domain.OverlaySettings
+import scot.raven.titanpad.settings.domain.UsageConfig
 import scot.raven.titanpad.settings.ui.ClearKeyPreferenceItem
 import scot.raven.titanpad.settings.ui.ColorPickerDialog
 import scot.raven.titanpad.settings.ui.DropdownPreferenceItem
@@ -76,7 +76,7 @@ fun CursorSettingsScreen(
 
     val currentKeyDescription =
         if (
-            uiState.cursorActivationKey != OverlaySettings.KEY_NONE &&
+            uiState.cursorActivationKey != UsageConfig.KEY_NONE &&
             reservedKeys.isNotEmpty() &&
             !reservedKeys[uiState.cursorActivationKey].isNullOrEmpty()
         ) {
@@ -130,7 +130,7 @@ fun CursorSettingsScreen(
                     mode = "standard cursor",
                     onClearKey = {
                         settingsState.requestHideAllOverlays()
-                        settingsState.updateCursorActivationKey(OverlaySettings.KEY_NONE)
+                        settingsState.updateCursorActivationKey(UsageConfig.KEY_NONE)
                     },
                 )
 

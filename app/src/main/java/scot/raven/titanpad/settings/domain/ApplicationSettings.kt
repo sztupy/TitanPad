@@ -1,7 +1,8 @@
 package scot.raven.titanpad.settings.domain
 
 data class ApplicationSettings(
-    val settings: String = ""
+    val currentConfigKey: String = "",
+    val configurations: Map<String, UsageConfig> = HashMap()
 ) {
     companion object
 }

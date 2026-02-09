@@ -9,7 +9,7 @@ import androidx.datastore.preferences.core.intPreferencesKey
 import androidx.datastore.preferences.core.longPreferencesKey
 import androidx.datastore.preferences.core.stringPreferencesKey
 import scot.raven.titanpad.core.logs.Logger
-import scot.raven.titanpad.settings.domain.OverlaySettings
+import scot.raven.titanpad.settings.domain.UsageConfig
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.map
@@ -71,7 +71,7 @@ class SettingsRepositoryImpl(
         }
     }
 
-    override fun getSettings(): Flow<OverlaySettings> {
+    override fun getSettings(): Flow<UsageConfig> {
         return dataStore.data
             .catch { exception ->
                 Logger.e("Error reading settings: ${exception.message}", exception)
@@ -81,21 +81,21 @@ class SettingsRepositoryImpl(
                 val cursorImageAlignment = getEnumPreference(
                     preferences,
                     CURSOR_IMAGE_ALIGNMENT,
-                    OverlaySettings.DEFAULT.cursorImageAlignment,
+                    UsageConfig.DEFAULT.cursorImageAlignment,
                     "cursor image alignment"
                 )
 
                 val clickableImageAlignment = getEnumPreference(
                     preferences,
                     CLICKABLE_IMAGE_ALIGNMENT,
-                    OverlaySettings.DEFAULT.clickableImageAlignment,
+                    UsageConfig.DEFAULT.clickableImageAlignment,
                     "clickable image alignment"
                 )
 
                 val scrollToggleImageAlignment = getEnumPreference(
                     preferences,
                     SCROLL_TOGGLE_IMAGE_ALIGNMENT,
-                    OverlaySettings.DEFAULT.scrollToggleImageAlignment,
+                    UsageConfig.DEFAULT.scrollToggleImageAlignment,
                     "scroll toggle image alignment"
                 )
 
@@ -109,7 +109,7 @@ class SettingsRepositoryImpl(
                 val applicationListType = getEnumPreference(
                     preferences,
                     APPLICATION_LIST_TYPE,
-                    OverlaySettings.DEFAULT.applicationListType,
+                    UsageConfig.DEFAULT.applicationListType,
                     "application list type"
                 )
 
@@ -123,66 +123,66 @@ class SettingsRepositoryImpl(
                 val clickableListType = getEnumPreference(
                     preferences,
                     CLICKABLE_LIST_TYPE,
-                    OverlaySettings.DEFAULT.clickableListType,
+                    UsageConfig.DEFAULT.clickableListType,
                     "clickable list type"
                 )
 
-                val settings = OverlaySettings(
+                val settings = UsageConfig(
                     activationDuration = preferences[ACTIVATION_DURATION]
-                        ?: OverlaySettings.DEFAULT.activationDuration,
+                        ?: UsageConfig.DEFAULT.activationDuration,
                     showGestureVisualization = preferences[SHOW_GESTURE_VISUAL]
-                        ?: OverlaySettings.DEFAULT.showGestureVisualization,
-                    visualSize = preferences[VISUAL_SIZE] ?: OverlaySettings.DEFAULT.visualSize,
-                    cursorSize = preferences[CURSOR_SIZE] ?: OverlaySettings.DEFAULT.cursorSize,
+                        ?: UsageConfig.DEFAULT.showGestureVisualization,
+                    visualSize = preferences[VISUAL_SIZE] ?: UsageConfig.DEFAULT.visualSize,
+                    cursorSize = preferences[CURSOR_SIZE] ?: UsageConfig.DEFAULT.cursorSize,
                     cursorAccelerationStart = preferences[CURSOR_ACCELERATION_START]
-                        ?: OverlaySettings.DEFAULT.cursorAccelerationStart,
+                        ?: UsageConfig.DEFAULT.cursorAccelerationStart,
                     cursorAccelerationDuration = preferences[CURSOR_ACCELERATION_DURATION]
-                        ?: OverlaySettings.DEFAULT.cursorAccelerationDuration,
+                        ?: UsageConfig.DEFAULT.cursorAccelerationDuration,
                     cursorActivationKey = preferences[CURSOR_ACTIVATION_KEY]
-                        ?: OverlaySettings.DEFAULT.cursorActivationKey,
+                        ?: UsageConfig.DEFAULT.cursorActivationKey,
                     allowPassthrough = preferences[ALLOW_PASSTHROUGH]
-                        ?: OverlaySettings.DEFAULT.allowPassthrough,
+                        ?: UsageConfig.DEFAULT.allowPassthrough,
                     hideOnKeyboardOpen = preferences[HIDE_ON_KEYBOARD_OPEN]
-                        ?: OverlaySettings.DEFAULT.hideOnKeyboardOpen,
+                        ?: UsageConfig.DEFAULT.hideOnKeyboardOpen,
                     hideOnLauncherOpen = preferences[HIDE_ON_LAUNCHER_OPEN]
-                        ?: OverlaySettings.DEFAULT.hideOnLauncherOpen,
+                        ?: UsageConfig.DEFAULT.hideOnLauncherOpen,
                     hideOnLockScreen = preferences[HIDE_ON_LOCK_SCREEN]
-                        ?: OverlaySettings.DEFAULT.hideOnLockScreen,
+                        ?: UsageConfig.DEFAULT.hideOnLockScreen,
                     roundedCursorCorners = preferences[ROUNDED_CURSOR_CORNERS]
-                        ?: OverlaySettings.DEFAULT.roundedCursorCorners,
+                        ?: UsageConfig.DEFAULT.roundedCursorCorners,
                     usePhysicalSize = preferences[USE_PHYSICAL_SIZE]
-                        ?: OverlaySettings.DEFAULT.usePhysicalSize,
+                        ?: UsageConfig.DEFAULT.usePhysicalSize,
                     standardCursorHex = preferences[STANDARD_CURSOR_HEX]
-                        ?: OverlaySettings.DEFAULT.standardCursorHex,
+                        ?: UsageConfig.DEFAULT.standardCursorHex,
                     standardCursorMatchBorder = preferences[STANDARD_CURSOR_MATCH_BORDER]
-                        ?: OverlaySettings.DEFAULT.standardCursorMatchBorder,
+                        ?: UsageConfig.DEFAULT.standardCursorMatchBorder,
                     cursorImagePath = preferences[CURSOR_IMAGE_PATH]
-                        ?: OverlaySettings.DEFAULT.cursorImagePath,
+                        ?: UsageConfig.DEFAULT.cursorImagePath,
                     clickableImagePath = preferences[CLICKABLE_IMAGE_PATH]
-                        ?: OverlaySettings.DEFAULT.clickableImagePath,
+                        ?: UsageConfig.DEFAULT.clickableImagePath,
                     scrollToggleImagePath = preferences[SCROLL_TOGGLE_IMAGE_PATH]
-                        ?: OverlaySettings.DEFAULT.scrollToggleImagePath,
+                        ?: UsageConfig.DEFAULT.scrollToggleImagePath,
                     useCustomCursorIcon = preferences[USE_CUSTOM_CURSOR_ICON]
-                        ?: OverlaySettings.DEFAULT.useCustomCursorIcon,
+                        ?: UsageConfig.DEFAULT.useCustomCursorIcon,
                     cursorImageAlignment = cursorImageAlignment,
                     clickableImageAlignment = clickableImageAlignment,
                     scrollToggleImageAlignment = scrollToggleImageAlignment,
                     autoHideApps = autoHideApps,
                     clickableApps = clickableApps,
                     showNotification = preferences[SHOW_NOTIFICATION]
-                        ?: OverlaySettings.DEFAULT.showNotification,
+                        ?: UsageConfig.DEFAULT.showNotification,
                     applicationListType = applicationListType,
                     clickableListType = clickableListType,
                     checkClickable = preferences[CHECK_CLICKABLE]
-                        ?: OverlaySettings.DEFAULT.checkClickable,
-                    disableTouchscreen = preferences[DISABLE_TOUCHSCREEN] ?: OverlaySettings.DEFAULT.disableTouchscreen
+                        ?: UsageConfig.DEFAULT.checkClickable,
+                    disableTouchscreen = preferences[DISABLE_TOUCHSCREEN] ?: UsageConfig.DEFAULT.disableTouchscreen
                 )
 
                 settings
             }
     }
 
-    override suspend fun updateSettings(settings: OverlaySettings) {
+    override suspend fun updateSettings(settings: UsageConfig) {
         try {
             dataStore.edit { preferences ->
                 preferences[ACTIVATION_DURATION] = settings.activationDuration
@@ -235,7 +235,7 @@ class SettingsRepositoryImpl(
         }
     }
 
-    override suspend fun validateAndUpdateSettings(settings: OverlaySettings): OverlaySettings.ValidationResult {
+    override suspend fun validateAndUpdateSettings(settings: UsageConfig): UsageConfig.ValidationResult {
         try {
             val validationResult = settings.validate()
 
@@ -252,7 +252,7 @@ class SettingsRepositoryImpl(
             return validationResult
         } catch (e: Exception) {
             Logger.e("Error updating settings", e)
-            return OverlaySettings.ValidationResult(
+            return UsageConfig.ValidationResult(
                 isValid = false,
                 errors = listOf("Error updating settings: ${e.message}"),
             )

@@ -10,4 +10,9 @@ interface IHidService {
 
     void keyDown(int keyCode) = 3;
     void keyUp(int keyCode) = 4;
+
+    void tapScreen(int x, int y) = 5;
+    void tapRelease() = 6;
+
+    void setJoystick(int x, int y) = 7;
 }

@@ -11,7 +11,7 @@ import android.view.WindowInsets
 import android.view.WindowManager
 import scot.raven.titanpad.core.logs.Logger
 import scot.raven.titanpad.core.util.OrientationUtil
-import scot.raven.titanpad.settings.domain.OverlaySettings
+import scot.raven.titanpad.settings.domain.UsageConfig
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -26,7 +26,7 @@ import kotlinx.coroutines.flow.onEach
  */
 class OrientationHandler(
     private val context: Context,
-    private val settingsFlow: StateFlow<OverlaySettings>
+    private val settingsFlow: StateFlow<UsageConfig>
 ) {
     private val displayManager = context.getSystemService(Context.DISPLAY_SERVICE) as DisplayManager
     private val windowManager = context.getSystemService(Context.WINDOW_SERVICE) as WindowManager

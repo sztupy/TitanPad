@@ -11,7 +11,7 @@ import scot.raven.titanpad.accessibility.AppAccessibilityService
 import scot.raven.titanpad.core.logs.Logger
 import scot.raven.titanpad.core.shizuku.ShizukuConnection
 import scot.raven.titanpad.core.shizuku.ShizukuStatus
-import scot.raven.titanpad.settings.domain.OverlaySettings
+import scot.raven.titanpad.settings.domain.UsageConfig
 import scot.raven.titanpad.settings.repository.SettingsRepository
 import scot.raven.titanpad.settings.repository.SettingsRepositoryImpl
 import kotlinx.coroutines.CoroutineScope
@@ -21,9 +21,6 @@ import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.flowOn
-import kotlinx.coroutines.flow.launchIn
-import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.stateIn
 import scot.raven.titanpad.cursor.control.TrackpadActionHandler
 
@@ -41,14 +38,14 @@ class TitanPad : Application() {
     private var shizukuObserverJob: Job? = null
     private var _trackpadActionHandler: TrackpadActionHandler? = null
     private var settingsObserverJob: Job? = null
-    private lateinit var _settingsFlow: StateFlow<OverlaySettings>
+    private lateinit var _settingsFlow: StateFlow<UsageConfig>
 
-    fun getSettingsFlow(): StateFlow<OverlaySettings> {
+    fun getSettingsFlow(): StateFlow<UsageConfig> {
         if (!::_settingsFlow.isInitialized) {
             _settingsFlow = settingsRepository.getSettings().stateIn(
                 scope = CoroutineScope(Dispatchers.IO + SupervisorJob()),
                 started = SharingStarted.Eagerly,
-                initialValue = OverlaySettings()
+                initialValue = UsageConfig()
             )
         }
         return _settingsFlow
@@ -61,16 +58,7 @@ class TitanPad : Application() {
     override fun onCreate() {
         super.onCreate()
         instance = this
-
-        settingsObserverJob = getSettingsFlow()
-            .onEach { settings ->
-                if (shizukuObserverJob == null) {
-                    initializeShizuku()
-                }
-            }
-            .flowOn(Dispatchers.IO)
-            .launchIn(applicationScope)
-
+        initializeShizuku()
         Logger.i("TitanPad application initialized")
     }
 

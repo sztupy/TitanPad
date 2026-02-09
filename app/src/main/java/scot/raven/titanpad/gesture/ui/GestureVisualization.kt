@@ -9,7 +9,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.drawscope.Stroke
 import scot.raven.titanpad.core.constants.GestureConstants
 import scot.raven.titanpad.core.domain.ScreenDimensions
-import scot.raven.titanpad.settings.domain.OverlaySettings
+import scot.raven.titanpad.settings.domain.UsageConfig
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.update
 
@@ -32,7 +32,7 @@ fun GestureVisualization(
     gesturePaths: List<GesturePath>,
     dimensions: ScreenDimensions,
     modifier: Modifier = Modifier,
-    settings: OverlaySettings? = null
+    settings: UsageConfig? = null
 ) {
     var visualSize = settings?.visualSize?.toFloat() ?: GestureConstants.DEFAULT_SIZE.toFloat()
     visualSize *= GestureConstants.SIZE_MULTIPLIER * dimensions.getScreenScaleFactor()

@@ -5,7 +5,7 @@ import scot.raven.titanpad.core.control.CoreManager.ChannelMessage
 import scot.raven.titanpad.core.control.ModeCoordinator
 import scot.raven.titanpad.core.logs.Logger
 import scot.raven.titanpad.gesture.api.GestureManager
-import scot.raven.titanpad.settings.domain.OverlaySettings
+import scot.raven.titanpad.settings.domain.UsageConfig
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.channels.Channel
@@ -19,7 +19,7 @@ import kotlinx.coroutines.launch
 class CursorActionHandler(
     private val cursorStateManager: CursorStateManager,
     private val gestureManager: GestureManager,
-    private val settingsFlow: StateFlow<OverlaySettings>,
+    private val settingsFlow: StateFlow<UsageConfig>,
     private val backgroundScope: CoroutineScope,
     private val modeCoordinator: ModeCoordinator,
 ) {

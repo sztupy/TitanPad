@@ -8,7 +8,7 @@ import scot.raven.titanpad.core.logs.Logger
 import scot.raven.titanpad.cursor.domain.IconAlignment
 import scot.raven.titanpad.settings.domain.AppListType
 import scot.raven.titanpad.settings.domain.Defaults
-import scot.raven.titanpad.settings.domain.OverlaySettings
+import scot.raven.titanpad.settings.domain.UsageConfig
 import scot.raven.titanpad.settings.repository.SettingsRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -91,7 +91,7 @@ class SettingsState(
         }
     }
 
-    private fun updateSettings(settingsUpdater: (OverlaySettings) -> OverlaySettings) {
+    private fun updateSettings(settingsUpdater: (UsageConfig) -> UsageConfig) {
         viewModelScope.launch {
             val currentSettings = createSettingsFromUiState()
             val updatedSettings = settingsUpdater(currentSettings)
@@ -107,8 +107,8 @@ class SettingsState(
         }
     }
 
-    private fun createSettingsFromUiState(): OverlaySettings {
-        return OverlaySettings(
+    private fun createSettingsFromUiState(): UsageConfig {
+        return UsageConfig(
             activationDuration = _uiState.value.activationDuration,
             showGestureVisualization = _uiState.value.showGestureVisualization,
             visualSize = _uiState.value.visualSize,
@@ -141,7 +141,7 @@ class SettingsState(
         )
     }
 
-    fun <T> updatePreference(value: T, updater: (OverlaySettings, T) -> OverlaySettings) {
+    fun <T> updatePreference(value: T, updater: (UsageConfig, T) -> UsageConfig) {
         updateSettings { settings -> updater(settings, value) }
     }
 

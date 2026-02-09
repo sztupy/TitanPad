@@ -7,7 +7,7 @@ import scot.raven.titanpad.cursor.domain.IconAlignment
 /**
  * Represents default user preferences.
  */
-data class OverlaySettings(
+data class UsageConfig(
     val activationDuration: Long = Defaults.Settings.ACTIVATION_DURATION,
     val showGestureVisualization: Boolean = Defaults.Settings.SHOW_GESTURE_VISUAL,
     val visualSize: Int = Defaults.Settings.VISUAL_SIZE,
@@ -39,7 +39,7 @@ data class OverlaySettings(
     val disableTouchscreen: Boolean = Defaults.Settings.DISABLE_TOUCHSCREEN
 ) {
     companion object {
-        val DEFAULT = OverlaySettings()
+        val DEFAULT = UsageConfig()
         const val KEY_NONE = ApplicationConstants.OVERLAY_DISABLED
         val RESTRICTED_KEYS = emptySet<Int>()
     }
@@ -60,7 +60,7 @@ data class OverlaySettings(
         return ValidationResult(errors.isEmpty(), errors)
     }
 
-    fun sanitized(): OverlaySettings {
+    fun sanitized(): UsageConfig {
         return copy(
             cursorSize = cursorSize.coerceIn(CursorConstants.MIN_SIZE, CursorConstants.MAX_SIZE),
             cursorActivationKey = if (isValidRemappableKey(cursorActivationKey)) cursorActivationKey else KEY_NONE,

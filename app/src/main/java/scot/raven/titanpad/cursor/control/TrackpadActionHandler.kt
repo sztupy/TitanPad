@@ -19,6 +19,7 @@ import scot.raven.titanpad.BuildConfig
 import scot.raven.titanpad.accessibility.AppAccessibilityService
 import scot.raven.titanpad.core.control.HidService
 import scot.raven.titanpad.core.control.IHidService
+import scot.raven.titanpad.core.domain.OrientationHandler
 import scot.raven.titanpad.core.logs.Logger
 import scot.raven.titanpad.gesture.api.GestureManager
 import java.io.BufferedReader
@@ -37,7 +38,6 @@ class TrackpadActionHandler(
     private val trackpadEventDevice: String = DEFAULT_TRACKPAD_EVENT_DEVICE,
     private val topButtonEventDevice: String = DEFAULT_LEFT_TOP_EVENT_DEVICE,
     private val bottomButtonEventDevice: String = DEFAULT_LEFT_BOTTOM_EVENT_DEVICE,
-    private val swipeUpThreshold: Int = DEFAULT_SWIPE_UP_THRESHOLD,
     private val logTag: String = DEFAULT_LOG_TAG,
 ) {
 
@@ -47,6 +47,8 @@ class TrackpadActionHandler(
     private var touchDown = false
     private var startX = 0
     private var startY = 0
+    private var centerX = 0
+    private var centerY = 0
     private var currentX = 0
     private var currentY = 0
     private var dragStartX = 0.0f
@@ -70,7 +72,7 @@ class TrackpadActionHandler(
         }
 
         val enabled = isEnabled()
-        Log.d(DEBUG_TAG, "start() called - isEnabled=$enabled, swipeUpThreshold=$swipeUpThreshold")
+        Log.d(DEBUG_TAG, "start() called - isEnabled=$enabled")
 
         if (!enabled) {
             Log.d(DEBUG_TAG, "start() ABORTED: gestures disabled in settings")
@@ -99,6 +101,7 @@ class TrackpadActionHandler(
         getTrackpadEventJob?.cancel()
         getBottomButtonEventJob?.cancel()
         getTopButtonEventJob?.cancel()
+
         Log.d(DEBUG_TAG, "start() launching getevent coroutine...")
         getTrackpadEventJob = eventParser(trackpadEventDevice, ::parseTrackpadEvent)
         getBottomButtonEventJob = eventParser(topButtonEventDevice, ::parseKeyboardEvent)
@@ -233,6 +236,7 @@ class TrackpadActionHandler(
                         currentX = newX
                         if (touchDown && !startPosSet) {
                             startX = newX
+                            centerX = newX
                         }
                     }
                 }
@@ -247,6 +251,7 @@ class TrackpadActionHandler(
                         currentY = newY
                         if (touchDown && !startPosSet) {
                             startY = newY
+                            centerY = newY
                         }
                     }
                 }
@@ -290,7 +295,11 @@ class TrackpadActionHandler(
             val deltaX = currentX - startX + 0.0f
             val deltaY = currentY - startY + 0.0f
 
-            hidService?.setMousePosition(deltaX.toInt(), deltaY.toInt(), 0)
+            //hidService?.setMousePosition(deltaX.toInt(), deltaY.toInt(), 0)
+
+            //hidService?.tapScreen(currentX, currentY*2)
+
+            hidService?.setJoystick(currentX - centerX, currentY - centerY)
 
             if (numFingers <= 1) {
                 val newPosition = cursorStateManager.applyMovement(Offset(deltaX, deltaY))
@@ -347,6 +356,9 @@ class TrackpadActionHandler(
             val service = AppAccessibilityService.getInstance()
             val clickable = service?.isNodeClickable(cursorStateManager.cursorState.value?.position) == true && service.showClickableInCurrentApp()
             cursorStateManager.updateClickable(clickable)
+
+            //hidService?.tapRelease()
+            //hidService?.setJoystick(0,0)
 
             val durationMs = (endTime - startTime) / 1_000_000.0
             if (durationMs < 100 || numFingers > 1) {
@@ -451,7 +463,7 @@ class TrackpadActionHandler(
 //        const val DEFAULT_MAIN_SCREEN_EVENT_DEVICE = "/dev/input/event2" // main screen touch
         const val DEFAULT_LEFT_BOTTOM_EVENT_DEVICE = "/dev/input/event3" // left bottom button is event 00fa
 //        // event4 would be the non-existent headphone jack sensor
-//        const val DEFAULT_BACK_SCREEN_EVENT_DEVICE = "/dev/input/event5" // back screen touch
+        const val DEFAULT_BACK_SCREEN_EVENT_DEVICE = "/dev/input/event5" // back screen touch
 //        const val DEFAULT_KEYBOARD_EVENT_DEVICE = "/dev/input/event6" // keyboard buttons
         const val DEFAULT_TRACKPAD_EVENT_DEVICE = "/dev/input/event7" // keyboard touch
         // event8 has an unknown purpose

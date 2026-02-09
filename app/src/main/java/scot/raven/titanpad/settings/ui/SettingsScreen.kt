@@ -80,10 +80,12 @@ import scot.raven.titanpad.R
 import scot.raven.titanpad.core.constants.ApplicationConstants
 import scot.raven.titanpad.core.shizuku.ShizukuConnection
 import scot.raven.titanpad.core.shizuku.ShizukuStatus
-import scot.raven.titanpad.settings.domain.OverlaySettings
+import scot.raven.titanpad.settings.domain.UsageConfig
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import androidx.core.net.toUri
+import rikka.shizuku.Shizuku
+import scot.raven.titanpad.core.logs.Logger
 
 /**
  * Main settings screen.
@@ -96,9 +98,42 @@ fun SettingsScreen(
     onNavigateToDebugOptions: () -> Unit,
     onNavigateToAutoHideSettings: () -> Unit,
     onNavigateToCommonGestureSettings: () -> Unit,
+    onNavigateToSetupOptions: () -> Unit
 ) {
     val uiState by settingsState.uiState.collectAsState()
     val context = LocalContext.current
+    var shizukuVersionValid by remember { mutableStateOf(false) }
+
+    LaunchedEffect(shizukuVersionValid) {
+        shizukuVersionValid = withContext(Dispatchers.IO) {
+            try {
+                val packageInfo =
+                    context.packageManager.getPackageInfo("moe.shizuku.privileged.api", 0)
+                val versionString = packageInfo.versionName.orEmpty()
+                Logger.d("Shizuku version found: $versionString")
+                val versionName = versionString.split(".")
+                if (versionName.size<3) {
+                    false
+                } else {
+                    val major = versionName[0].toInt()
+                    val minor = versionName[1].toInt()
+                    val build = versionName[2].toInt()
+
+                    if (major == 13 && minor == 6 && build == 0 && versionString.contains("thedjchi")) {
+                        true
+                    } else if (major == 13 && minor == 5 && build == 4) {
+                        true
+                    } else if (major > 13 || (major == 13 && minor > 6) || (major == 13 && minor == 6 && build > 0)) {
+                        true
+                    } else {
+                        false
+                    }
+                }
+            } catch (_: Exception) {
+                false
+            }
+        }
+    }
 
     Scaffold(
         topBar = {
@@ -118,41 +153,52 @@ fun SettingsScreen(
                 NoteItem("Pre-Release Version", Icons.Default.Info, "Information")
             }
 
-            PermissionStatusBanner(
-                title = "Accessibility Service",
-                status = uiState.isAccessibilityServiceEnabled,
-                onClickAction = {
-                    context.startActivity(Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS))
-                },
-            )
+            PreferenceCategory(title = "Setup") {
 
-            val shizukuStatus = ShizukuConnection.statusFlow.collectAsState().value
-            PermissionStatusBanner(
-                title = "Shizuku Service",
-                status = shizukuStatus == ShizukuStatus.READY,
-                onClickAction = {
-                    when (shizukuStatus) {
-                        ShizukuStatus.PERMISSION_REQUIRED -> ShizukuConnection.requestPermission()
-                        else -> {}
+                PermissionStatusBanner(
+                    title = "Accessibility Service",
+                    status = uiState.isAccessibilityServiceEnabled,
+                    onClickAction = {
+                        context.startActivity(Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS))
+                    },
+                )
+
+                val shizukuStatus = ShizukuConnection.statusFlow.collectAsState().value
+                PermissionStatusBanner(
+                    title = "Shizuku Service",
+                    status = shizukuStatus == ShizukuStatus.READY,
+                    onClickAction = {
+                        when (shizukuStatus) {
+                            ShizukuStatus.PERMISSION_REQUIRED -> ShizukuConnection.requestPermission()
+                            else -> {}
+                        }
                     }
-                }
-            )
+                )
 
-            Row(
-                modifier = Modifier.padding(8.dp),
-                verticalAlignment = Alignment.CenterVertically,
-            ) {
-                Text(
-                    text = "WARNING! Shizuku's latest official version v13.6.0 doesn't work with MTK phones due to a bug. Either downgrade to v13.5.4, or use thedjchi's Shizuku fork which already contains a fix along with other improvements. Click here for the download link.",
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    modifier = Modifier
-                        .clickable {
-                            openNewTabWindow(
+                PermissionStatusBanner(
+                    title = "Shizuku MTK support",
+                    status = shizukuVersionValid,
+                    onClickAction = {
+                        when (shizukuVersionValid) {
+                            false -> openNewTabWindow(
                                 "https://github.com/thedjchi/Shizuku/releases",
                                 context
                             )
+
+                            else -> {}
                         }
+                    },
+                    passText = "Shizuku version supported",
+                    failText = "Shizuku's latest official version v13.6.0 doesn't work with MTK phones due to a bug. Either downgrade to v13.5.4, or use thedjchi's Shizuku fork which already contains a fix along with other improvements. Click here for the download link.",
+                )
+
+                PermissionStatusBanner(
+                    title = "Disable Scroll Assistant",
+                    status = null,
+                    onClickAction = {
+                        onNavigateToSetupOptions()
+                    },
+                    passText = "Disable built-in features like the Scroll Assistant",
                 )
             }
 
@@ -160,7 +206,7 @@ fun SettingsScreen(
                 SimplePreferenceItem(
                     title = "Standard Cursor",
                     subtitle =
-                    if (uiState.cursorActivationKey == OverlaySettings.KEY_NONE) {
+                    if (uiState.cursorActivationKey == UsageConfig.KEY_NONE) {
                         "Unmapped"
                     } else {
                         "Mapped"
@@ -219,7 +265,9 @@ fun SettingsScreen(
                     title = "Hardware mouse display settings",
                     subtitle = "Found under 'Display' -> 'Colour and Motion' -> 'Large mouse cursor'",
                     onClick = {
-                        context.startActivity(Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS))
+                        if (!startActivity("com.android.settings/.Settings\$ColorAndMotionActivity")) {
+                            context.startActivity(Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS))
+                        }
                     }
                 )
 
@@ -227,7 +275,9 @@ fun SettingsScreen(
                     title = "Hardware mouse sensitivity settings",
                     subtitle = "Found under 'System' -> 'Keyboard' -> 'Pointer Speed'",
                     onClick = {
-                        context.startActivity(Intent(Settings.ACTION_SETTINGS))
+                        if (!startActivity("com.android.settings/.Settings\$KeyboardSettingsActivity")) {
+                            context.startActivity(Intent(Settings.ACTION_SETTINGS))
+                        }
                     }
                 )
             }
@@ -487,9 +537,10 @@ fun <T> DropdownPreferenceItem(
 @Composable
 private fun PermissionStatusBanner(
     title: String,
-    status: Boolean,
+    status: Boolean?,
     onClickAction: () -> Unit,
-    infoText: String? = null,
+    passText: String = "Permission Granted",
+    failText: String = "Permission Required",
 ) {
     Column {
         Surface(
@@ -497,7 +548,7 @@ private fun PermissionStatusBanner(
             Modifier
                 .fillMaxWidth()
                 .padding(horizontal = 16.dp, vertical = 8.dp),
-            color = if (status) Color(0xFFE6F3E6) else Color(0xFFFFF4E6),
+            color = if (status == null) MaterialTheme.colorScheme.surfaceContainer else if (status) MaterialTheme.colorScheme.surfaceContainer else MaterialTheme.colorScheme.errorContainer,
             shape = RoundedCornerShape(8.dp),
             onClick = onClickAction,
         ) {
@@ -506,25 +557,25 @@ private fun PermissionStatusBanner(
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 Icon(
-                    imageVector = if (status) Icons.Default.Check else Icons.Default.Warning,
+                    imageVector = if (status == null) Icons.Default.Info else if (status) Icons.Default.Check else Icons.Default.Warning,
                     contentDescription = null,
-                    tint = if (status) Color(0xFF4CAF50) else Color(0xFFFF9800),
+                    tint = if (status == null) Color(0xFF0492C2) else if (status) Color(0xFF4CAF50) else Color(0xFFFF9800),
                     modifier = Modifier.size(24.dp),
                 )
                 Spacer(modifier = Modifier.width(12.dp))
-                Column {
+                Column(modifier = Modifier.weight(10f, fill = true)) {
                     Text(
                         text = title,
                         style = MaterialTheme.typography.titleMedium,
                         color = MaterialTheme.colorScheme.onSurface,
                     )
                     Text(
-                        text = if (status) "Permission Granted" else "Permission Required",
+                        text = if (status == null || status) passText else failText,
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
                 }
-                if (!status) {
+                if (status == null || !status) {
                     Spacer(modifier = Modifier.weight(1f))
                     Icon(
                         imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
@@ -533,18 +584,6 @@ private fun PermissionStatusBanner(
                     )
                 }
             }
-        }
-
-        if (infoText != null) {
-            Text(
-                text = infoText,
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f),
-                modifier =
-                Modifier
-                    .padding(horizontal = 16.dp)
-                    .padding(bottom = 8.dp),
-            )
         }
     }
 }
@@ -556,7 +595,7 @@ fun SetKeyPreferenceItem(
     onCaptureKey: () -> Unit,
 ) {
     val subtitle =
-        if (currentKeyCode == OverlaySettings.KEY_NONE) {
+        if (currentKeyCode == UsageConfig.KEY_NONE) {
             "Currently not mapped"
         } else {
             "Current: ${KeyEvent.keyCodeToString(currentKeyCode)}"
@@ -666,7 +705,8 @@ data class AppInfo(
     val appName: String,
     val isSystemApp: Boolean,
     val hasLauncherActivity: Boolean = false,
-    val isHomeLauncher: Boolean = false
+    val isHomeLauncher: Boolean = false,
+    val version: String
 )
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -674,7 +714,7 @@ data class AppInfo(
 fun AppListScreen(
     settingsState: SettingsState,
     getter: (SettingsUiState) -> Set<String>,
-    setter: (OverlaySettings, Set<String>) -> OverlaySettings,
+    setter: (UsageConfig, Set<String>) -> UsageConfig,
     onNavigateBack: () -> Unit
 ) {
     val uiState by settingsState.uiState.collectAsState()
@@ -834,31 +874,12 @@ fun AppItem(
                     overflow = TextOverflow.Ellipsis
                 )
                 Text(
-                    text = app.packageName,
+                    text = "${app.packageName} ${app.version}",
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis
                 )
-//                if (app.isHomeLauncher) {
-//                    Text(
-//                        text = "Home launcher",
-//                        style = MaterialTheme.typography.labelSmall,
-//                        color = MaterialTheme.colorScheme.tertiary
-//                    )
-//                } else if (app.hasLauncherActivity) {
-//                    Text(
-//                        text = if (app.isSystemApp) "System app" else "User app",
-//                        style = MaterialTheme.typography.labelSmall,
-//                        color = if (app.isSystemApp) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.secondary
-//                    )
-//                } else {
-//                    Text(
-//                        text = "System app",
-//                        style = MaterialTheme.typography.labelSmall,
-//                        color = MaterialTheme.colorScheme.outline
-//                    )
-//                }
             }
 
             Checkbox(
@@ -911,6 +932,8 @@ suspend fun loadInstalledApps(packageManager: PackageManager, includeSystemApps:
                 try {
                     val packageName = appInfo.packageName
 
+                    val version = packageManager.getPackageInfo(packageName, 0).versionName
+
                     val appName = packageManager.getApplicationLabel(appInfo).toString()
                     val isSystemApp = (appInfo.flags and ApplicationInfo.FLAG_SYSTEM) != 0 &&
                             (appInfo.flags and ApplicationInfo.FLAG_UPDATED_SYSTEM_APP) == 0
@@ -930,7 +953,8 @@ suspend fun loadInstalledApps(packageManager: PackageManager, includeSystemApps:
                         appName = appName,
                         isSystemApp = isSystemApp,
                         hasLauncherActivity = packageName in launcherPackages,
-                        isHomeLauncher = packageName in homePackages
+                        isHomeLauncher = packageName in homePackages,
+                        version = version.orEmpty()
                     )
                 } catch (e: Exception) {
                     null
@@ -1071,4 +1095,39 @@ fun openNewTabWindow(urls: String, context: Context) {
     b.putBoolean("new_window", true)
     intents.putExtras(b)
     context.startActivity(intents)
+}
+
+fun startActivity(activity: String): Boolean {
+    val shizukuRunning = try { Shizuku.pingBinder() } catch (_: Exception) { false }
+    val shizukuAuthorized = try {
+        Shizuku.checkSelfPermission() == PackageManager.PERMISSION_GRANTED
+    } catch (_: Exception) { false }
+
+    val shizukuAvailable = shizukuRunning && shizukuAuthorized
+    if (shizukuAvailable) {
+        try {
+            Logger.e("Starting activity $activity")
+            val newProcessMethod = Shizuku::class.java.getDeclaredMethod(
+                "newProcess",
+                Array<String>::class.java,
+                Array<String>::class.java,
+                String::class.java
+            )
+            newProcessMethod.isAccessible = true
+
+            newProcessMethod.invoke(
+                null,
+                arrayOf("am","start", "-n", activity),
+                null,
+                null
+            )
+        } catch (e: Exception) {
+            Logger.e("Could not start activity $activity", e)
+            return false
+        }
+        return true
+    } else {
+        Logger.e("Shizuku unavailable to start activity $activity")
+        return false
+    }
 }

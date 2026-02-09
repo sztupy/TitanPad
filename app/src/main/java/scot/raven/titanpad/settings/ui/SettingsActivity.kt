@@ -17,6 +17,8 @@ import scot.raven.titanpad.core.ui.AppTheme
 import scot.raven.titanpad.settings.ui.autohide.AutoHideSettingsActivity
 import scot.raven.titanpad.settings.ui.cursor.CursorSettingsActivity
 import scot.raven.titanpad.settings.ui.gesture.CommonGestureSettingsActivity
+import scot.raven.titanpad.settings.ui.setup.DebugOptionsActivity
+import scot.raven.titanpad.settings.ui.setup.SetupOptionsActivity
 
 /**
  * Main settings screen.
@@ -52,6 +54,7 @@ class SettingsActivity : ComponentActivity() {
                     settingsState = settingsState,
                     onNavigateToCursorSettings = { startCustomActivity(this, CursorSettingsActivity::class.java) },
                     onNavigateToDebugOptions = { startCustomActivity(this, DebugOptionsActivity::class.java) },
+                    onNavigateToSetupOptions = { startCustomActivity(this, SetupOptionsActivity::class.java) },
                     onNavigateToAutoHideSettings = { startCustomActivity(this, AutoHideSettingsActivity::class.java) },
                     onNavigateToCommonGestureSettings = { startCustomActivity(this, CommonGestureSettingsActivity::class.java) },
                 )

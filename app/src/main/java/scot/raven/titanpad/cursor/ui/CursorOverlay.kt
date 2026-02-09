@@ -25,7 +25,7 @@ import scot.raven.titanpad.core.constants.CursorConstants
 import scot.raven.titanpad.core.domain.ScreenDimensions
 import scot.raven.titanpad.cursor.domain.CursorState
 import scot.raven.titanpad.cursor.domain.IconAlignment
-import scot.raven.titanpad.settings.domain.OverlaySettings
+import scot.raven.titanpad.settings.domain.UsageConfig
 import java.io.File
 import kotlin.math.PI
 import kotlin.math.atan2
@@ -41,7 +41,7 @@ import kotlin.math.sqrt
 fun CursorOverlay(
     cursorState: CursorState,
     modifier: Modifier = Modifier,
-    settings: OverlaySettings? = null,
+    settings: UsageConfig? = null,
     dimensions: ScreenDimensions
 ) {
     var cursorSize = settings?.cursorSize?.toFloat() ?: CursorConstants.DEFAULT_SIZE.toFloat()

@@ -26,7 +26,7 @@ import scot.raven.titanpad.core.logs.Logger
 import scot.raven.titanpad.core.ui.AppTheme
 import scot.raven.titanpad.cursor.ui.CursorOverlay
 import scot.raven.titanpad.gesture.ui.GestureVisualization
-import scot.raven.titanpad.settings.domain.OverlaySettings
+import scot.raven.titanpad.settings.domain.UsageConfig
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -42,7 +42,7 @@ class OverlayManager(
     private val backgroundScope: CoroutineScope,
     private val mainScope: CoroutineScope,
     private val windowManager: WindowManager,
-    private val settingsFlow: StateFlow<OverlaySettings>,
+    private val settingsFlow: StateFlow<UsageConfig>,
     private val orientationHandler: OrientationHandler,
     private val coreManager: CoreManager,
     private val lifecycleOwner: LifecycleOwner,
@@ -143,7 +143,7 @@ class OverlayManager(
             }
 
             // Notify cursor of touchscreen changes due to key presses
-            if (touchEnabled != null) {
+            if (touchEnabled != null && overlayView != null) {
                 try {
                     windowManager.updateViewLayout(overlayView, createOverlayLayoutParams(touchEnabled))
                     Choreographer.getInstance().postFrameCallbackDelayed({ _ ->
@@ -155,7 +155,7 @@ class OverlayManager(
             }
 
             // Immediately update layout depending on setting
-            if (touchChanged != null) {
+            if (touchChanged != null && overlayView != null) {
                 try {
                     windowManager.updateViewLayout(overlayView, createOverlayLayoutParams(touchChanged))
                 } catch (e: Exception) {
@@ -208,7 +208,6 @@ class OverlayManager(
         }
     }
 
-    @SuppressLint("ObsoleteSdkInt")
     private fun createOverlayView() {
         try {
             if (Looper.myLooper() != Looper.getMainLooper()) {
@@ -223,11 +222,9 @@ class OverlayManager(
             composeView.setViewTreeSavedStateRegistryOwner(savedStateRegistryOwner)
             composeView.setViewCompositionStrategy(ViewCompositionStrategy.DisposeOnDetachedFromWindow)
 
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-                composeView.setOnApplyWindowInsetsListener { _, insets ->
-                    mainScope.launch { updateOverlayUI() }
-                    insets
-                }
+            composeView.setOnApplyWindowInsetsListener { _, insets ->
+                mainScope.launch { updateOverlayUI() }
+                insets
             }
 
             overlayView = composeView

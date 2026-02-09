@@ -14,7 +14,7 @@ import scot.raven.titanpad.cursor.control.TrackpadActionHandler
 import scot.raven.titanpad.gesture.api.GestureManager
 import scot.raven.titanpad.gesture.standard.DefaultGestureStrategy
 import scot.raven.titanpad.gesture.ui.GesturePath
-import scot.raven.titanpad.settings.domain.OverlaySettings
+import scot.raven.titanpad.settings.domain.UsageConfig
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.channels.Channel
@@ -32,7 +32,7 @@ import kotlinx.coroutines.launch
  */
 class CoreManager(
     private val service: AccessibilityService,
-    private val settingsFlow: StateFlow<OverlaySettings>,
+    private val settingsFlow: StateFlow<UsageConfig>,
     private val orientationHandler: OrientationHandler,
     private val backgroundScope: CoroutineScope,
     private val keysPressed: MutableStateFlow<Int>,

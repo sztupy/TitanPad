@@ -1,4 +1,4 @@
-package scot.raven.titanpad.settings.ui
+package scot.raven.titanpad.settings.ui.setup
 
 import android.os.Bundle
 import androidx.activity.ComponentActivity
@@ -6,8 +6,9 @@ import androidx.activity.compose.setContent
 import androidx.lifecycle.ViewModelProvider
 import scot.raven.titanpad.TitanPad
 import scot.raven.titanpad.core.ui.AppTheme
+import scot.raven.titanpad.settings.ui.SettingsState
 
-class DebugOptionsActivity : ComponentActivity() {
+class SetupOptionsActivity : ComponentActivity() {
     private lateinit var settingsState: SettingsState
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -18,7 +19,7 @@ class DebugOptionsActivity : ComponentActivity() {
 
         setContent {
             AppTheme {
-                DebugOptionsScreen(
+                SetupOptionsScreen(
                     settingsState = settingsState,
                     onNavigateBack = {
                         finish()

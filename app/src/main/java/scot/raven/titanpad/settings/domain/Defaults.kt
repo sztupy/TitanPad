@@ -34,6 +34,8 @@ object Defaults {
         const val MOUSE_TWO_FINGER_HOLD = false
         const val MOUSE_TAP_MAX_DURATION = 100
         const val SCROLL_VERTICAL_ONLY = false
+        const val SOFTWARE_MOUSE_SENSITIVITY = 4
+        const val SOFTWARE_MOUSE_EXPONENTIAL = true
         const val TWO_FINGER_SENSITIVITY = 8
         val FUNC_1_BUTTON_MAP = FuncButtonMap.OFF
         val FUNC_2_BUTTON_MAP = FuncButtonMap.OFF

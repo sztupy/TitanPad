@@ -29,6 +29,8 @@ data class UsageConfig(
     val mouseTwoFingerToHold: Boolean = Defaults.Settings.MOUSE_TWO_FINGER_HOLD,
     val mouseTapMaxDuration: Int = Defaults.Settings.MOUSE_TAP_MAX_DURATION,
     val scrollOnlyVertically: Boolean = Defaults.Settings.SCROLL_VERTICAL_ONLY,
+    val softwareMouseSensitivity: Int = Defaults.Settings.SOFTWARE_MOUSE_SENSITIVITY,
+    val softwareMouseExponential: Boolean = Defaults.Settings.SOFTWARE_MOUSE_EXPONENTIAL,
     val twoFingerSensitivity: Int = Defaults.Settings.TWO_FINGER_SENSITIVITY,
     val func1ButtonMap: FuncButtonMap = Defaults.Settings.FUNC_1_BUTTON_MAP,
     val func2ButtonMap: FuncButtonMap = Defaults.Settings.FUNC_2_BUTTON_MAP,

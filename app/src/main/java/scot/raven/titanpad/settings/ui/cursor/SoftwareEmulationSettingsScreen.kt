@@ -64,6 +64,32 @@ fun SoftwareEmulationSettingsScreen(
                 .padding(paddingValues)
                 .verticalScroll(rememberScrollState())
         ) {
+            PreferenceCategory(title = "Sensitivity") {
+                SliderPreferenceItem(
+                    title = "Mouse Sensitivity",
+                    value = uiState.softwareMouseSensitivity.toFloat(),
+                    valueRange = 1f..9f,
+                    valueText = "${uiState.softwareMouseSensitivity}",
+                    onValueChange = { value ->
+                        settingsState.updatePreference(value) { settings, v ->
+                            settings.copy(softwareMouseSensitivity = v.toInt())
+                        }
+                    },
+                    steps = 7,
+                )
+
+                SwitchPreferenceItem(
+                    title = "Exponential sensitivity",
+                    subtitle = if (uiState.softwareMouseExponential) "Mouse moves quicker on quicker swipes" else "Mouse moves the same regardless of swipe speed",
+                    checked = uiState.softwareMouseExponential,
+                    onCheckedChange = { value ->
+                        settingsState.updatePreference(value) { settings, v ->
+                            settings.copy(softwareMouseExponential = v)
+                        }
+                    },
+                )
+            }
+
             PreferenceCategory(title = "Adaptive") {
                 SwitchPreferenceItem(
                     title = "Show Location Clickable",

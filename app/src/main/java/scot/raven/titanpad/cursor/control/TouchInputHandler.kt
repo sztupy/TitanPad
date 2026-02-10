@@ -13,6 +13,9 @@ import scot.raven.titanpad.cursor.domain.InputType
 import scot.raven.titanpad.gesture.api.GestureManager
 import scot.raven.titanpad.settings.domain.ApplicationSettings
 import scot.raven.titanpad.settings.domain.UsageConfig
+import kotlin.math.absoluteValue
+import kotlin.math.pow
+import kotlin.math.sign
 
 class TouchInputHandler(
     private val cursorStateManager: CursorStateManager,
@@ -149,7 +152,11 @@ class TouchInputHandler(
             val deltaY = (currentY - lastPositionY + 0.0f)
 
             if (inputType == InputType.SOFTWARE_MOUSE) {
-                val newPosition = cursorStateManager.applyMovement(Offset(deltaX, deltaY))
+                val multiplier = settings.softwareMouseSensitivity.toFloat() / if (settings.softwareMouseExponential) 4f else 6f
+                val deltaWithSensitivityX = if (settings.softwareMouseExponential) (deltaX.absoluteValue / 4f).pow(multiplier + 1) * deltaX.sign else deltaX * multiplier
+                val deltaWithSensitivityY = if (settings.softwareMouseExponential) (deltaY.absoluteValue / 4f).pow(multiplier + 1) * deltaY.sign else deltaY * multiplier
+
+                val newPosition = cursorStateManager.applyMovement(Offset(deltaWithSensitivityX, deltaWithSensitivityY))
                 cursorStateManager.updatePosition(newPosition)
 
                 if (dragEnabled) {
@@ -171,24 +178,28 @@ class TouchInputHandler(
                 }
             } else if (inputType == InputType.HARDWARE_MOUSE) {
                 hidService?.setMousePosition(deltaX.toInt(), deltaY.toInt(), if (dragEnabled) 1 else 0, 0)
-            } else if (inputType == InputType.HARDWARE_SCROLL) {
+            } else if (inputType == InputType.HARDWARE_SCROLL || inputType == InputType.SOFTWARE_SCROLL) {
+                var touchX = 0
+                var touchY = 0
                 if (!backScreenMode) {
                     if (settings.touchpadSplitInput) {
-                        hidService?.tapScreen(
-                            ((if (settings.scrollOnlyVertically) startPositionX else currentX).toFloat() / (settings.touchpadSplitPosition / 100f)).toInt(),
-                            currentY * 2
-                        )
+                        touchX = ((if (settings.scrollOnlyVertically) startPositionX else currentX).toFloat() / (settings.touchpadSplitPosition / 100f)).toInt()
+                        touchY = currentY * 2
                     } else {
-                        hidService?.tapScreen(
-                            if (settings.scrollOnlyVertically) startPositionX else currentX,
-                            currentY * 2
-                        )
+                        touchX = if (settings.scrollOnlyVertically) startPositionX else currentX
+                        touchY = currentY * 2
                     }
                 } else {
-                    hidService?.tapScreen(
-                        ((BACK_SCREEN_WIDTH-(if (settings.scrollOnlyVertically) startPositionX else currentX)).toFloat() * (TRACKPAD_WIDTH.toFloat() / BACK_SCREEN_WIDTH.toFloat())).toInt(),
-                        (currentY.toFloat() * (TRACKPAD_HEIGHT.toFloat() / BACK_SCREEN_HEIGHT.toFloat())).toInt() * 2
-                    )
+                    touchX =((BACK_SCREEN_WIDTH-(if (settings.scrollOnlyVertically) startPositionX else currentX)).toFloat() * (TRACKPAD_WIDTH.toFloat() / BACK_SCREEN_WIDTH.toFloat())).toInt()
+                    touchY =(currentY.toFloat() * (TRACKPAD_HEIGHT.toFloat() / BACK_SCREEN_HEIGHT.toFloat())).toInt() * 2
+                }
+
+                if (inputType == InputType.HARDWARE_SCROLL) {
+                    hidService?.tapScreen(touchX, touchY)
+                } else {
+                    scope.launch {
+                        gestureManager.moveTo(touchX.toFloat(), touchY.toFloat())
+                    }
                 }
             } else if (inputType == InputType.HARDWARE_JOYSTICK) {
                 if (backScreenMode) {
@@ -258,6 +269,10 @@ class TouchInputHandler(
                 }
             } else if (inputType == InputType.HARDWARE_SCROLL) {
                 hidService?.tapRelease()
+            } else if (inputType == InputType.SOFTWARE_SCROLL) {
+                scope.launch {
+                    gestureManager.endTap()
+                }
             } else if (inputType == InputType.HARDWARE_JOYSTICK) {
                 hidService?.setJoystick(0,0)
             }

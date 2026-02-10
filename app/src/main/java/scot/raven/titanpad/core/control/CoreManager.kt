@@ -27,6 +27,7 @@ import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
 import scot.raven.titanpad.accessibility.AppAccessibilityService.Companion.BROADCAST_CURSOR_ACTIVATED
+import scot.raven.titanpad.cursor.domain.InputType
 import scot.raven.titanpad.settings.domain.ApplicationSettings
 import scot.raven.titanpad.settings.ui.SettingsActivity.Companion.CONFIG_ID_EXTRA
 
@@ -121,12 +122,14 @@ class CoreManager(
             modeCoordinator.activeMode
                 .onEach { mode ->
                     updateNotification(mode)
+                    updateCursorMode()
                 }
                 .launchIn(backgroundScope)
 
             settingsFlow
                 .onEach {
                     updateNotification(modeCoordinator.activeMode.value)
+                    updateCursorMode()
                 }
                 .launchIn(backgroundScope)
 
@@ -147,6 +150,29 @@ class CoreManager(
             Logger.e("Error initializing CoreManager", e)
             throw e
         }
+    }
+
+    private fun updateCursorMode() {
+        val currentMode = modeCoordinator.activeMode.value
+        val currentSettings = settingsFlow.value.getActiveConfig()
+
+        if (currentMode != ModeCoordinator.OverlayMode.ON) {
+            cursorStateManager.hideCursor()
+            return
+        }
+
+        val combinedInputTypes = setOf(
+            currentSettings.touchPadMainInputType,
+            currentSettings.backScreenInputType
+        ) + if (currentSettings.touchpadSplitInput) currentSettings.touchPadLeftInputType else currentSettings.touchPadMainInputType
+
+        val shouldDisplayCursor = combinedInputTypes.contains(InputType.SOFTWARE_MOUSE)
+        if (!shouldDisplayCursor) {
+            cursorStateManager.hideCursor()
+        }
+
+        if (shouldDisplayCursor && !cursorStateManager.isCursorVisible())
+            cursorStateManager.setCursorVisibiliy(true)
     }
 
     private fun onScreenDimensionsChanged(newDimensions: ScreenDimensions) {

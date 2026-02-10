@@ -176,6 +176,8 @@ class SettingsRepositoryImpl(
         val MOUSE_TWO_FINGER_HOLD = booleanPreferencesKey("mouse_two_finger_hold__$configId")
         val MOUSE_TAP_MAX_DURATION = intPreferencesKey("mouse_tap_max_duration__$configId")
         val SCROLL_VERTICAL_ONLY = booleanPreferencesKey("scroll_vertical_only__$configId")
+        val SOFTWARE_MOUSE_SENSITIVITY = intPreferencesKey("software_mouse_sensitivity__$configId")
+        val SOFTWARE_MOUSE_EXPONENTIAL = booleanPreferencesKey("software_mouse_exponential__$configId")
         val TWO_FINGER_SENSITIVITY = intPreferencesKey("two_finger_sensitivity__$configId")
         val FUNC_1_BUTTON_MAP = stringPreferencesKey("func_1_button_map__$configId")
         val FUNC_2_BUTTON_MAP = stringPreferencesKey("func_2_button_map__$configId")
@@ -307,6 +309,8 @@ class SettingsRepositoryImpl(
             mouseTwoFingerToHold = preferences[MOUSE_TWO_FINGER_HOLD]?: UsageConfig.DEFAULT.mouseTwoFingerToHold,
             mouseTapMaxDuration = preferences[MOUSE_TAP_MAX_DURATION]?: UsageConfig.DEFAULT.mouseTapMaxDuration,
             scrollOnlyVertically = preferences[SCROLL_VERTICAL_ONLY]?: UsageConfig.DEFAULT.scrollOnlyVertically,
+            softwareMouseSensitivity = preferences[SOFTWARE_MOUSE_SENSITIVITY]?: UsageConfig.DEFAULT.softwareMouseSensitivity,
+            softwareMouseExponential = preferences[SOFTWARE_MOUSE_EXPONENTIAL]?: UsageConfig.DEFAULT.softwareMouseExponential,
             twoFingerSensitivity = preferences[TWO_FINGER_SENSITIVITY]?: UsageConfig.DEFAULT.twoFingerSensitivity,
             func1ButtonMap = func1ButtonMap,
             func2ButtonMap = func2ButtonMap,
@@ -368,6 +372,8 @@ class SettingsRepositoryImpl(
         val MOUSE_TWO_FINGER_HOLD = booleanPreferencesKey("mouse_two_finger_hold__$configId")
         val MOUSE_TAP_MAX_DURATION = intPreferencesKey("mouse_tap_max_duration__$configId")
         val SCROLL_VERTICAL_ONLY = booleanPreferencesKey("scroll_vertical_only__$configId")
+        val SOFTWARE_MOUSE_SENSITIVITY = intPreferencesKey("software_mouse_sensitivity__$configId")
+        val SOFTWARE_MOUSE_EXPONENTIAL = booleanPreferencesKey("software_mouse_exponential__$configId")
         val TWO_FINGER_SENSITIVITY = intPreferencesKey("two_finger_sensitivity__$configId")
         val FUNC_1_BUTTON_MAP = stringPreferencesKey("func_1_button_map__$configId")
         val FUNC_2_BUTTON_MAP = stringPreferencesKey("func_2_button_map__$configId")
@@ -412,6 +418,8 @@ class SettingsRepositoryImpl(
         preferences[MOUSE_TWO_FINGER_HOLD] = settings.mouseTwoFingerToHold
         preferences[MOUSE_TAP_MAX_DURATION] = settings.mouseTapMaxDuration
         preferences[SCROLL_VERTICAL_ONLY] = settings.scrollOnlyVertically
+        preferences[SOFTWARE_MOUSE_SENSITIVITY] = settings.softwareMouseSensitivity
+        preferences[SOFTWARE_MOUSE_EXPONENTIAL] = settings.softwareMouseExponential
         preferences[TWO_FINGER_SENSITIVITY] = settings.twoFingerSensitivity
         preferences[FUNC_1_BUTTON_MAP] = settings.func1ButtonMap.name
         preferences[FUNC_2_BUTTON_MAP] = settings.func2ButtonMap.name

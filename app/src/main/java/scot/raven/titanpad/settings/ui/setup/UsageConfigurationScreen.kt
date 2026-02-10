@@ -193,6 +193,16 @@ fun UsageConfigurationScreen(
                     }
                 )
                 SwitchPreferenceItem(
+                    title = "Disable top row touch",
+                    subtitle = if (uiState.touchpadDisableTopRow) "Touching the top row will not trigger touch events" else "The entire keyboard is used for touch events",
+                    checked = uiState.touchpadDisableTopRow,
+                    onCheckedChange = { value ->
+                        settingsState.updatePreference(value) { settings, v ->
+                            settings.copy(touchpadDisableTopRow = v)
+                        }
+                    },
+                )
+                SwitchPreferenceItem(
                     title = "Separate left side",
                     subtitle = if (uiState.touchpadSplitInput) "Use different configuration for the left side" else "Use same configuration for entire trackpad",
                     checked = uiState.touchpadSplitInput,

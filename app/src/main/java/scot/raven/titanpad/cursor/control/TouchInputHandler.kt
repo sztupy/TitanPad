@@ -136,7 +136,11 @@ class TouchInputHandler(
                     }
                 }
 
-                detectGesture(settings, inputType)
+                if (settings.touchpadDisableTopRow && !backScreenMode && startPositionY <= TRACKPAD_HEIGHT/4) {
+                    // Do nothing
+                } else {
+                    detectGesture(settings, inputType)
+                }
             }
         }
     }

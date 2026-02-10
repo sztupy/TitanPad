@@ -169,6 +169,7 @@ class SettingsRepositoryImpl(
         val TOUCHPAD_MAIN_INPUT = stringPreferencesKey("touchpad_main_input__$configId")
         val TOUCHPAD_LEFT_INPUT = stringPreferencesKey("touchpad_left_input__$configId")
         val BACK_SCREEN_INPUT = stringPreferencesKey("back_screen_input__$configId")
+        val TOUCHPAD_DISABLE_TOP_ROW = booleanPreferencesKey("touchpad_disable_top_row__$configId")
         val TOUCHPAD_SPLIT_INPUT = booleanPreferencesKey("touchpad_split_input__$configId")
         val TOUCHPAD_SPLIT_POSITION = intPreferencesKey("touchpad_split_position__$configId")
         val MOUSE_TAP_TO_CLICK = booleanPreferencesKey("mouse_tap_to_click__$configId")
@@ -302,6 +303,7 @@ class SettingsRepositoryImpl(
             touchPadMainInputType = touchPadMainInputType,
             touchPadLeftInputType = touchPadLeftInputType,
             backScreenInputType = backScreenInputType,
+            touchpadDisableTopRow = preferences[TOUCHPAD_DISABLE_TOP_ROW]?: UsageConfig.DEFAULT.touchpadDisableTopRow,
             touchpadSplitInput = preferences[TOUCHPAD_SPLIT_INPUT]?: UsageConfig.DEFAULT.touchpadSplitInput,
             touchpadSplitPosition = preferences[TOUCHPAD_SPLIT_POSITION]?: UsageConfig.DEFAULT.touchpadSplitPosition,
             mouseTapToClick = preferences[MOUSE_TAP_TO_CLICK]?: UsageConfig.DEFAULT.mouseTapToClick,
@@ -365,6 +367,7 @@ class SettingsRepositoryImpl(
         val TOUCHPAD_MAIN_INPUT = stringPreferencesKey("touchpad_main_input__$configId")
         val TOUCHPAD_LEFT_INPUT = stringPreferencesKey("touchpad_left_input__$configId")
         val BACK_SCREEN_INPUT = stringPreferencesKey("back_screen_input__$configId")
+        val TOUCHPAD_DISABLE_TOP_ROW = booleanPreferencesKey("touchpad_disable_top_row__$configId")
         val TOUCHPAD_SPLIT_INPUT = booleanPreferencesKey("touchpad_split_input__$configId")
         val TOUCHPAD_SPLIT_POSITION = intPreferencesKey("touchpad_split_position__$configId")
         val MOUSE_TAP_TO_CLICK = booleanPreferencesKey("mouse_tap_to_click__$configId")
@@ -411,6 +414,7 @@ class SettingsRepositoryImpl(
         preferences[TOUCHPAD_MAIN_INPUT] = settings.touchPadMainInputType.name
         preferences[TOUCHPAD_LEFT_INPUT] = settings.touchPadLeftInputType.name
         preferences[BACK_SCREEN_INPUT] = settings.backScreenInputType.name
+        preferences[TOUCHPAD_DISABLE_TOP_ROW] = settings.touchpadDisableTopRow
         preferences[TOUCHPAD_SPLIT_INPUT] = settings.touchpadSplitInput
         preferences[TOUCHPAD_SPLIT_POSITION] = settings.touchpadSplitPosition
         preferences[MOUSE_TAP_TO_CLICK] = settings.mouseTapToClick

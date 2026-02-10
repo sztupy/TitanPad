@@ -4,10 +4,9 @@ import android.content.Context
 import android.content.Intent
 import android.content.pm.ApplicationInfo
 import android.content.pm.PackageManager
-import android.net.Uri
 import android.os.Bundle
 import android.provider.Settings
-import android.view.KeyEvent
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -35,6 +34,7 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material3.AlertDialog
@@ -64,6 +64,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
@@ -78,12 +79,18 @@ import androidx.core.graphics.drawable.toBitmap
 import androidx.core.graphics.toColorInt
 import scot.raven.titanpad.BuildConfig
 import scot.raven.titanpad.R
-import scot.raven.titanpad.core.constants.ApplicationConstants
 import scot.raven.titanpad.core.shizuku.ShizukuConnection
 import scot.raven.titanpad.core.shizuku.ShizukuStatus
-import scot.raven.titanpad.settings.domain.OverlaySettings
+import scot.raven.titanpad.settings.domain.UsageConfig
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import androidx.core.net.toUri
+import kotlinx.coroutines.flow.StateFlow
+import rikka.shizuku.Shizuku
+import scot.raven.titanpad.accessibility.AppAccessibilityService
+import scot.raven.titanpad.core.logs.Logger
+import scot.raven.titanpad.core.util.KeyCodeUtil
+import scot.raven.titanpad.cursor.domain.InputType
 
 /**
  * Main settings screen.
@@ -92,14 +99,45 @@ import kotlinx.coroutines.withContext
 @Composable
 fun SettingsScreen(
     settingsState: SettingsState,
-    onNavigateToCursorSettings: () -> Unit,
-    onNavigateToDebugOptions: () -> Unit,
-    onNavigateToAutoHideSettings: () -> Unit,
-    onNavigateToCommonGestureSettings: () -> Unit,
-    onNavigateToScrollSettings: () -> Unit
+    activeConfiguration: StateFlow<String>,
+    onNavigateToCursorSettings: (String) -> Unit,
+    onNavigateToSetupOptions: () -> Unit,
 ) {
     val uiState by settingsState.uiState.collectAsState()
+    val validationErrors by settingsState.validationErrors.collectAsState()
     val context = LocalContext.current
+    var shizukuVersionValid by remember { mutableStateOf(false) }
+
+    LaunchedEffect(shizukuVersionValid) {
+        shizukuVersionValid = withContext(Dispatchers.IO) {
+            try {
+                val packageInfo =
+                    context.packageManager.getPackageInfo("moe.shizuku.privileged.api", 0)
+                val versionString = packageInfo.versionName.orEmpty()
+                Logger.d("Shizuku version found: $versionString")
+                val versionName = versionString.split(".")
+                if (versionName.size<3) {
+                    false
+                } else {
+                    val major = versionName[0].toInt()
+                    val minor = versionName[1].toInt()
+                    val build = versionName[2].toInt()
+
+                    if (major == 13 && minor == 6 && build == 0 && versionString.contains("thedjchi")) {
+                        true
+                    } else if (major == 13 && minor == 5 && build == 4) {
+                        true
+                    } else if (major > 13 || (major == 13 && minor > 6) || (major == 13 && minor == 6 && build > 0)) {
+                        true
+                    } else {
+                        false
+                    }
+                }
+            } catch (_: Exception) {
+                false
+            }
+        }
+    }
 
     Scaffold(
         topBar = {
@@ -119,15 +157,25 @@ fun SettingsScreen(
                 NoteItem("Pre-Release Version", Icons.Default.Info, "Information")
             }
 
-            PermissionStatusBanner(
-                title = "Accessibility Service",
-                status = uiState.isAccessibilityServiceEnabled,
-                onClickAction = {
-                    context.startActivity(Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS))
-                },
-            )
+            if(uiState.showError) {
+                NoteItem(uiState.errorMessage, Icons.Default.Warning, "Error")
+            }
 
-            if (uiState.enableShizukuIntegration) {
+            if(uiState.showInvalidSettingError) {
+                validationErrors.forEach {
+                    NoteItem(it, Icons.Default.Warning, "Error")
+                }
+            }
+
+            PreferenceCategory(title = "Setup") {
+                PermissionStatusBanner(
+                    title = "Accessibility Service",
+                    status = uiState.isAccessibilityServiceEnabled,
+                    onClickAction = {
+                        context.startActivity(Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS))
+                    },
+                )
+
                 val shizukuStatus = ShizukuConnection.statusFlow.collectAsState().value
                 PermissionStatusBanner(
                     title = "Shizuku Service",
@@ -139,87 +187,119 @@ fun SettingsScreen(
                         }
                     }
                 )
-            }
 
-            PreferenceCategory(title = "Input Modes") {
-                SimplePreferenceItem(
-                    title = "Standard Cursor",
-                    subtitle =
-                    if (uiState.cursorActivationKey == OverlaySettings.KEY_NONE) {
-                        "Unmapped"
-                    } else {
-                        "Mapped"
-                    },
-                    onClick = onNavigateToCursorSettings,
-                )
-            }
+                PermissionStatusBanner(
+                    title = "Shizuku MTK support",
+                    status = shizukuVersionValid,
+                    onClickAction = {
+                        when (shizukuVersionValid) {
+                            false -> openNewTabWindow(
+                                "https://github.com/thedjchi/Shizuku/releases",
+                                context
+                            )
 
-            PreferenceCategory(title = "Behavior") {
-                SimplePreferenceItem(
-                    title = "Auto-Hide Cursor Options",
-                    subtitle = "Automatically hide and restore the cursor",
-                    onClick = onNavigateToAutoHideSettings
-                )
-
-                SliderPreferenceItem(
-                    title = "Activation Duration",
-                    value = uiState.activationDuration.toFloat(),
-                    valueRange = ApplicationConstants.MIN_ACTIVATION_HOLD_DURATION.toFloat()..ApplicationConstants.MAX_ACTIVATION_HOLD_DURATION.toFloat(),
-                    valueText = "${uiState.activationDuration} ms",
-                    onValueChange = { value ->
-                        settingsState.updatePreference(value) { settings, v ->
-                            settings.copy(activationDuration = v.toLong())
+                            else -> {}
                         }
                     },
-                    steps = 4,
+                    passText = "Shizuku version supported",
+                    failText = "Shizuku's latest official version v13.6.0 doesn't work with MTK phones due to a bug. Either downgrade to v13.5.4, or use thedjchi's Shizuku fork which already contains a fix along with other improvements. Click here for the download link.",
                 )
 
-                if (uiState.activationDuration == 0L) {
-                    NoteItem(
-                        title = "Activation keys will be fully intercepted",
-                        icon = Icons.Default.Warning,
-                        contentDescription = "Warning",
-                        color = Color(0xFFFFF4E6),
-                    )
-                    NoteItem(
-                        title = "Standard cursor control scheme toggle will be disabled",
-                        icon = Icons.Default.Warning,
-                        contentDescription = "Warning",
-                        color = Color(0xFFFFF4E6),
+                PermissionStatusBanner(
+                    title = "Disable Scroll Assistant",
+                    status = null,
+                    onClickAction = {
+                        onNavigateToSetupOptions()
+                    },
+                    passText = "Disable built-in features like the Scroll Assistant",
+                )
+            }
+
+            val configurationStatus = activeConfiguration.collectAsState()
+            PreferenceCategory(title = "Configurations") {
+                NoteItem("Click on item to edit configuration. Use switcher to activate/deactivate.", Icons.Default.Info, "Information")
+
+                SwitchPreferenceItem(
+                    title = uiState.defaultConfigName,
+                    subtitle = "",
+                    onClick = {
+                        onNavigateToCursorSettings("default")
+                    },
+                    onCheckedChange = { state ->
+                        if (AppAccessibilityService.getInstance() == null) {
+                            settingsState.showToast("Background system not running, enable Accessibility Services")
+                        } else {
+                            if (state)
+                                AppAccessibilityService.activateStandardCursor(context, "default")
+                            else
+                                AppAccessibilityService.deactivateStandardCursor(context, "default")
+                        }
+                    },
+                    checked = configurationStatus.value == "default"
+                )
+
+                uiState.configList.forEach { item ->
+                    SwitchPreferenceItem(
+                        title = item.value,
+                        subtitle = "",
+                        onClick = {
+                            onNavigateToCursorSettings(item.key)
+                        },
+                        onDeleteClick = {
+                            settingsState.deleteConfig(item.key)
+                        },
+                        onCheckedChange = { state ->
+                            if (AppAccessibilityService.getInstance() == null) {
+                                settingsState.showToast("Background system not running, enable Accessibility Services")
+                            } else {
+                                if (state)
+                                    AppAccessibilityService.activateStandardCursor(
+                                        context,
+                                        item.key
+                                    )
+                                else
+                                    AppAccessibilityService.deactivateStandardCursor(
+                                        context,
+                                        item.key
+                                    )
+                            }
+                        },
+                        checked = configurationStatus.value == item.key
                     )
                 }
 
+                SimplePreferenceItem(
+                    title = "New Configuration",
+                    subtitle = "Add new configuration to the list",
+                    onClick = {
+                        Logger.d("CLICKED")
+                        settingsState.addConfig(UsageConfig.randomId())
+                    }
+                )
+            }
+
+            PreferenceCategory(title = "Keys") {
                 SwitchPreferenceItem(
-                    title = "Show Notification Icon",
-                    subtitle = "Show icon when cursor is activated",
-                    checked = uiState.showNotification,
+                    title = "Make the Func keys visible to applications",
+                    subtitle = "Make the Func keys (the two buttons on the left side) visible to external apps, e.g. Key Mapper. Also enables these buttons to be used as Activation Keys in the config",
+                    checked = uiState.alwaysRemapFuncKeys,
                     onCheckedChange = { value ->
-                        settingsState.updatePreference(value) { settings, v ->
-                            settings.copy(showNotification = v)
+                        settingsState.updateGlobalPreference(value) { settings, v ->
+                            settings.copy(alwaysRemapFuncKeys = v)
                         }
                     },
                 )
-            }
 
-            PreferenceCategory(title = "Gestures") {
-                SimplePreferenceItem(
-                    title = "Common Gesture Options",
-                    subtitle = "Settings that apply to both scrolls and zooms",
-                    onClick = onNavigateToCommonGestureSettings
-                )
-
-                SimplePreferenceItem(
-                    title = "Scroll Options",
-                    subtitle = "Settings specific to scrolling",
-                    onClick = onNavigateToScrollSettings
-                )
-            }
-
-            PreferenceCategory(title = "Advanced") {
-                SimplePreferenceItem(
-                    title = "Developer Options",
-                    subtitle = "Additional configurable features",
-                    onClick = onNavigateToDebugOptions
+                SwitchPreferenceItem(
+                    title = "Enable better compatibility",
+                    subtitle = "Map Func1 to KEYCODE_F11 and Func2 to KEYCODE_F12 for better compatibility with external apps",
+                    checked = uiState.alwaysRemapFuncKeysCompat,
+                    onCheckedChange = { value ->
+                        settingsState.updateGlobalPreference(value) { settings, v ->
+                            settings.copy(alwaysRemapFuncKeysCompat = v)
+                        }
+                    },
+                    enabled = uiState.alwaysRemapFuncKeys
                 )
             }
 
@@ -227,8 +307,7 @@ fun SettingsScreen(
                 Surface(
                     modifier = Modifier.fillMaxWidth(),
                 ) {
-                    Column(
-                    ) {
+                    Column {
                         Row(
                             modifier =
                             Modifier
@@ -347,10 +426,12 @@ fun SwitchPreferenceItem(
     subtitle: String? = null,
     checked: Boolean,
     onCheckedChange: (Boolean) -> Unit,
+    onClick: (() -> Unit)? = null,
+    onDeleteClick: (() -> Unit)? = null,
     enabled: Boolean = true
 ) {
     Surface(
-        onClick = { onCheckedChange(!checked) },
+        onClick = { if (onClick == null) onCheckedChange(!checked) else onClick() },
         modifier = Modifier.fillMaxWidth(),
     ) {
         Row(
@@ -368,6 +449,15 @@ fun SwitchPreferenceItem(
                     )
                 }
             }
+            if (onDeleteClick != null && !checked) {
+                IconButton(onClick = onDeleteClick) {
+                    Icon(
+                        imageVector = Icons.Default.Delete,
+                        contentDescription = "Delete",
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+            }
             Switch(
                 checked = checked,
                 onCheckedChange = onCheckedChange,
@@ -376,6 +466,103 @@ fun SwitchPreferenceItem(
             )
         }
     }
+}
+
+@Composable
+fun TextFieldDialog(
+    initialValue: String,
+    onUpdate: (String) -> Unit,
+    onDismiss: () -> Unit,
+    title: String,
+    subtitle: String,
+    label: String
+) {
+    var value by remember {
+        mutableStateOf(
+            TextFieldValue(
+                text = initialValue,
+                selection = TextRange(initialValue.length)
+            )
+        )
+    }
+    var isError by remember { mutableStateOf(false) }
+
+    val saveAction = {
+        if (!isError) {
+            onUpdate(value.text)
+            onDismiss()
+        }
+    }
+
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text(title) },
+        text = {
+            Column {
+                Text(subtitle)
+                Spacer(modifier = Modifier.height(16.dp))
+                OutlinedTextField(
+                    value = value,
+                    onValueChange = { input ->
+                        val filtered = input.text
+                        val newSelection = TextRange(
+                            start = minOf(filtered.length, input.selection.start),
+                            end = minOf(filtered.length, input.selection.end)
+                        )
+
+                        value = TextFieldValue(
+                            text = filtered,
+                            selection = newSelection,
+                            composition = input.composition
+                        )
+
+                        if (filtered.isEmpty()) {
+                            isError = true
+                        } else {
+                            isError = false
+                        }
+                    },
+                    label = { Text(label) },
+                    singleLine = true,
+                    isError = isError,
+                    supportingText = {
+                        if (isError) {
+                            Text(
+                                text = "Invalid value",
+                                color = Color.Red,
+                                modifier = Modifier.padding(top = 4.dp)
+                            )
+                        }
+                    },
+                    keyboardOptions = KeyboardOptions(
+                        imeAction = ImeAction.Done
+                    ),
+                    keyboardActions = KeyboardActions(
+                        onDone = {
+                            if (!isError) {
+                                saveAction()
+                            }
+                        }
+                    )
+                )
+            }
+        },
+        confirmButton = {
+            TextButton(
+                onClick = {
+                    if (!isError) saveAction()
+                },
+                enabled = !isError
+            ) {
+                Text("Save")
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) {
+                Text("Cancel")
+            }
+        }
+    )
 }
 
 @Composable
@@ -461,11 +648,42 @@ fun <T> DropdownPreferenceItem(
 }
 
 @Composable
+fun InputSelectorItem(
+    title: String,
+    selectedInputType: InputType,
+    onOptionSelected: (InputType) -> Unit
+) {
+    DropdownPreferenceItem(
+        title = title,
+        subtitle =
+            when (selectedInputType) {
+                InputType.OFF -> "Disabled"
+                InputType.SOFTWARE_MOUSE -> "Software Mouse"
+                InputType.HARDWARE_MOUSE -> "Emulated Hardware Mouse"
+                InputType.SOFTWARE_SCROLL -> "Software Scroll Assistant"
+                InputType.HARDWARE_SCROLL -> "Emulated Hardware Scroll Assistant"
+                InputType.HARDWARE_JOYSTICK -> "Emulated Hardware Joystick"
+            },
+        selectedOption = selectedInputType,
+        options =
+            listOf(
+                InputType.OFF to "Disabled",
+                InputType.SOFTWARE_MOUSE to "Mouse (software)",
+                InputType.HARDWARE_MOUSE to "Mouse (hardware)",
+                InputType.SOFTWARE_SCROLL to "Scroll (software)",
+                InputType.HARDWARE_SCROLL to "Scroll (hardware)",
+                InputType.HARDWARE_JOYSTICK to "Joystick"
+            ),
+        onOptionSelected = onOptionSelected,
+    )
+}
+@Composable
 private fun PermissionStatusBanner(
     title: String,
-    status: Boolean,
+    status: Boolean?,
     onClickAction: () -> Unit,
-    infoText: String? = null,
+    passText: String = "Permission Granted",
+    failText: String = "Permission Required",
 ) {
     Column {
         Surface(
@@ -473,7 +691,7 @@ private fun PermissionStatusBanner(
             Modifier
                 .fillMaxWidth()
                 .padding(horizontal = 16.dp, vertical = 8.dp),
-            color = if (status) Color(0xFFE6F3E6) else Color(0xFFFFF4E6),
+            color = if (status == null) MaterialTheme.colorScheme.surfaceContainer else if (status) MaterialTheme.colorScheme.surfaceContainer else MaterialTheme.colorScheme.errorContainer,
             shape = RoundedCornerShape(8.dp),
             onClick = onClickAction,
         ) {
@@ -482,25 +700,25 @@ private fun PermissionStatusBanner(
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 Icon(
-                    imageVector = if (status) Icons.Default.Check else Icons.Default.Warning,
+                    imageVector = if (status == null) Icons.Default.Info else if (status) Icons.Default.Check else Icons.Default.Warning,
                     contentDescription = null,
-                    tint = if (status) Color(0xFF4CAF50) else Color(0xFFFF9800),
+                    tint = if (status == null) Color(0xFF0492C2) else if (status) Color(0xFF4CAF50) else Color(0xFFFF9800),
                     modifier = Modifier.size(24.dp),
                 )
                 Spacer(modifier = Modifier.width(12.dp))
-                Column {
+                Column(modifier = Modifier.weight(10f, fill = true)) {
                     Text(
                         text = title,
                         style = MaterialTheme.typography.titleMedium,
                         color = MaterialTheme.colorScheme.onSurface,
                     )
                     Text(
-                        text = if (status) "Permission Granted" else "Permission Required",
+                        text = if (status == null || status) passText else failText,
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
                 }
-                if (!status) {
+                if (status == null || !status) {
                     Spacer(modifier = Modifier.weight(1f))
                     Icon(
                         imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
@@ -509,18 +727,6 @@ private fun PermissionStatusBanner(
                     )
                 }
             }
-        }
-
-        if (infoText != null) {
-            Text(
-                text = infoText,
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f),
-                modifier =
-                Modifier
-                    .padding(horizontal = 16.dp)
-                    .padding(bottom = 8.dp),
-            )
         }
     }
 }
@@ -532,29 +738,16 @@ fun SetKeyPreferenceItem(
     onCaptureKey: () -> Unit,
 ) {
     val subtitle =
-        if (currentKeyCode == OverlaySettings.KEY_NONE) {
-            "Currently not mapped"
+        if (currentKeyCode == UsageConfig.KEY_NONE) {
+            "No activation key set"
         } else {
-            "Current: ${KeyEvent.keyCodeToString(currentKeyCode)}"
+            "Current: ${KeyCodeUtil.keyCodeToString(currentKeyCode)}"
         }
 
     SimplePreferenceItem(
         title = title,
         subtitle = subtitle,
         onClick = onCaptureKey,
-    )
-}
-
-@Composable
-fun ClearKeyPreferenceItem(
-    title: String = "Clear Activation Key",
-    mode: String,
-    onClearKey: () -> Unit,
-) {
-    SimplePreferenceItem(
-        title = title,
-        subtitle = "Unmaps $mode",
-        onClick = onClearKey,
     )
 }
 
@@ -607,7 +800,7 @@ fun NoteItem(
     title: String,
     icon: ImageVector,
     contentDescription: String,
-    color: Color? = null,
+    color: Color? = null
 ) {
     Surface(
         modifier =
@@ -642,7 +835,8 @@ data class AppInfo(
     val appName: String,
     val isSystemApp: Boolean,
     val hasLauncherActivity: Boolean = false,
-    val isHomeLauncher: Boolean = false
+    val isHomeLauncher: Boolean = false,
+    val version: String
 )
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -650,7 +844,7 @@ data class AppInfo(
 fun AppListScreen(
     settingsState: SettingsState,
     getter: (SettingsUiState) -> Set<String>,
-    setter: (OverlaySettings, Set<String>) -> OverlaySettings,
+    setter: (UsageConfig, Set<String>) -> UsageConfig,
     onNavigateBack: () -> Unit
 ) {
     val uiState by settingsState.uiState.collectAsState()
@@ -687,36 +881,6 @@ fun AppListScreen(
                 .fillMaxSize()
                 .padding(paddingValues)
         ) {
-//            Column(
-//                modifier = Modifier
-//                    .fillMaxWidth()
-//                    .padding(16.dp)
-//            ) {
-//                Row(
-//                    modifier = Modifier.fillMaxWidth(),
-//                    verticalAlignment = Alignment.CenterVertically
-//                ) {
-//                    Text(
-//                        text = "Show system apps",
-//                        modifier = Modifier.weight(1f),
-//                        style = MaterialTheme.typography.bodyMedium
-//                    )
-//                    Switch(
-//                        checked = showSystemApps,
-//                        onCheckedChange = { showSystemApps = it }
-//                    )
-//                }
-//
-//                Text(
-//                    text = "Showing ${installedApps.size} apps",
-//                    style = MaterialTheme.typography.bodySmall,
-//                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-//                    modifier = Modifier.padding(top = 4.dp)
-//                )
-//            }
-//
-//            HorizontalDivider()
-
             if (isLoading) {
                 Box(
                     modifier = Modifier.fillMaxSize(),
@@ -758,7 +922,7 @@ fun AppItem(
     onSelectionChanged: (Boolean) -> Unit
 ) {
     val context = LocalContext.current
-    var appIcon by remember { mutableStateOf<androidx.compose.ui.graphics.ImageBitmap?>(null) }
+    var appIcon by remember { mutableStateOf<ImageBitmap?>(null) }
 
     LaunchedEffect(app.packageName) {
         withContext(Dispatchers.IO) {
@@ -781,7 +945,7 @@ fun AppItem(
             verticalAlignment = Alignment.CenterVertically
         ) {
             if (appIcon != null) {
-                androidx.compose.foundation.Image(
+                Image(
                     bitmap = appIcon!!,
                     contentDescription = null,
                     modifier = Modifier.size(32.dp)
@@ -810,31 +974,12 @@ fun AppItem(
                     overflow = TextOverflow.Ellipsis
                 )
                 Text(
-                    text = app.packageName,
+                    text = "${app.packageName} ${app.version}",
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis
                 )
-//                if (app.isHomeLauncher) {
-//                    Text(
-//                        text = "Home launcher",
-//                        style = MaterialTheme.typography.labelSmall,
-//                        color = MaterialTheme.colorScheme.tertiary
-//                    )
-//                } else if (app.hasLauncherActivity) {
-//                    Text(
-//                        text = if (app.isSystemApp) "System app" else "User app",
-//                        style = MaterialTheme.typography.labelSmall,
-//                        color = if (app.isSystemApp) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.secondary
-//                    )
-//                } else {
-//                    Text(
-//                        text = "System app",
-//                        style = MaterialTheme.typography.labelSmall,
-//                        color = MaterialTheme.colorScheme.outline
-//                    )
-//                }
             }
 
             Checkbox(
@@ -887,6 +1032,8 @@ suspend fun loadInstalledApps(packageManager: PackageManager, includeSystemApps:
                 try {
                     val packageName = appInfo.packageName
 
+                    val version = packageManager.getPackageInfo(packageName, 0).versionName
+
                     val appName = packageManager.getApplicationLabel(appInfo).toString()
                     val isSystemApp = (appInfo.flags and ApplicationInfo.FLAG_SYSTEM) != 0 &&
                             (appInfo.flags and ApplicationInfo.FLAG_UPDATED_SYSTEM_APP) == 0
@@ -906,7 +1053,8 @@ suspend fun loadInstalledApps(packageManager: PackageManager, includeSystemApps:
                         appName = appName,
                         isSystemApp = isSystemApp,
                         hasLauncherActivity = packageName in launcherPackages,
-                        isHomeLauncher = packageName in homePackages
+                        isHomeLauncher = packageName in homePackages,
+                        version = version.orEmpty()
                     )
                 } catch (e: Exception) {
                     null
@@ -914,12 +1062,7 @@ suspend fun loadInstalledApps(packageManager: PackageManager, includeSystemApps:
             }
                 .distinctBy { it.packageName }
                 .sortedWith(
-                    compareBy<AppInfo>
-//                        { !it.isHomeLauncher }
-//                        .thenBy { !it.hasLauncherActivity }
-//                        .thenBy { it.isSystemApp }
-//                        .thenBy
-                    { it.appName.lowercase() }
+                    compareBy { it.appName.lowercase() }
                 )
         } catch (e: Exception) {
             emptyList()
@@ -1046,10 +1189,45 @@ fun ColorPickerDialog(
 }
 
 fun openNewTabWindow(urls: String, context: Context) {
-    val uris = Uri.parse(urls)
+    val uris = urls.toUri()
     val intents = Intent(Intent.ACTION_VIEW, uris)
     val b = Bundle()
     b.putBoolean("new_window", true)
     intents.putExtras(b)
     context.startActivity(intents)
+}
+
+fun startActivity(activity: String): Boolean {
+    val shizukuRunning = try { Shizuku.pingBinder() } catch (_: Exception) { false }
+    val shizukuAuthorized = try {
+        Shizuku.checkSelfPermission() == PackageManager.PERMISSION_GRANTED
+    } catch (_: Exception) { false }
+
+    val shizukuAvailable = shizukuRunning && shizukuAuthorized
+    if (shizukuAvailable) {
+        try {
+            Logger.e("Starting activity $activity")
+            val newProcessMethod = Shizuku::class.java.getDeclaredMethod(
+                "newProcess",
+                Array<String>::class.java,
+                Array<String>::class.java,
+                String::class.java
+            )
+            newProcessMethod.isAccessible = true
+
+            newProcessMethod.invoke(
+                null,
+                arrayOf("am","start", "-n", activity),
+                null,
+                null
+            )
+        } catch (e: Exception) {
+            Logger.e("Could not start activity $activity", e)
+            return false
+        }
+        return true
+    } else {
+        Logger.e("Shizuku unavailable to start activity $activity")
+        return false
+    }
 }

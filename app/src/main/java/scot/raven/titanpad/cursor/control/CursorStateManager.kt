@@ -1,14 +1,8 @@
 package scot.raven.titanpad.cursor.control
 
 import androidx.compose.ui.geometry.Offset
-import scot.raven.titanpad.core.constants.CursorConstants
-import scot.raven.titanpad.core.constants.GestureConstants
 import scot.raven.titanpad.core.domain.ScreenDimensions
-import scot.raven.titanpad.core.util.AccelerationUtil.cubicBezier
-import scot.raven.titanpad.core.util.AccelerationUtil.normalizeValue
-import scot.raven.titanpad.cursor.domain.CursorDirection
 import scot.raven.titanpad.cursor.domain.CursorState
-import scot.raven.titanpad.settings.domain.OverlaySettings
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -18,7 +12,6 @@ import kotlinx.coroutines.flow.update
  * Manages the cursor state, including position, visibility and mode.
  */
 class CursorStateManager(
-    private val settingsFlow: StateFlow<OverlaySettings>,
     private val dimensionsFlow: StateFlow<ScreenDimensions>
 ) {
     private val _cursorState = MutableStateFlow<CursorState?>(null)
@@ -29,6 +22,14 @@ class CursorStateManager(
 
     fun toggleCursorVisibility() {
         if (_cursorState.value == null) {
+            showCursor()
+        } else {
+            hideCursor()
+        }
+    }
+
+    fun setCursorVisibiliy(state: Boolean) {
+        if (state) {
             showCursor()
         } else {
             hideCursor()
@@ -76,17 +77,6 @@ class CursorStateManager(
         _cursorState.update { currentState ->
             currentState?.copy(clickable = clickable)
         }
-    }
-
-    fun updateHoldState(isHoldActive: Boolean): CursorState? {
-        _cursorState.update { currentState ->
-            currentState?.copy(
-                isHoldActive = isHoldActive,
-                inScrollMode = if (isHoldActive) false else currentState.inScrollMode
-            )
-        }
-
-        return _cursorState.value
     }
 
     private fun updateCursor(cursor: CursorState?) {

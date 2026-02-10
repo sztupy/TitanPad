@@ -24,6 +24,8 @@ import scot.raven.titanpad.settings.ui.DropdownPreferenceItem
 import scot.raven.titanpad.settings.ui.PreferenceCategory
 import scot.raven.titanpad.settings.ui.SettingsState
 import scot.raven.titanpad.settings.ui.SimplePreferenceItem
+import scot.raven.titanpad.settings.ui.setup.clearImage
+import scot.raven.titanpad.settings.ui.setup.rememberUnifiedImagePickerLauncher
 import java.io.File
 
 @OptIn(ExperimentalMaterial3Api::class)

@@ -2,19 +2,13 @@ package scot.raven.titanpad.gesture.api
 
 import android.os.Build
 import androidx.compose.ui.geometry.Offset
-import scot.raven.titanpad.core.constants.GestureConstants
-import scot.raven.titanpad.core.domain.ScreenDimensions
-import scot.raven.titanpad.core.domain.ScrollDirection
 import scot.raven.titanpad.core.logs.Logger
 import scot.raven.titanpad.core.shizuku.ShizukuConnection
-import scot.raven.titanpad.core.util.OrientationUtil
 import scot.raven.titanpad.core.util.VersionUtil
 import scot.raven.titanpad.gesture.ui.GesturePath
 import scot.raven.titanpad.gesture.ui.GestureType
-import scot.raven.titanpad.gesture.ui.animateGesturePath
 import scot.raven.titanpad.gesture.ui.endStationaryGesture
 import scot.raven.titanpad.gesture.ui.showStationaryGesture
-import scot.raven.titanpad.settings.domain.OverlaySettings
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
@@ -22,6 +16,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import scot.raven.titanpad.settings.domain.ApplicationSettings
 import kotlin.math.abs
 import kotlin.math.pow
 
@@ -30,7 +25,7 @@ import kotlin.math.pow
  */
 class GestureManager(
     private val defaultStrategy: GestureStrategy,
-    private val settingsFlow: StateFlow<OverlaySettings>,
+    private val settingsFlow: StateFlow<ApplicationSettings>,
     private val serviceScope: CoroutineScope
 ) {
     private val _gesturePaths = MutableStateFlow<List<GesturePath>>(emptyList())
@@ -40,8 +35,11 @@ class GestureManager(
     private var shizukuObserverJob: Job? = null
 
     private val _isReady = MutableStateFlow(true)
-    val isReady: StateFlow<Boolean> = _isReady.asStateFlow()
     private var currentTapVisual: String = ""
+
+    private var tapState = false
+    private var lastX = 0f
+    private var lastY = 0f
 
     fun setGestureReady(ready: Boolean) {
         _isReady.value = ready
@@ -83,7 +81,30 @@ class GestureManager(
         }
     }
 
-    suspend fun startTap(x: Float, y: Float): Boolean {
+    suspend fun moveTo(x: Float, y:Float) {
+        if (!tapState) {
+            if (startTap(x, y)) {
+                tapState = true
+                lastX = x
+                lastY = y
+            }
+        } else {
+            if (dragTap(lastX, lastY, x, y)) {
+                lastX = x
+                lastY = y
+            }
+        }
+    }
+
+    suspend fun endTap() {
+        if (tapState) {
+            if (endTap(lastX, lastY)) {
+                tapState = false
+            }
+        }
+    }
+
+    private suspend fun startTap(x: Float, y: Float): Boolean {
         try {
             Logger.d("Starting tap gesture at ($x, $y)")
             if (!getGestureReady()) return false
@@ -105,14 +126,14 @@ class GestureManager(
         return abs(this - other) < epsilon
     }
 
-    suspend fun dragTap(fromX: Float, fromY: Float, toX: Float, toY: Float): Boolean {
+    private suspend fun dragTap(fromX: Float, fromY: Float, toX: Float, toY: Float): Boolean {
         if (VersionUtil.belowVersion(Build.VERSION_CODES.O)) {
             return true
         }
         if (shouldShowGestures) {
             // Need to fix visualization lag; remove drag visualization for now
             endVisualizeTap()
-            // visualizeTap(toX, toY)
+            visualizeTap(toX, toY)
         }
         if (!getGestureReady()) return false
         if (fromX.equalToDecimalPlaces(toX, 4) && fromY.equalToDecimalPlaces(toY, 4)) {
@@ -131,7 +152,7 @@ class GestureManager(
         }
     }
 
-    suspend fun endTap(x: Float, y: Float): Boolean {
+    private suspend fun endTap(x: Float, y: Float): Boolean {
         if (VersionUtil.belowVersion(Build.VERSION_CODES.O)) {
             return true
         }

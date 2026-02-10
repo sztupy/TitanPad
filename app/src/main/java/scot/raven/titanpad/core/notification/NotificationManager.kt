@@ -5,11 +5,13 @@ import android.app.NotificationManager
 import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
-import android.os.Build
 import androidx.core.app.NotificationCompat
+import kotlinx.coroutines.flow.StateFlow
 import scot.raven.titanpad.R
+import scot.raven.titanpad.TitanPad
 import scot.raven.titanpad.core.control.ModeCoordinator
 import scot.raven.titanpad.core.logs.Logger
+import scot.raven.titanpad.settings.domain.ApplicationSettings
 import scot.raven.titanpad.settings.ui.SettingsActivity
 
 /**
@@ -24,37 +26,38 @@ class NotificationManager(private val context: Context) {
 
     private val notificationManager = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
 
+    private val settingsFlow : StateFlow<ApplicationSettings>
+
     init {
         createNotificationChannel()
+        settingsFlow = TitanPad.getInstance().getSettingsFlow()
     }
 
     private fun createNotificationChannel() {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            val channel = NotificationChannel(
-                CHANNEL_ID,
-                "Active Cursor",
-                NotificationManager.IMPORTANCE_LOW
-            ).apply {
-                description = "Shows when a cursor mode is active"
-                setShowBadge(false)
-                enableLights(false)
-                enableVibration(false)
-                setSound(null, null)
-            }
-            notificationManager.createNotificationChannel(channel)
+        val channel = NotificationChannel(
+            CHANNEL_ID,
+            "Active Cursor",
+            NotificationManager.IMPORTANCE_LOW
+        ).apply {
+            description = "Shows when a cursor mode is active"
+            setShowBadge(false)
+            enableLights(false)
+            enableVibration(false)
+            setSound(null, null)
         }
+        notificationManager.createNotificationChannel(channel)
     }
 
     fun showNotification(mode: ModeCoordinator.OverlayMode) {
         try {
             val (title, text, icon) = when (mode) {
-                ModeCoordinator.OverlayMode.CURSOR -> Triple(
-                    "Standard Cursor Active",
+                ModeCoordinator.OverlayMode.ON -> Triple(
+                    "TitanPad Active - ${settingsFlow.value.getActiveConfig().configName}",
                     "Tap to open settings",
                     R.drawable.ic_blur_on
                 )
-                ModeCoordinator.OverlayMode.AUTOHIDDEN -> Triple(
-                    "Cursor Autohidden",
+                ModeCoordinator.OverlayMode.HIDDEN -> Triple(
+                    "TitanPad Autohidden - ${settingsFlow.value.getActiveConfig().configName}",
                     "Tap to open settings",
                     R.drawable.ic_blur_off
                 )
@@ -73,7 +76,7 @@ class NotificationManager(private val context: Context) {
                 0,
                 settingsIntent,
                 PendingIntent.FLAG_UPDATE_CURRENT or
-                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) PendingIntent.FLAG_IMMUTABLE else 0
+                        PendingIntent.FLAG_IMMUTABLE
             )
 
             val notification = NotificationCompat.Builder(context, CHANNEL_ID)
@@ -103,9 +106,5 @@ class NotificationManager(private val context: Context) {
         } catch (e: Exception) {
             Logger.e("Error hiding cursor notification", e)
         }
-    }
-
-    fun cleanup() {
-        hideNotification()
     }
 }

@@ -10,7 +10,5 @@ object CursorConstants {
     // Appearance
     const val STANDARD_CURSOR_HEX = "FFFFFF"
 
-    private const val POLLING_RATE = 60
-    const val POLLING_DURATION_MS = 1000f / POLLING_RATE
     const val OPACITY = 0.7f
 }

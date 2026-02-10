@@ -6,7 +6,6 @@ import android.os.Bundle
 import scot.raven.titanpad.R
 
 class StandardCursorCreateShortcutActivity : Activity() {
-    @Suppress("Deprecation")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 

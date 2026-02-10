@@ -25,7 +25,7 @@ import scot.raven.titanpad.core.constants.CursorConstants
 import scot.raven.titanpad.core.domain.ScreenDimensions
 import scot.raven.titanpad.cursor.domain.CursorState
 import scot.raven.titanpad.cursor.domain.IconAlignment
-import scot.raven.titanpad.settings.domain.OverlaySettings
+import scot.raven.titanpad.settings.domain.ApplicationSettings
 import java.io.File
 import kotlin.math.PI
 import kotlin.math.atan2
@@ -40,29 +40,29 @@ import kotlin.math.sqrt
 @Composable
 fun CursorOverlay(
     cursorState: CursorState,
-    settings: OverlaySettings? = null,
     modifier: Modifier = Modifier,
+    settings: ApplicationSettings? = null,
     dimensions: ScreenDimensions
 ) {
-    var cursorSize = settings?.cursorSize?.toFloat() ?: CursorConstants.DEFAULT_SIZE.toFloat()
+    var cursorSize = settings?.getActiveConfig()?.cursorSize?.toFloat() ?: CursorConstants.DEFAULT_SIZE.toFloat()
     cursorSize *= CursorConstants.SIZE_MULTIPLIER * dimensions.getScreenScaleFactor()
     val opacity = CursorConstants.OPACITY
-    val cursorColor = settings?.standardCursorHex?.let {
+    val cursorColor = settings?.getActiveConfig()?.standardCursorHex?.let {
         try {
             Color("#$it".toColorInt())
         } catch (e: Exception) {
             Color.White
         }
     } ?: Color.White
-    val matchBorder = settings?.standardCursorMatchBorder ?: false
+    val matchBorder = settings?.getActiveConfig()?.standardCursorMatchBorder ?: false
 
-    val iconImageUri = settings?.cursorImagePath?.takeIf {
+    val iconImageUri = settings?.getActiveConfig()?.cursorImagePath?.takeIf {
         it.isNotEmpty() && File(it).exists()
     }
-    val clickableImageUri = settings?.clickableImagePath?.takeIf {
+    val clickableImageUri = settings?.getActiveConfig()?.clickableImagePath?.takeIf {
         it.isNotEmpty() && File(it).exists()
     }
-    val scrollToggleIconImageUri = settings?.scrollToggleImagePath?.takeIf {
+    val scrollToggleIconImageUri = settings?.getActiveConfig()?.scrollToggleImagePath?.takeIf {
         it.isNotEmpty() && File(it).exists()
     }
 
@@ -71,18 +71,18 @@ fun CursorOverlay(
     val density = LocalDensity.current
     val context = LocalContext.current
 
-    val isClickable = cursorState.clickable && settings?.checkClickable == true
+    val isClickable = cursorState.clickable && settings?.getActiveConfig()?.checkClickable == true
 
     Box(modifier = modifier
         .fillMaxSize()
         .border(
             width = if (cursorState.inScrollMode) 2.dp else 0.dp,
-            color = cursorColor.copy(alpha = if (cursorState.inScrollMode && (settings?.useCustomCursorIcon != true || scrollToggleIconImageUri == null)) 1f else 0f),
+            color = cursorColor.copy(alpha = if (cursorState.inScrollMode && (settings?.getActiveConfig()?.useCustomCursorIcon != true || scrollToggleIconImageUri == null)) 1f else 0f),
         )
     ) {
-        val showScrollToggleIcon = (settings?.useCustomCursorIcon == true) && (cursorState.inScrollMode) && (scrollToggleIconImageUri != null)
-        val showClickableIcon = !showScrollToggleIcon && (settings?.useCustomCursorIcon == true) && (isClickable) && (clickableImageUri != null)
-        val showBaseCustomIcon = !showScrollToggleIcon && !showClickableIcon && (settings?.useCustomCursorIcon == true) && (iconImageUri != null)
+        val showScrollToggleIcon = (settings?.getActiveConfig()?.useCustomCursorIcon == true) && (cursorState.inScrollMode) && (scrollToggleIconImageUri != null)
+        val showClickableIcon = !showScrollToggleIcon && (settings?.getActiveConfig()?.useCustomCursorIcon == true) && (isClickable) && (clickableImageUri != null)
+        val showBaseCustomIcon = !showScrollToggleIcon && !showClickableIcon && (settings?.getActiveConfig()?.useCustomCursorIcon == true) && (iconImageUri != null)
 
         when {
             showScrollToggleIcon -> {
@@ -95,8 +95,8 @@ fun CursorOverlay(
                     modifier = Modifier
                         .size(cursorSize.dp)
                         .offset(
-                            x = with(density) { position.x.toDp() } - if (settings?.scrollToggleImageAlignment == IconAlignment.CENTER) (cursorSize/2).dp else 0.dp,
-                            y = with(density) { position.y.toDp() } - if (settings?.scrollToggleImageAlignment == IconAlignment.CENTER) (cursorSize/2).dp else 0.dp
+                            x = with(density) { position.x.toDp() } - if (settings?.getActiveConfig()?.scrollToggleImageAlignment == IconAlignment.CENTER) (cursorSize/2).dp else 0.dp,
+                            y = with(density) { position.y.toDp() } - if (settings?.getActiveConfig()?.scrollToggleImageAlignment == IconAlignment.CENTER) (cursorSize/2).dp else 0.dp
                         )
                 )
             }
@@ -110,8 +110,8 @@ fun CursorOverlay(
                     modifier = Modifier
                         .size(cursorSize.dp)
                         .offset(
-                            x = with(density) { position.x.toDp() } - if (settings?.clickableImageAlignment == IconAlignment.CENTER) (cursorSize/2).dp else 0.dp,
-                            y = with(density) { position.y.toDp() } - if (settings?.clickableImageAlignment == IconAlignment.CENTER) (cursorSize/2).dp else 0.dp
+                            x = with(density) { position.x.toDp() } - if (settings?.getActiveConfig()?.clickableImageAlignment == IconAlignment.CENTER) (cursorSize/2).dp else 0.dp,
+                            y = with(density) { position.y.toDp() } - if (settings?.getActiveConfig()?.clickableImageAlignment == IconAlignment.CENTER) (cursorSize/2).dp else 0.dp
                         )
                 )
             }
@@ -125,8 +125,8 @@ fun CursorOverlay(
                     modifier = Modifier
                         .size(cursorSize.dp)
                         .offset(
-                            x = with(density) { position.x.toDp() } - if (settings?.cursorImageAlignment == IconAlignment.CENTER) (cursorSize/2).dp else 0.dp,
-                            y = with(density) { position.y.toDp() } - if (settings?.cursorImageAlignment == IconAlignment.CENTER) (cursorSize/2).dp else 0.dp
+                            x = with(density) { position.x.toDp() } - if (settings?.getActiveConfig()?.cursorImageAlignment == IconAlignment.CENTER) (cursorSize/2).dp else 0.dp,
+                            y = with(density) { position.y.toDp() } - if (settings?.getActiveConfig()?.cursorImageAlignment == IconAlignment.CENTER) (cursorSize/2).dp else 0.dp
                         )
 //                        .border(1.dp, Color.Black)
 //                onSuccess = {
@@ -147,7 +147,7 @@ fun CursorOverlay(
                         opacity = opacity,
                         cursorColor = cursorColor,
                         matchBorder = matchBorder,
-                        roundedCorners = settings?.roundedCursorCorners ?: false,
+                        roundedCorners = settings?.getActiveConfig()?.roundedCursorCorners ?: false,
                         isHoldActive = cursorState.isHoldActive,
                         isClickable = isClickable
                     )
@@ -223,6 +223,7 @@ private fun DrawScope.drawDefaultCursor(
                 forceMoveTo = false
             )
         }
+        drawPath(path, cursorColor.copy(alpha = opacity))
         drawPath(path, if (matchBorder) cursorColor else Color.Black, style = Stroke(width = cursorSize * 0.1f))
     }
 

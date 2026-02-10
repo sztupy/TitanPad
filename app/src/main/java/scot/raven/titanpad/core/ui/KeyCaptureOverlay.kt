@@ -1,4 +1,7 @@
+package scot.raven.titanpad.core.ui
+
 import android.view.KeyEvent
+import android.view.KeyEvent.KEYCODE_UNKNOWN
 import android.widget.Toast
 import androidx.compose.foundation.focusable
 import androidx.compose.foundation.layout.Box
@@ -30,14 +33,13 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import kotlinx.coroutines.delay
+import scot.raven.titanpad.core.util.KeyCodeUtil
 
 /**
  * Renders UI for capturing activation key.
  */
 @Composable
 fun KeyCaptureOverlay(
-    restrictedKeys: Set<Int>,
-    reservedKeys: Map<Int, String>,
     onKeySelected: (Int) -> Unit,
     onDismiss: () -> Unit,
     showToast: (String) -> Unit = {},
@@ -95,17 +97,9 @@ fun KeyCaptureOverlay(
                     .onKeyEvent { keyEvent ->
                         if (keyEvent.nativeKeyEvent.action == KeyEvent.ACTION_DOWN) {
                             when (val keyCode = keyEvent.nativeKeyEvent.keyCode) {
-                                in restrictedKeys -> showToast(
-                                    "Invalid key: ${
-                                        KeyEvent.keyCodeToString(
-                                            keyCode
-                                        )
-                                    }"
-                                )
-
-                                in reservedKeys.keys -> {
-                                    onKeySelected(keyCode)
-                                    showToast("Overriding reserved key")
+                                KEYCODE_UNKNOWN -> {
+                                    onKeySelected(keyEvent.nativeKeyEvent.scanCode + 10000)
+                                    showToast("Key set")
                                 }
 
                                 else -> {

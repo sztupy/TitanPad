@@ -8,11 +8,9 @@ import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.preferencesDataStore
 import scot.raven.titanpad.accessibility.AppAccessibilityService
-import scot.raven.titanpad.core.logs.LogManager
 import scot.raven.titanpad.core.logs.Logger
 import scot.raven.titanpad.core.shizuku.ShizukuConnection
 import scot.raven.titanpad.core.shizuku.ShizukuStatus
-import scot.raven.titanpad.settings.domain.OverlaySettings
 import scot.raven.titanpad.settings.repository.SettingsRepository
 import scot.raven.titanpad.settings.repository.SettingsRepositoryImpl
 import kotlinx.coroutines.CoroutineScope
@@ -22,11 +20,9 @@ import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.flowOn
-import kotlinx.coroutines.flow.launchIn
-import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.stateIn
-import scot.raven.titanpad.cursor.control.TrackpadActionHandler
+import scot.raven.titanpad.cursor.control.InputManager
+import scot.raven.titanpad.settings.domain.ApplicationSettings
 
 /**
  * Checks accessibility service and initializes Shizuku service on Android 11.
@@ -40,46 +36,29 @@ class TitanPad : Application() {
     val settingsRepository: SettingsRepository by _settingsRepository
     private val applicationScope = CoroutineScope(SupervisorJob() + Dispatchers.Main)
     private var shizukuObserverJob: Job? = null
-    private var _trackpadActionHandler: TrackpadActionHandler? = null
+    private var _inputManager: InputManager? = null
     private var settingsObserverJob: Job? = null
-    private lateinit var _settingsFlow: StateFlow<OverlaySettings>
+    private lateinit var _settingsFlow: StateFlow<ApplicationSettings>
 
-    fun getSettingsFlow(): StateFlow<OverlaySettings> {
+    fun getSettingsFlow(): StateFlow<ApplicationSettings> {
         if (!::_settingsFlow.isInitialized) {
             _settingsFlow = settingsRepository.getSettings().stateIn(
                 scope = CoroutineScope(Dispatchers.IO + SupervisorJob()),
                 started = SharingStarted.Eagerly,
-                initialValue = OverlaySettings()
+                initialValue = ApplicationSettings()
             )
         }
         return _settingsFlow
     }
 
-    fun setTrackpadActionHandler(handler: TrackpadActionHandler) {
-        _trackpadActionHandler = handler
+    fun setTrackpadActionHandler(handler: InputManager) {
+        _inputManager = handler
     }
 
     override fun onCreate() {
         super.onCreate()
         instance = this
-
-        settingsObserverJob = getSettingsFlow()
-            .onEach { settings ->
-                if (settings.enableShizukuIntegration) {
-                    if (shizukuObserverJob == null) {
-                        initializeShizuku()
-                    }
-                } else {
-                    cleanupShizuku()
-                }
-
-                if (!settings.collectLogs) {
-                    LogManager.clear()
-                }
-            }
-            .flowOn(Dispatchers.IO)
-            .launchIn(applicationScope)
-
+        initializeShizuku()
         Logger.i("TitanPad application initialized")
     }
 
@@ -98,16 +77,16 @@ class TitanPad : Application() {
 
                     ShizukuStatus.NOT_AVAILABLE -> {
                         ShizukuConnection.resetPermissionRetryCount()
-                        _trackpadActionHandler?.stop()
+                        _inputManager?.stop()
                     }
 
                     ShizukuStatus.ERROR -> {
-                        _trackpadActionHandler?.stop()
+                        _inputManager?.stop()
                     }
 
                     ShizukuStatus.READY -> {
                         ShizukuConnection.resetPermissionRetryCount()
-                        _trackpadActionHandler?.start()
+                        _inputManager?.start()
                         Logger.i("Shizuku ready")
                     }
 
@@ -118,7 +97,7 @@ class TitanPad : Application() {
 
     private fun cleanupShizuku() {
         shizukuObserverJob?.cancel()
-        _trackpadActionHandler?.stop()
+        _inputManager?.stop()
         ShizukuConnection.cleanup()
         shizukuObserverJob?.cancel()
     }
@@ -143,7 +122,7 @@ class TitanPad : Application() {
         fun isAccessibilityServiceEnabled(context: Context): Boolean {
             try {
                 val am =
-                    context.getSystemService(Context.ACCESSIBILITY_SERVICE) as AccessibilityManager
+                    context.getSystemService(ACCESSIBILITY_SERVICE) as AccessibilityManager
                 val enabledServices =
                     am.getEnabledAccessibilityServiceList(
                         AccessibilityServiceInfo.FEEDBACK_ALL_MASK,

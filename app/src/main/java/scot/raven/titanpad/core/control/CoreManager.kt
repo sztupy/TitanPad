@@ -1,6 +1,7 @@
 package scot.raven.titanpad.core.control
 
 import android.accessibilityservice.AccessibilityService
+import android.content.Intent
 import android.view.KeyEvent
 import androidx.compose.ui.geometry.Offset
 import scot.raven.titanpad.TitanPad
@@ -8,13 +9,12 @@ import scot.raven.titanpad.core.domain.OrientationHandler
 import scot.raven.titanpad.core.domain.ScreenDimensions
 import scot.raven.titanpad.core.logs.Logger
 import scot.raven.titanpad.core.notification.NotificationManager
-import scot.raven.titanpad.cursor.control.CursorActionHandler
+import scot.raven.titanpad.cursor.control.CursorActivator
 import scot.raven.titanpad.cursor.control.CursorStateManager
-import scot.raven.titanpad.cursor.control.TrackpadActionHandler
+import scot.raven.titanpad.cursor.control.InputManager
 import scot.raven.titanpad.gesture.api.GestureManager
 import scot.raven.titanpad.gesture.standard.DefaultGestureStrategy
 import scot.raven.titanpad.gesture.ui.GesturePath
-import scot.raven.titanpad.settings.domain.OverlaySettings
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.channels.Channel
@@ -26,13 +26,18 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
+import scot.raven.titanpad.accessibility.AppAccessibilityService.Companion.BROADCAST_CURSOR_ACTIVATED
+import scot.raven.titanpad.cursor.domain.InputType
+import scot.raven.titanpad.settings.domain.ApplicationSettings
+import scot.raven.titanpad.settings.ui.SettingsActivity.Companion.CONFIG_ID_EXTRA
 
 /**
  * Manages standard cursor modes.
  */
 class CoreManager(
     private val service: AccessibilityService,
-    private val settingsFlow: StateFlow<OverlaySettings>,
+    private val settingsFlow: StateFlow<ApplicationSettings>,
+    private val modeCoordinator: ModeCoordinator,
     private val orientationHandler: OrientationHandler,
     private val backgroundScope: CoroutineScope,
     private val keysPressed: MutableStateFlow<Int>,
@@ -40,10 +45,9 @@ class CoreManager(
 ) {
     private lateinit var gestureManager: GestureManager
     lateinit var cursorStateManager: CursorStateManager
-    private lateinit var cursorActionHandler: CursorActionHandler
-    lateinit var modeCoordinator: ModeCoordinator
+    private lateinit var cursorActivator: CursorActivator
     private lateinit var notificationManager: NotificationManager
-    private lateinit var trackpadActionHandler: TrackpadActionHandler
+    private lateinit var inputManager: InputManager
 
     private val screenDimensionsFlow = orientationHandler.screenDimensions
 
@@ -65,7 +69,7 @@ class CoreManager(
 
         if (msg.event.action == KeyEvent.ACTION_DOWN) {
             keysPressed.value += 1
-            if (keysPressed.value == 1 && settings.disableTouchscreen) {
+            if (keysPressed.value == 1 && settings.getActiveConfig().disableTouchscreen) {
                 layoutApplied.first()
             }
         }
@@ -74,7 +78,7 @@ class CoreManager(
 
         if (msg.event.action == KeyEvent.ACTION_UP) {
             keysPressed.value -= 1
-            if (keysPressed.value == 0 && settings.disableTouchscreen) {
+            if (keysPressed.value == 0 && settings.getActiveConfig().disableTouchscreen) {
                 layoutApplied.first()
             }
         }
@@ -84,10 +88,9 @@ class CoreManager(
         try {
             Logger.i("Initializing CoreManager")
 
-            modeCoordinator = ModeCoordinator()
             notificationManager = NotificationManager(service)
 
-            val defaultStrategy = DefaultGestureStrategy(service, settingsFlow)
+            val defaultStrategy = DefaultGestureStrategy(service)
 
             gestureManager = GestureManager(
                 defaultStrategy,
@@ -97,10 +100,10 @@ class CoreManager(
 
             // Cursor components
             cursorStateManager = CursorStateManager(
-                settingsFlow,
                 screenDimensionsFlow
             )
-            cursorActionHandler = CursorActionHandler(
+            cursorActivator = CursorActivator(
+                service,
                 cursorStateManager,
                 gestureManager,
                 settingsFlow,
@@ -119,30 +122,57 @@ class CoreManager(
             modeCoordinator.activeMode
                 .onEach { mode ->
                     updateNotification(mode)
+                    updateCursorMode()
                 }
                 .launchIn(backgroundScope)
 
             settingsFlow
                 .onEach {
                     updateNotification(modeCoordinator.activeMode.value)
+                    updateCursorMode()
                 }
                 .launchIn(backgroundScope)
 
-            trackpadActionHandler = TrackpadActionHandler(
+            inputManager = InputManager(
                 isEnabled = { true },
                 scope = backgroundScope,
                 cursorStateManager = cursorStateManager,
-                gestureManager = gestureManager
+                gestureManager = gestureManager,
+                settingsFlow = settingsFlow,
+                modeCoordinator = modeCoordinator
             )
 
-            TitanPad.getInstance().setTrackpadActionHandler(trackpadActionHandler)
-            trackpadActionHandler.start()
+            TitanPad.getInstance().setTrackpadActionHandler(inputManager)
+            inputManager.start()
 
             Logger.i("CoreManager initialization complete")
         } catch (e: Exception) {
             Logger.e("Error initializing CoreManager", e)
             throw e
         }
+    }
+
+    private fun updateCursorMode() {
+        val currentMode = modeCoordinator.activeMode.value
+        val currentSettings = settingsFlow.value.getActiveConfig()
+
+        if (currentMode != ModeCoordinator.OverlayMode.ON) {
+            cursorStateManager.hideCursor()
+            return
+        }
+
+        val combinedInputTypes = setOf(
+            currentSettings.touchPadMainInputType,
+            currentSettings.backScreenInputType
+        ) + if (currentSettings.touchpadSplitInput) currentSettings.touchPadLeftInputType else currentSettings.touchPadMainInputType
+
+        val shouldDisplayCursor = combinedInputTypes.contains(InputType.SOFTWARE_MOUSE)
+        if (!shouldDisplayCursor) {
+            cursorStateManager.hideCursor()
+        }
+
+        if (shouldDisplayCursor && !cursorStateManager.isCursorVisible())
+            cursorStateManager.setCursorVisibiliy(true)
     }
 
     private fun onScreenDimensionsChanged(newDimensions: ScreenDimensions) {
@@ -156,13 +186,53 @@ class CoreManager(
         }
     }
 
-    fun activateCursorMode(keymapToggle: Boolean = false): Boolean {
+    fun activateCursorMode(keymapToggle: Boolean = false, configId: String): Boolean {
         try {
+            Logger.d("Activating cursor mode")
+
+            val settings = settingsFlow.value
+
+            if (settings.getActiveConfig().configId != configId && modeCoordinator.activeMode.value != ModeCoordinator.OverlayMode.OFF) {
+                modeCoordinator.requestActivation(ModeCoordinator.OverlayMode.OFF)
+            }
+
+            backgroundScope.launch {
+                TitanPad.getInstance().settingsRepository.setActiveKey(configId)
+            }
+
             if ((!cursorStateManager.isCursorVisible() || keymapToggle) && modeCoordinator.requestActivation(
-                    ModeCoordinator.OverlayMode.CURSOR
+                    ModeCoordinator.OverlayMode.ON
                 )) {
-                cursorStateManager.toggleCursorVisibility()
+                cursorStateManager.setCursorVisibiliy(modeCoordinator.activeMode.value == ModeCoordinator.OverlayMode.ON)
+
+                val intent = Intent(BROADCAST_CURSOR_ACTIVATED)
+                intent.setPackage(service.packageName)
+                intent.putExtra(CONFIG_ID_EXTRA, configId)
+                service.sendBroadcast(intent)
+
                 return cursorStateManager.isCursorVisible()
+            }
+            return false
+        } catch (e: Exception) {
+            Logger.e("Error activating cursor mode", e)
+            return false
+        }
+    }
+
+    fun deactivateCursorMode(keymapToggle: Boolean = false) : Boolean {
+        try {
+            Logger.d("Deactivating cursor mode")
+            if ((cursorStateManager.isCursorVisible() || keymapToggle) && modeCoordinator.requestActivation(
+                    ModeCoordinator.OverlayMode.OFF
+                )) {
+                cursorStateManager.setCursorVisibiliy(false)
+
+                val intent = Intent(BROADCAST_CURSOR_ACTIVATED)
+                intent.setPackage(service.packageName)
+                intent.putExtra(CONFIG_ID_EXTRA, "")
+                service.sendBroadcast(intent)
+
+                return !cursorStateManager.isCursorVisible()
             }
             return false
         } catch (e: Exception) {
@@ -176,13 +246,13 @@ class CoreManager(
         val settings = settingsFlow.value
 
         try {
-            val eventHandled = cursorActionHandler.handleKeyEvent(event, channel)
+            val eventHandled = cursorActivator.handleKeyEvent(event, channel)
 
-            if (settings.allowPassthrough) {
+            if (settings.getActiveConfig().allowPassthrough) {
                 Logger.d("Allowing key event to pass through")
             }
 
-            return !settings.allowPassthrough && eventHandled
+            return !settings.getActiveConfig().allowPassthrough && eventHandled
         } catch (e: Exception) {
             Logger.e("Error processing key event", e)
             return false
@@ -193,7 +263,7 @@ class CoreManager(
         val settings = settingsFlow.value
 
         try {
-            if (settings.showNotification) {
+            if (settings.getActiveConfig().showNotification) {
                 when (mode) {
                     ModeCoordinator.OverlayMode.OFF -> {
                         notificationManager.hideNotification()
@@ -220,9 +290,9 @@ class CoreManager(
                 cursorStateManager.hideCursor()
             }
 
-            modeCoordinator.deactivate(ModeCoordinator.OverlayMode.CURSOR, fromAutoHide)
+            modeCoordinator.deactivate(ModeCoordinator.OverlayMode.ON, fromAutoHide)
 
-            cursorActionHandler.cleanup()
+            cursorActivator.cleanup()
         } catch (e: Exception) {
             Logger.e("Error force hiding overlays", e)
         }
@@ -237,7 +307,7 @@ class CoreManager(
     }
 
     fun cleanup() {
-        cursorActionHandler.cleanup()
+        cursorActivator.cleanup()
         gestureManager.cleanup()
     }
 }

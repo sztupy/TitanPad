@@ -11,8 +11,8 @@ import kotlinx.coroutines.flow.asStateFlow
 class ModeCoordinator {
     enum class OverlayMode {
         OFF,
-        AUTOHIDDEN,
-        CURSOR
+        HIDDEN,
+        ON
     }
 
     private val _activeMode = MutableStateFlow(OverlayMode.OFF)
@@ -28,7 +28,7 @@ class ModeCoordinator {
 
     fun deactivate(mode: OverlayMode, fromAutoHide: Boolean) {
         if (_activeMode.value == mode) {
-            _activeMode.value = if (fromAutoHide) OverlayMode.AUTOHIDDEN else OverlayMode.OFF
+            _activeMode.value = if (fromAutoHide) OverlayMode.HIDDEN else OverlayMode.OFF
             Logger.d("Overlay mode deactivated: $mode")
         }
     }

@@ -1,10 +1,8 @@
 package scot.raven.titanpad.core.control
 
-import android.annotation.SuppressLint
 import android.content.Context
 import android.graphics.PixelFormat
 import android.graphics.Rect
-import android.os.Build
 import android.os.Looper
 import android.view.Choreographer
 import android.view.Gravity
@@ -26,13 +24,13 @@ import scot.raven.titanpad.core.logs.Logger
 import scot.raven.titanpad.core.ui.AppTheme
 import scot.raven.titanpad.cursor.ui.CursorOverlay
 import scot.raven.titanpad.gesture.ui.GestureVisualization
-import scot.raven.titanpad.settings.domain.OverlaySettings
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
+import scot.raven.titanpad.settings.domain.ApplicationSettings
 
 /**
  * Creates and updates the overlay according to observed state changes.
@@ -42,7 +40,7 @@ class OverlayManager(
     private val backgroundScope: CoroutineScope,
     private val mainScope: CoroutineScope,
     private val windowManager: WindowManager,
-    private val settingsFlow: StateFlow<OverlaySettings>,
+    private val settingsFlow: StateFlow<ApplicationSettings>,
     private val orientationHandler: OrientationHandler,
     private val coreManager: CoreManager,
     private val lifecycleOwner: LifecycleOwner,
@@ -52,7 +50,6 @@ class OverlayManager(
 ) {
     private var overlayView: ComposeView? = null
     private var currentPaths: Int? = null
-    private var isOrientationChanging = false
 
     fun initialize() {
         try {
@@ -88,9 +85,9 @@ class OverlayManager(
         settingsFlow
             .onEach { settings ->
                 Logger.d("Settings changed")
-                coreManager.updateGestureVisualization(settings.showGestureVisualization)
+                coreManager.updateGestureVisualization(settings.getActiveConfig().showGestureVisualization)
                 mainScope.launch {
-                    updateOverlayUI(touchChanged = !settings.disableTouchscreen)
+                    updateOverlayUI(touchChanged = !settings.getActiveConfig().disableTouchscreen)
                 }
             }
             .launchIn(backgroundScope)
@@ -99,7 +96,7 @@ class OverlayManager(
             .onEach { num ->
                 val settings = settingsFlow.value
 
-                if (settings.disableTouchscreen) {
+                if (settings.getActiveConfig().disableTouchscreen) {
                     when (num) {
                         0 -> mainScope.launch {
                             updateOverlayUI(touchEnabled = false)
@@ -132,7 +129,7 @@ class OverlayManager(
             val settings = settingsFlow.value
 
             val shouldShowOverlay = cursor != null ||
-                    (gesturePaths.isNotEmpty() && settings.showGestureVisualization)
+                    (gesturePaths.isNotEmpty() && settings.getActiveConfig().showGestureVisualization)
 
             if (!shouldShowOverlay && overlayView != null) {
                 removeOverlayView()
@@ -144,7 +141,7 @@ class OverlayManager(
             }
 
             // Notify cursor of touchscreen changes due to key presses
-            if (touchEnabled != null) {
+            if (touchEnabled != null && overlayView != null) {
                 try {
                     windowManager.updateViewLayout(overlayView, createOverlayLayoutParams(touchEnabled))
                     Choreographer.getInstance().postFrameCallbackDelayed({ _ ->
@@ -156,7 +153,7 @@ class OverlayManager(
             }
 
             // Immediately update layout depending on setting
-            if (touchChanged != null) {
+            if (touchChanged != null && overlayView != null) {
                 try {
                     windowManager.updateViewLayout(overlayView, createOverlayLayoutParams(touchChanged))
                 } catch (e: Exception) {
@@ -167,7 +164,6 @@ class OverlayManager(
             overlayView?.setContent {
                 val currentSettings by settingsFlow.collectAsState()
                 val currentGesturePaths by coreManager.getGesturePaths().collectAsState()
-                val currentOrientation by orientationHandler.currentOrientation.collectAsState()
                 val dimensions by orientationHandler.screenDimensions.collectAsState()
 
                 AppTheme {
@@ -184,7 +180,7 @@ class OverlayManager(
                             )
                         }
 
-                        if (currentSettings.showGestureVisualization && currentGesturePaths.isNotEmpty()) {
+                        if (currentSettings.getActiveConfig().showGestureVisualization && currentGesturePaths.isNotEmpty()) {
                             GestureVisualization(
                                 gesturePaths = currentGesturePaths,
                                 settings = currentSettings,
@@ -210,7 +206,6 @@ class OverlayManager(
         }
     }
 
-    @SuppressLint("ObsoleteSdkInt")
     private fun createOverlayView() {
         try {
             if (Looper.myLooper() != Looper.getMainLooper()) {
@@ -225,16 +220,14 @@ class OverlayManager(
             composeView.setViewTreeSavedStateRegistryOwner(savedStateRegistryOwner)
             composeView.setViewCompositionStrategy(ViewCompositionStrategy.DisposeOnDetachedFromWindow)
 
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-                composeView.setOnApplyWindowInsetsListener { _, insets ->
-                    mainScope.launch { updateOverlayUI() }
-                    insets
-                }
+            composeView.setOnApplyWindowInsetsListener { _, insets ->
+                mainScope.launch { updateOverlayUI() }
+                insets
             }
 
             overlayView = composeView
 
-            windowManager.addView(overlayView, createOverlayLayoutParams(touchEnabled = !settings.disableTouchscreen))
+            windowManager.addView(overlayView, createOverlayLayoutParams(touchEnabled = !settings.getActiveConfig().disableTouchscreen))
             Logger.d("Overlay view created and added to window manager")
         } catch (e: Exception) {
             Logger.e("Failed to add overlay view", e)
@@ -261,33 +254,10 @@ class OverlayManager(
         }
     }
 
-    @SuppressLint("ObsoleteSdkInt")
-    @Suppress("Deprecation")
-    fun getInsetsFromView(): Rect {
-        val view = overlayView ?: return Rect(0, 0, 0, 0)
-
-        return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            view.rootWindowInsets?.let {
-                Rect(
-                    it.systemWindowInsetLeft,
-                    it.systemWindowInsetTop,
-                    it.systemWindowInsetRight,
-                    it.systemWindowInsetBottom
-                )
-            } ?: Rect(0, 0, 0, 0)
-        } else {
-            Rect(0, 0, 0, 0)
-        }
-    }
-
     private fun createOverlayLayoutParams(touchEnabled: Boolean? = null): WindowManager.LayoutParams {
         val settings = settingsFlow.value
-        val insets = if (!settings.usePhysicalSize) {
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-                orientationHandler.getSystemInsets()
-            } else {
-                getInsetsFromView()
-            }
+        val insets = if (!settings.getActiveConfig().usePhysicalSize) {
+            orientationHandler.getSystemInsets()
         } else {
             Rect(0, 0, 0, 0)
         }

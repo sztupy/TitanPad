@@ -1,13 +1,13 @@
 package scot.raven.titanpad.accessibility
 
 import android.accessibilityservice.AccessibilityService
+import android.annotation.SuppressLint
 import android.app.KeyguardManager
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
 import android.graphics.Rect
-import android.os.Build
 import android.view.KeyEvent
 import android.view.WindowManager
 import android.view.accessibility.AccessibilityEvent
@@ -42,10 +42,12 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import scot.raven.titanpad.settings.ui.SettingsActivity.Companion.CONFIG_ID_EXTRA
 
 /**
  * Receives key events, displays overlays, and performs gestures.
  */
+@SuppressLint("AccessibilityPolicy")
 class AppAccessibilityService : AccessibilityService(), LifecycleOwner,
     SavedStateRegistryOwner {
     private var windowManager: WindowManager? = null
@@ -68,10 +70,11 @@ class AppAccessibilityService : AccessibilityService(), LifecycleOwner,
     private lateinit var coreManager: CoreManager
     private lateinit var overlayManager: OverlayManager
     private lateinit var orientationHandler: OrientationHandler
+    private lateinit var modeCoordinator: ModeCoordinator
 
     private var lastOverlayType: ModeCoordinator.OverlayMode = ModeCoordinator.OverlayMode.OFF
 
-    private val _keysPressed = MutableStateFlow<Int>(0)
+    private val _keysPressed = MutableStateFlow(0)
     private val keysPressed: StateFlow<Int> = _keysPressed.asStateFlow()
     private val _layoutApplied = MutableSharedFlow<Unit>(
         replay = 0,
@@ -86,16 +89,25 @@ class AppAccessibilityService : AccessibilityService(), LifecycleOwner,
     private var lastAppState = false
     private var lastStateChanged = false
     private var autoHideJob: Job? = null
-    private val keyguardManager by lazy { getSystemService(Context.KEYGUARD_SERVICE) as KeyguardManager }
-    private val imm by lazy { getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager }
+    private val keyguardManager by lazy { getSystemService(KEYGUARD_SERVICE) as KeyguardManager }
+    private val imm by lazy { getSystemService(INPUT_METHOD_SERVICE) as InputMethodManager }
     private val windowHeightMethod by lazy { InputMethodManager::class.java.getMethod("getInputMethodWindowVisibleHeight")}
 
     private val receiver = object : BroadcastReceiver() {
         override fun onReceive(context: Context, intent: Intent) {
+            var configId = intent.getStringExtra(CONFIG_ID_EXTRA)
+            if (configId==null)
+                configId = "default"
+
             when (intent.action) {
                 ACTION_ACTIVATE_CURSOR -> {
                     backgroundScope.launch {
-                        coreManager.activateCursorMode(true)
+                        coreManager.activateCursorMode(true, configId)
+                    }
+                }
+                ACTION_DEACTIVATE_CURSOR -> {
+                    backgroundScope.launch {
+                        coreManager.deactivateCursorMode(true)
                     }
                 }
             }
@@ -110,15 +122,21 @@ class AppAccessibilityService : AccessibilityService(), LifecycleOwner,
         }
 
         const val ACTION_ACTIVATE_CURSOR = "scot.raven.titanpad.ACTION_ACTIVATE_CURSOR"
+        const val ACTION_DEACTIVATE_CURSOR = "scot.raven.titanpad.ACTION_DEACTIVATE_CURSOR"
+        const val BROADCAST_CURSOR_ACTIVATED = "scot.raven.titanpad.BROADCAST_CURSOR_ACTIVATED"
 
-        fun activateStandardCursor(context: Context) {
+        fun activateStandardCursor(context: Context, configId: String) {
             val intent = Intent(ACTION_ACTIVATE_CURSOR)
             intent.setPackage(context.packageName)
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-                context.sendBroadcast(intent, null)
-            } else {
-                context.sendBroadcast(intent)
-            }
+            intent.putExtra(CONFIG_ID_EXTRA, configId)
+            context.sendBroadcast(intent, null)
+        }
+
+        fun deactivateStandardCursor(context: Context, configId: String) {
+            val intent = Intent(ACTION_DEACTIVATE_CURSOR)
+            intent.setPackage(context.packageName)
+            intent.putExtra(CONFIG_ID_EXTRA, configId)
+            context.sendBroadcast(intent, null)
         }
     }
 
@@ -162,6 +180,8 @@ class AppAccessibilityService : AccessibilityService(), LifecycleOwner,
             savedStateRegistryController.performRestore(null)
             lifecycleRegistry.handleLifecycleEvent(Lifecycle.Event.ON_CREATE)
 
+            modeCoordinator = ModeCoordinator()
+
             serviceJob = SupervisorJob()
             backgroundScope = CoroutineScope(Dispatchers.Default + serviceJob + coroutineExceptionHandler)
             mainScope = CoroutineScope(Dispatchers.Main + serviceJob + coroutineExceptionHandler)
@@ -177,7 +197,8 @@ class AppAccessibilityService : AccessibilityService(), LifecycleOwner,
                 orientationHandler = orientationHandler,
                 backgroundScope = backgroundScope,
                 keysPressed = _keysPressed,
-                layoutApplied = layoutApplied
+                layoutApplied = layoutApplied,
+                modeCoordinator = modeCoordinator
             )
             coreManager.initialize()
 
@@ -198,13 +219,9 @@ class AppAccessibilityService : AccessibilityService(), LifecycleOwner,
 
             val filter = IntentFilter().apply {
                 addAction(ACTION_ACTIVATE_CURSOR)
+                addAction(ACTION_DEACTIVATE_CURSOR)
             }
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
-                registerReceiver(receiver, filter, Context.RECEIVER_NOT_EXPORTED)
-            } else {
-                @Suppress("UnspecifiedRegisterReceiverFlag")
-                registerReceiver(receiver, filter)
-            }
+            registerReceiver(receiver, filter, RECEIVER_EXPORTED)
 
             lifecycleRegistry.handleLifecycleEvent(Lifecycle.Event.ON_RESUME)
 
@@ -218,14 +235,14 @@ class AppAccessibilityService : AccessibilityService(), LifecycleOwner,
     }
 
     private fun autoHideCursor() {
-        val currentOverlay = coreManager.modeCoordinator.activeMode.value
+        val currentOverlay = modeCoordinator.activeMode.value
         val cursorOff = currentOverlay == ModeCoordinator.OverlayMode.OFF
-        val cursorAlreadyHidden = currentOverlay == ModeCoordinator.OverlayMode.AUTOHIDDEN
+        val cursorAlreadyHidden = currentOverlay == ModeCoordinator.OverlayMode.HIDDEN
         if (cursorOff || cursorAlreadyHidden)
             return
 
         lastOverlayType = currentOverlay
-        if (lastOverlayType == ModeCoordinator.OverlayMode.CURSOR) {
+        if (lastOverlayType == ModeCoordinator.OverlayMode.ON) {
             coreManager.cursorStateManager.cursorState.value?.let { cursor ->
                 coreManager.cursorStateManager.setLastCursorPosition(Offset(cursor.position.x, cursor.position.y))
             }
@@ -236,32 +253,26 @@ class AppAccessibilityService : AccessibilityService(), LifecycleOwner,
     }
 
     private fun attemptCursorRestore() {
-        val currentOverlay = coreManager.modeCoordinator.activeMode.value
-        if (currentOverlay != ModeCoordinator.OverlayMode.AUTOHIDDEN)
+        val currentOverlay = modeCoordinator.activeMode.value
+        if (currentOverlay != ModeCoordinator.OverlayMode.HIDDEN)
             return
 
         Logger.d("Restoring cursor overlay")
         val settings = TitanPad.getInstance().getSettingsFlow().value
-        val cursorMapped = settings.cursorActivationKey != ApplicationConstants.OVERLAY_DISABLED
-        val cursorLost = (lastOverlayType == ModeCoordinator.OverlayMode.CURSOR) && !cursorMapped
-
-        // Edge case: cursor previously autohidden and then cleared
-        // Commenting out for now; always triggers for a user with keymapper and both internally unmapped
-//        if (cursorLost) {
-//            lastOverlayType = ModeCoordinator.OverlayMode.OFF
-//        }
+        val cursorMapped = settings.getActiveConfig().cursorActivationKey != ApplicationConstants.OVERLAY_DISABLED
+        (lastOverlayType == ModeCoordinator.OverlayMode.ON) && !cursorMapped
 
         // If no previous overlay type, default to any mapped cursor
         if (lastOverlayType == ModeCoordinator.OverlayMode.OFF) {
             lastOverlayType = when {
-                cursorMapped -> ModeCoordinator.OverlayMode.CURSOR
+                cursorMapped -> ModeCoordinator.OverlayMode.ON
                 else -> ModeCoordinator.OverlayMode.OFF
             }
         }
 
         when (lastOverlayType) {
-            ModeCoordinator.OverlayMode.CURSOR -> {
-                coreManager.activateCursorMode()
+            ModeCoordinator.OverlayMode.ON -> {
+                coreManager.activateCursorMode(configId = settings.getActiveConfig().configId)
             }
 
             else -> {}
@@ -274,11 +285,11 @@ class AppAccessibilityService : AccessibilityService(), LifecycleOwner,
         event.let {
             when (event.eventType) {
                 AccessibilityEvent.TYPE_WINDOWS_CHANGED, AccessibilityEvent.TYPE_WINDOW_STATE_CHANGED -> {
-                    if (settings.hideOnKeyboardOpen) {
+                    if (settings.getActiveConfig().hideOnKeyboardOpen) {
                         checkKeyboardVisibility()
                     }
 
-                    if (settings.hideOnLockScreen) {
+                    if (settings.getActiveConfig().hideOnLockScreen) {
                         checkLockScreenVisibility()
                     }
 
@@ -338,24 +349,24 @@ class AppAccessibilityService : AccessibilityService(), LifecycleOwner,
             ?.firstOrNull { it.type == AccessibilityWindowInfo.TYPE_APPLICATION && it.root != null }
         val appName = appWindow?.root?.packageName?.toString()
 
-        if (settings.autoHideApps.isEmpty()) return Pair(appName, settings.applicationListType == AppListType.ALLOW_LIST)
+        if (settings.getActiveConfig().autoHideApps.isEmpty()) return Pair(appName, settings.getActiveConfig().applicationListType == AppListType.ALLOW_LIST)
 
-        if (appWindow != null && appName in settings.autoHideApps) {
-            return Pair(appName, settings.applicationListType == AppListType.DENY_LIST)
+        if (appWindow != null && appName in settings.getActiveConfig().autoHideApps) {
+            return Pair(appName, settings.getActiveConfig().applicationListType == AppListType.DENY_LIST)
         }
 
-        return Pair(appName, settings.applicationListType == AppListType.ALLOW_LIST)
+        return Pair(appName, settings.getActiveConfig().applicationListType == AppListType.ALLOW_LIST)
     }
 
     fun showClickableInCurrentApp(): Boolean {
         val settings = TitanPad.getInstance().getSettingsFlow().value
-        val showByDefault = settings.clickableListType == AppListType.DENY_LIST
+        val showByDefault = settings.getActiveConfig().clickableListType == AppListType.DENY_LIST
 
-        if (settings.clickableApps.isEmpty()) return showByDefault
+        if (settings.getActiveConfig().clickableApps.isEmpty()) return showByDefault
 
         for (window in windows) {
             val pkg = window.root?.packageName?.toString()
-            if (pkg != null && pkg in settings.clickableApps) {
+            if (pkg != null && pkg in settings.getActiveConfig().clickableApps) {
                 return !showByDefault
             }
         }

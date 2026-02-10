@@ -1,0 +1,18 @@
+package scot.raven.titanpad.core.control;
+
+interface IHidService {
+
+    void destroy() = 16777114; // Destroy method defined by Shizuku server
+
+    void exit() = 1; // Exit method defined by user
+
+    void setMousePosition(int x, int y, int buttonDown, int buttonUp) = 2;
+
+    void keyDown(int keyCode) = 3;
+    void keyUp(int keyCode) = 4;
+
+    void tapScreen(int x, int y) = 5;
+    void tapRelease() = 6;
+
+    void setJoystick(int x, int y) = 7;
+}

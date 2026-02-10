@@ -6,7 +6,7 @@ interface IHidService {
 
     void exit() = 1; // Exit method defined by user
 
-    void setMousePosition(int x, int y, int buttons) = 2;
+    void setMousePosition(int x, int y, int buttonDown, int buttonUp) = 2;
 
     void keyDown(int keyCode) = 3;
     void keyUp(int keyCode) = 4;

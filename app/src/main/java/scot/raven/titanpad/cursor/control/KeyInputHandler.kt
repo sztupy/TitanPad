@@ -25,9 +25,9 @@ class KeyInputHandler(val settingsFlow: StateFlow<ApplicationSettings>) : InputH
                             hidService?.keyDown(if (settings.alwaysRemapFuncKeysCompat) 0x44 else 0x68)
 
                         when (settings.getActiveConfig().func1ButtonMap) {
-                            FuncButtonMap.MOUSE_LEFT_CLICK -> hidService?.setMousePosition(0,0,1)
-                            FuncButtonMap.MOUSE_RIGHT_CLICK -> hidService?.setMousePosition(0,0,2)
-                            FuncButtonMap.MOUSE_MIDDLE_CLICK -> hidService?.setMousePosition(0,0,4)
+                            FuncButtonMap.MOUSE_LEFT_CLICK -> hidService?.setMousePosition(0,0,1, 0)
+                            FuncButtonMap.MOUSE_RIGHT_CLICK -> hidService?.setMousePosition(0,0,2, 0)
+                            FuncButtonMap.MOUSE_MIDDLE_CLICK -> hidService?.setMousePosition(0,0,4, 0)
                             else -> {}
                         }
 
@@ -38,9 +38,9 @@ class KeyInputHandler(val settingsFlow: StateFlow<ApplicationSettings>) : InputH
                             hidService?.keyDown(if (settings.alwaysRemapFuncKeysCompat) 0x45 else 0x69)
 
                         when (settings.getActiveConfig().func2ButtonMap) {
-                            FuncButtonMap.MOUSE_LEFT_CLICK -> hidService?.setMousePosition(0,0,1)
-                            FuncButtonMap.MOUSE_RIGHT_CLICK -> hidService?.setMousePosition(0,0,2)
-                            FuncButtonMap.MOUSE_MIDDLE_CLICK -> hidService?.setMousePosition(0,0,4)
+                            FuncButtonMap.MOUSE_LEFT_CLICK -> hidService?.setMousePosition(0,0,1, 0)
+                            FuncButtonMap.MOUSE_RIGHT_CLICK -> hidService?.setMousePosition(0,0,2, 0)
+                            FuncButtonMap.MOUSE_MIDDLE_CLICK -> hidService?.setMousePosition(0,0,4, 0)
                             else -> {}
                         }
                     }
@@ -57,9 +57,9 @@ class KeyInputHandler(val settingsFlow: StateFlow<ApplicationSettings>) : InputH
                             hidService?.keyUp(if (settings.alwaysRemapFuncKeysCompat) 0x44 else 0x68)
 
                         when (settings.getActiveConfig().func1ButtonMap) {
-                            FuncButtonMap.MOUSE_LEFT_CLICK -> hidService?.setMousePosition(0,0,0)
-                            FuncButtonMap.MOUSE_RIGHT_CLICK -> hidService?.setMousePosition(0,0,0)
-                            FuncButtonMap.MOUSE_MIDDLE_CLICK -> hidService?.setMousePosition(0,0,0)
+                            FuncButtonMap.MOUSE_LEFT_CLICK -> hidService?.setMousePosition(0,0,0, 1)
+                            FuncButtonMap.MOUSE_RIGHT_CLICK -> hidService?.setMousePosition(0,0,0, 2)
+                            FuncButtonMap.MOUSE_MIDDLE_CLICK -> hidService?.setMousePosition(0,0,0, 4)
                             else -> {}
                         }
                     }
@@ -68,10 +68,10 @@ class KeyInputHandler(val settingsFlow: StateFlow<ApplicationSettings>) : InputH
                         if (settings.alwaysRemapFuncKeys)
                             hidService?.keyUp(if (settings.alwaysRemapFuncKeysCompat) 0x45 else 0x69)
 
-                        when (settings.getActiveConfig().func1ButtonMap) {
-                            FuncButtonMap.MOUSE_LEFT_CLICK -> hidService?.setMousePosition(0,0,0)
-                            FuncButtonMap.MOUSE_RIGHT_CLICK -> hidService?.setMousePosition(0,0,0)
-                            FuncButtonMap.MOUSE_MIDDLE_CLICK -> hidService?.setMousePosition(0,0,0)
+                        when (settings.getActiveConfig().func2ButtonMap) {
+                            FuncButtonMap.MOUSE_LEFT_CLICK -> hidService?.setMousePosition(0,0,0, 1)
+                            FuncButtonMap.MOUSE_RIGHT_CLICK -> hidService?.setMousePosition(0,0,0, 2)
+                            FuncButtonMap.MOUSE_MIDDLE_CLICK -> hidService?.setMousePosition(0,0,0, 4)
                             else -> {}
                         }
                     }

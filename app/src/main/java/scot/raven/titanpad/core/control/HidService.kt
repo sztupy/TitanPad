@@ -3,6 +3,9 @@ package scot.raven.titanpad.core.control
 import android.os.RemoteException
 import android.util.Log
 import com.android.commands.hid.Device
+import kotlin.experimental.and
+import kotlin.experimental.inv
+import kotlin.experimental.or
 
 class HidService : IHidService.Stub() {
 
@@ -222,11 +225,11 @@ class HidService : IHidService.Stub() {
     }
 
     @Throws(RemoteException::class)
-    override fun setMousePosition(x: Int, y: Int, buttons: Int) {
+    override fun setMousePosition(x: Int, y: Int, buttonDown: Int, buttonUp: Int) {
         val xClamp = x.coerceIn(-127, 127)
         val yClamp = y.coerceIn(-127, 127)
 
-        mouseCode[0] = buttons.toByte()
+        mouseCode[0] = mouseCode[0].or(buttonDown.toByte()).and(buttonUp.toByte().inv())
         mouseCode[1] = xClamp.toByte()
         mouseCode[2] = yClamp.toByte()
         mouse.sendReport(mouseCode) //Here we send mouse report data.

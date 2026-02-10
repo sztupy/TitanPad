@@ -53,6 +53,9 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import scot.raven.titanpad.core.constants.ApplicationConstants
+import scot.raven.titanpad.cursor.domain.FuncButtonMap
+import scot.raven.titanpad.settings.domain.AppListType
+import scot.raven.titanpad.settings.ui.DropdownPreferenceItem
 import scot.raven.titanpad.settings.ui.TextFieldDialog
 import scot.raven.titanpad.settings.ui.startActivity
 import java.io.File
@@ -234,6 +237,54 @@ fun UsageConfigurationScreen(
                     onClick = {
                         context.startActivity(Intent(Settings.ACTION_APPLICATION_DEVELOPMENT_SETTINGS))
                     }
+                )
+
+                DropdownPreferenceItem(
+                    title = "Func 1 (top left) button usage",
+                    subtitle =
+                        when (uiState.func1ButtonMap) {
+                            FuncButtonMap.OFF -> "None"
+                            FuncButtonMap.MOUSE_LEFT_CLICK -> "Left click"
+                            FuncButtonMap.MOUSE_RIGHT_CLICK -> "Right click"
+                            FuncButtonMap.MOUSE_MIDDLE_CLICK -> "Middle click"
+                        },
+                    selectedOption = uiState.func1ButtonMap,
+                    options =
+                        listOf(
+                            FuncButtonMap.OFF to "None",
+                            FuncButtonMap.MOUSE_LEFT_CLICK to "Left click",
+                            FuncButtonMap.MOUSE_RIGHT_CLICK to "Right click",
+                            FuncButtonMap.MOUSE_MIDDLE_CLICK to "Middle click"
+                        ),
+                    onOptionSelected = { value ->
+                        settingsState.updatePreference(value) { settings, v ->
+                            settings.copy(func1ButtonMap = v)
+                        }
+                    },
+                )
+
+                DropdownPreferenceItem(
+                    title = "Func 2 (bottom left) button usage",
+                    subtitle =
+                        when (uiState.func2ButtonMap) {
+                            FuncButtonMap.OFF -> "None"
+                            FuncButtonMap.MOUSE_LEFT_CLICK -> "Left click"
+                            FuncButtonMap.MOUSE_RIGHT_CLICK -> "Right click"
+                            FuncButtonMap.MOUSE_MIDDLE_CLICK -> "Middle click"
+                        },
+                    selectedOption = uiState.func2ButtonMap,
+                    options =
+                        listOf(
+                            FuncButtonMap.OFF to "None",
+                            FuncButtonMap.MOUSE_LEFT_CLICK to "Left click",
+                            FuncButtonMap.MOUSE_RIGHT_CLICK to "Right click",
+                            FuncButtonMap.MOUSE_MIDDLE_CLICK to "Middle click"
+                        ),
+                    onOptionSelected = { value ->
+                        settingsState.updatePreference(value) { settings, v ->
+                            settings.copy(func2ButtonMap = v)
+                        }
+                    },
                 )
             }
 

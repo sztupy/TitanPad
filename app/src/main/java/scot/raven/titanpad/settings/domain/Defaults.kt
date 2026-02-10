@@ -1,6 +1,5 @@
 package scot.raven.titanpad.settings.domain
 
-import android.view.KeyEvent
 import scot.raven.titanpad.core.constants.ApplicationConstants
 import scot.raven.titanpad.core.constants.CursorConstants
 import scot.raven.titanpad.core.constants.GestureConstants
@@ -21,9 +20,9 @@ object Defaults {
         const val CURSOR_SIZE = CursorConstants.DEFAULT_SIZE
         const val CURSOR_ACCELERATION_START = GestureConstants.DEFAULT_ACCELERATION_START
         const val CURSOR_ACCELERATION_DURATION = GestureConstants.DEFAULT_ACCELERATION_DURATION
-        const val CURSOR_ACTIVATION_KEY = KeyEvent.KEYCODE_STAR
+        const val CURSOR_ACTIVATION_KEY = ApplicationConstants.OVERLAY_DISABLED
         const val ALLOW_PASSTHROUGH = GestureConstants.ALLOW_PASSTHROUGH
-        const val HIDE_ON_KEYBOARD_OPEN = false
+        const val HIDE_ON_KEYBOARD_OPEN = true
         const val HIDE_ON_LAUNCHER_OPEN = false
         const val HIDE_ON_LOCK_SCREEN = false
         const val ROUNDED_CURSOR_CORNERS = true
@@ -44,6 +43,6 @@ object Defaults {
         val CLICKABLE_LIST_TYPE = AppListType.DENY_LIST
         const val CHECK_CLICKABLE = false
         const val DISABLE_TOUCHSCREEN = false
-        const val ALWAYS_REMAP_FUNC_KEYS = false
+        const val ALWAYS_REMAP_FUNC_KEYS = true
     }
 }

@@ -12,8 +12,6 @@ import scot.raven.titanpad.TitanPad
 import scot.raven.titanpad.core.control.ModeCoordinator
 import scot.raven.titanpad.core.logs.Logger
 import scot.raven.titanpad.settings.domain.ApplicationSettings
-import scot.raven.titanpad.settings.domain.UsageConfig
-import scot.raven.titanpad.settings.repository.SettingsRepository
 import scot.raven.titanpad.settings.ui.SettingsActivity
 
 /**

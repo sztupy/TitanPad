@@ -9,7 +9,6 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.drawscope.Stroke
 import scot.raven.titanpad.core.constants.GestureConstants
 import scot.raven.titanpad.core.domain.ScreenDimensions
-import scot.raven.titanpad.settings.domain.UsageConfig
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.update
 import scot.raven.titanpad.settings.domain.ApplicationSettings

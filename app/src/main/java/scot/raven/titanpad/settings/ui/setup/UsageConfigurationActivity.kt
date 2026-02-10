@@ -9,15 +9,11 @@ import androidx.activity.compose.setContent
 import androidx.core.app.ActivityOptionsCompat
 import androidx.lifecycle.ViewModelProvider
 import scot.raven.titanpad.TitanPad
-import scot.raven.titanpad.accessibility.AppAccessibilityService
 import scot.raven.titanpad.core.ui.AppTheme
 import scot.raven.titanpad.settings.ui.SettingsActivity.Companion.CONFIG_ID_EXTRA
 import scot.raven.titanpad.settings.ui.SettingsState
 import scot.raven.titanpad.settings.ui.autohide.AutoHideSettingsActivity
-import scot.raven.titanpad.settings.ui.cursor.ClickableAppsActivity
-import scot.raven.titanpad.settings.ui.cursor.CursorIconActivity
-import scot.raven.titanpad.settings.ui.cursor.LocationClickableIconActivity
-import scot.raven.titanpad.settings.ui.gesture.CommonGestureSettingsActivity
+import scot.raven.titanpad.settings.ui.cursor.SoftwareEmulationSettingsActivity
 
 /**
  * Standard cursor settings screen.
@@ -51,14 +47,11 @@ class UsageConfigurationActivity : ComponentActivity() {
 
         setContent {
             AppTheme {
-                CursorSettingsScreen(
+                UsageConfigurationScreen(
                     settingsState = settingsState,
-                    onNavigateToCursorIcon = { startCustomActivity(this, CursorIconActivity::class.java, configId) },
-                    onNavigateToLocationClickableIcon = { startCustomActivity(this, LocationClickableIconActivity::class.java, configId) },
-                    onNavigateToClickableAppsScreen = { startCustomActivity(this, ClickableAppsActivity::class.java, configId) },
                     onNavigateToDebugOptions = { startCustomActivity(this, DebugOptionsActivity::class.java, configId) },
                     onNavigateToAutoHideSettings = { startCustomActivity(this, AutoHideSettingsActivity::class.java, configId) },
-                    onNavigateToCommonGestureSettings = { startCustomActivity(this, CommonGestureSettingsActivity::class.java, configId) },
+                    onNavigateToSoftwareEmulationSettings = { startCustomActivity(this, SoftwareEmulationSettingsActivity::class.java, configId) },
                     onNavigateBack = {
                         finish()
                     },

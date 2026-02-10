@@ -26,7 +26,6 @@ import scot.raven.titanpad.core.domain.ScreenDimensions
 import scot.raven.titanpad.cursor.domain.CursorState
 import scot.raven.titanpad.cursor.domain.IconAlignment
 import scot.raven.titanpad.settings.domain.ApplicationSettings
-import scot.raven.titanpad.settings.domain.UsageConfig
 import java.io.File
 import kotlin.math.PI
 import kotlin.math.atan2

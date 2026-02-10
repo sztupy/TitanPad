@@ -11,7 +11,6 @@ import android.view.WindowInsets
 import android.view.WindowManager
 import scot.raven.titanpad.core.logs.Logger
 import scot.raven.titanpad.core.util.OrientationUtil
-import scot.raven.titanpad.settings.domain.UsageConfig
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob

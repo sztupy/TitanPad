@@ -11,7 +11,6 @@ import scot.raven.titanpad.accessibility.AppAccessibilityService
 import scot.raven.titanpad.core.logs.Logger
 import scot.raven.titanpad.core.shizuku.ShizukuConnection
 import scot.raven.titanpad.core.shizuku.ShizukuStatus
-import scot.raven.titanpad.settings.domain.UsageConfig
 import scot.raven.titanpad.settings.repository.SettingsRepository
 import scot.raven.titanpad.settings.repository.SettingsRepositoryImpl
 import kotlinx.coroutines.CoroutineScope

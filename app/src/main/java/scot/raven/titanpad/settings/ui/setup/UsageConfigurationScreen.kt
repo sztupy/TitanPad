@@ -38,13 +38,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.datastore.core.IOException
-import scot.raven.titanpad.core.constants.CursorConstants
 import scot.raven.titanpad.core.logs.Logger
-import scot.raven.titanpad.settings.domain.AppListType
 import scot.raven.titanpad.settings.domain.UsageConfig
-import scot.raven.titanpad.settings.ui.ClearKeyPreferenceItem
-import scot.raven.titanpad.settings.ui.ColorPickerDialog
-import scot.raven.titanpad.settings.ui.DropdownPreferenceItem
 import scot.raven.titanpad.settings.ui.NoteItem
 import scot.raven.titanpad.settings.ui.PreferenceCategory
 import scot.raven.titanpad.settings.ui.SetKeyPreferenceItem
@@ -56,7 +51,6 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import scot.raven.titanpad.accessibility.AppAccessibilityService
 import scot.raven.titanpad.core.constants.ApplicationConstants
 import scot.raven.titanpad.settings.ui.TextFieldDialog
 import scot.raven.titanpad.settings.ui.startActivity
@@ -70,21 +64,17 @@ import java.util.UUID
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun CursorSettingsScreen(
+fun UsageConfigurationScreen(
     settingsState: SettingsState,
-    onNavigateToCursorIcon: () -> Unit,
-    onNavigateToLocationClickableIcon: () -> Unit,
-    onNavigateToClickableAppsScreen: () -> Unit,
     onNavigateToDebugOptions: () -> Unit,
     onNavigateToAutoHideSettings: () -> Unit,
-    onNavigateToCommonGestureSettings: () -> Unit,
+    onNavigateToSoftwareEmulationSettings: () -> Unit,
     onNavigateBack: () -> Unit,
 ) {
     val uiState by settingsState.uiState.collectAsState()
     var showCursorKeyCaptureOverlay by remember { mutableStateOf(false) }
     var reservedKeys by remember { mutableStateOf(emptyMap<Int, String>()) }
     var showNameChangeDialog by remember { mutableStateOf(false) }
-    var showColorPickerDialog by remember { mutableStateOf(false) }
     val context = LocalContext.current
 
     val currentKeyDescription =
@@ -139,8 +129,6 @@ fun CursorSettingsScreen(
                     onClick = { showNameChangeDialog = true }
                 )
 
-
-
                 if (showNameChangeDialog) {
                     TextFieldDialog(
                         title = "Configuration Name",
@@ -176,10 +164,10 @@ fun CursorSettingsScreen(
                     },
                 )
 
-                ClearKeyPreferenceItem(
-                    mode = "standard cursor",
-                    onClearKey = {
-                        settingsState.requestHideAllOverlays()
+                SimplePreferenceItem(
+                    title = "Clear Activation Key",
+                    subtitle = "Removes pre-set activation key",
+                    onClick = {
                         settingsState.updateCursorActivationKey(UsageConfig.KEY_NONE)
                     },
                 )
@@ -193,148 +181,9 @@ fun CursorSettingsScreen(
                         showToast = { message -> settingsState.showToast(message) },
                     )
                 }
-            }
-
-            PreferenceCategory(title = "Adaptive") {
-                SwitchPreferenceItem(
-                    title = "Show Location Clickable",
-                    subtitle = "Attempt to indicate if current cursor location is clickable",
-                    checked = uiState.checkClickable,
-                    onCheckedChange = { value ->
-                        settingsState.updatePreference(value) { settings, v ->
-                            settings.copy(checkClickable = v)
-                        }
-                    },
-                )
-
-                DropdownPreferenceItem(
-                    title = "Application List Type",
-                    subtitle =
-                        when (uiState.clickableListType) {
-                            AppListType.ALLOW_LIST -> "Show clickable locations only for selected apps"
-                            AppListType.DENY_LIST -> "Do not show clickable locations for selected apps"
-                        },
-                    selectedOption = uiState.clickableListType,
-                    options =
-                        listOf(
-                            AppListType.ALLOW_LIST to "Allow",
-                            AppListType.DENY_LIST to "Deny"
-                        ),
-                    onOptionSelected = { value ->
-                        settingsState.updatePreference(value) { settings, v ->
-                            settings.copy(clickableListType = v)
-                        }
-                    },
-                    enabled = uiState.checkClickable
-                )
-
-                SimplePreferenceItem(
-                    title = "Select Applications",
-                    subtitle = "${if (uiState.clickableListType == AppListType.ALLOW_LIST) "Show" else "Ignore"} in specific apps",
-                    onClick = onNavigateToClickableAppsScreen,
-                    enabled = uiState.checkClickable
-                )
-            }
-
-            PreferenceCategory(title = "Appearance") {
-                SliderPreferenceItem(
-                    title = "Cursor Size",
-                    value = uiState.cursorSize.toFloat(),
-                    valueRange = CursorConstants.MIN_SIZE.toFloat()..CursorConstants.MAX_SIZE.toFloat(),
-                    valueText = uiState.cursorSize.toString(),
-                    onValueChange = { value ->
-                        settingsState.updatePreference(value) { settings, v ->
-                            settings.copy(cursorSize = v.toInt())
-                        }
-                    },
-                    steps = 8,
-                )
-
-                SwitchPreferenceItem(
-                    title = "Smooth Cursor Corners",
-                    subtitle = "Round out the corners of the cursor",
-                    checked = uiState.roundedCursorCorners,
-                    onCheckedChange = { value ->
-                        settingsState.updatePreference(value) { settings, v ->
-                            settings.copy(roundedCursorCorners = v)
-                        }
-                    },
-                )
-
-                SimplePreferenceItem(
-                    title = "Cursor Color",
-                    subtitle = "Current RGB hex value: #${uiState.standardCursorHex}",
-                    onClick = { showColorPickerDialog = true }
-                )
-
-                SwitchPreferenceItem(
-                    title = "Match Border to Body",
-                    subtitle = "Replace black border and match cursor body color",
-                    checked = uiState.standardCursorMatchBorder,
-                    onCheckedChange = { value ->
-                        settingsState.updatePreference(value) { settings, v ->
-                            settings.copy(standardCursorMatchBorder = v)
-                        }
-                    },
-                )
-
-                if (showColorPickerDialog) {
-                    ColorPickerDialog(
-                        initialColorHex = uiState.standardCursorHex,
-                        onColorSelected = { newColorHex ->
-                            settingsState.updatePreference(newColorHex) { settings, v ->
-                                settings.copy(standardCursorHex = v)
-                            }
-                        },
-                        onDismiss = { showColorPickerDialog = false },
-                        title = "Cursor Color"
-                    )
-                }
-            }
-
-            PreferenceCategory(title = "Custom Icon") {
-                SwitchPreferenceItem(
-                    title = "Custom Cursor Icons",
-                    subtitle = "Replace the default cursor icon with an image or gif",
-                    checked = uiState.useCustomCursorIcon,
-                    onCheckedChange = { value ->
-                        settingsState.updatePreference(value) { settings, v ->
-                            settings.copy(useCustomCursorIcon = v)
-                        }
-                    },
-                )
-
-                SimplePreferenceItem(
-                    title = "Cursor Icon",
-                    subtitle = when {
-                        uiState.cursorImagePath == null -> "No icon set, falling back to default icon"
-                        else -> "Update icon"
-                    },
-                    onClick = onNavigateToCursorIcon,
-                    enabled = uiState.useCustomCursorIcon
-                )
-
-                SimplePreferenceItem(
-                    title = "Location Clickable Icon",
-                    subtitle = when {
-                        !uiState.checkClickable -> "Only applicable if \"Show Location Clickable\" is enabled"
-                        uiState.clickableImagePath == null -> "Select icon, otherwise falling back to base custom icon"
-                        else -> "Update icon"
-                    },
-                    onClick = onNavigateToLocationClickableIcon,
-                    enabled = uiState.useCustomCursorIcon && uiState.checkClickable,
-                )
-            }
-
-            PreferenceCategory(title = "Behavior") {
-                SimplePreferenceItem(
-                    title = "Auto-Hide Cursor Options",
-                    subtitle = "Automatically hide and restore the cursor",
-                    onClick = onNavigateToAutoHideSettings
-                )
 
                 SliderPreferenceItem(
-                    title = "Activation Duration",
+                    title = "Activation Keypress Minimum Duration",
                     value = uiState.activationDuration.toFloat(),
                     valueRange = ApplicationConstants.MIN_ACTIVATION_HOLD_DURATION.toFloat()..ApplicationConstants.MAX_ACTIVATION_HOLD_DURATION.toFloat(),
                     valueText = "${uiState.activationDuration} ms",
@@ -344,6 +193,46 @@ fun CursorSettingsScreen(
                         }
                     },
                     steps = 4,
+                )
+            }
+
+            PreferenceCategory(title = "Software Emulation") {
+                SimplePreferenceItem(
+                    title = "Software Emulation Setup",
+                    subtitle = "Change software emulated input settings",
+                    onClick = onNavigateToSoftwareEmulationSettings
+                )
+            }
+
+            PreferenceCategory(title = "Hardware Emulation") {
+                NoteItem("All hardware emulation feature require a Shizuku version that has working MTK phone support. The latest official Shizuku version v13.6.0 will NOT work.", Icons.Default.Warning, "Warning")
+
+                SimplePreferenceItem(
+                    title = "Hardware mouse display settings",
+                    subtitle = "Found under 'Display' -> 'Colour and Motion' -> 'Large mouse cursor'",
+                    onClick = {
+                        if (!startActivity($$"com.android.settings/.Settings$ColorAndMotionActivity")) {
+                            context.startActivity(Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS))
+                        }
+                    }
+                )
+
+                SimplePreferenceItem(
+                    title = "Hardware mouse sensitivity settings",
+                    subtitle = "Found under 'System' -> 'Keyboard' -> 'Pointer Speed'",
+                    onClick = {
+                        if (!startActivity($$"com.android.settings/.Settings$KeyboardSettingsActivity")) {
+                            context.startActivity(Intent(Settings.ACTION_SETTINGS))
+                        }
+                    }
+                )
+            }
+
+            PreferenceCategory(title = "Behavior") {
+                SimplePreferenceItem(
+                    title = "Auto-Hide Cursor Options",
+                    subtitle = "Automatically hide and restore the cursor",
+                    onClick = onNavigateToAutoHideSettings
                 )
 
                 if (uiState.activationDuration == 0L) {
@@ -370,34 +259,6 @@ fun CursorSettingsScreen(
                             settings.copy(showNotification = v)
                         }
                     },
-                )
-
-                SimplePreferenceItem(
-                    title = "Hardware mouse display settings",
-                    subtitle = "Found under 'Display' -> 'Colour and Motion' -> 'Large mouse cursor'",
-                    onClick = {
-                        if (!startActivity("com.android.settings/.Settings\$ColorAndMotionActivity")) {
-                            context.startActivity(Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS))
-                        }
-                    }
-                )
-
-                SimplePreferenceItem(
-                    title = "Hardware mouse sensitivity settings",
-                    subtitle = "Found under 'System' -> 'Keyboard' -> 'Pointer Speed'",
-                    onClick = {
-                        if (!startActivity("com.android.settings/.Settings\$KeyboardSettingsActivity")) {
-                            context.startActivity(Intent(Settings.ACTION_SETTINGS))
-                        }
-                    }
-                )
-            }
-
-            PreferenceCategory(title = "Gestures") {
-                SimplePreferenceItem(
-                    title = "Common Gesture Options",
-                    subtitle = "Settings that apply to both scrolls and zooms",
-                    onClick = onNavigateToCommonGestureSettings
                 )
             }
 

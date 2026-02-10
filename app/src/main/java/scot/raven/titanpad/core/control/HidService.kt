@@ -223,8 +223,8 @@ class HidService : IHidService.Stub() {
 
     @Throws(RemoteException::class)
     override fun setMousePosition(x: Int, y: Int, buttons: Int) {
-        val xClamp = x.coerceIn(-127, 127);
-        val yClamp = y.coerceIn(-127, 127);
+        val xClamp = x.coerceIn(-127, 127)
+        val yClamp = y.coerceIn(-127, 127)
 
         mouseCode[0] = buttons.toByte()
         mouseCode[1] = xClamp.toByte()
@@ -283,11 +283,11 @@ class HidService : IHidService.Stub() {
     }
 
     override fun setJoystick(x: Int, y: Int) {
-        val xClamp = x.coerceIn(-127, 127);
-        val yClamp = y.coerceIn(-127, 127);
-        gamePadCode[2] = xClamp.toByte();
-        gamePadCode[3] = yClamp.toByte();
-        gamePad.sendReport(gamePadCode);
+        val xClamp = x.coerceIn(-127, 127)
+        val yClamp = y.coerceIn(-127, 127)
+        gamePadCode[2] = xClamp.toByte()
+        gamePadCode[3] = yClamp.toByte()
+        gamePad.sendReport(gamePadCode)
     }
 
     companion object {

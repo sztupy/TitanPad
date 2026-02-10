@@ -4,7 +4,6 @@ import android.accessibilityservice.AccessibilityService
 import android.content.Intent
 import android.view.KeyEvent
 import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.platform.LocalContext
 import scot.raven.titanpad.TitanPad
 import scot.raven.titanpad.core.domain.OrientationHandler
 import scot.raven.titanpad.core.domain.ScreenDimensions
@@ -16,7 +15,6 @@ import scot.raven.titanpad.cursor.control.TrackpadActionHandler
 import scot.raven.titanpad.gesture.api.GestureManager
 import scot.raven.titanpad.gesture.standard.DefaultGestureStrategy
 import scot.raven.titanpad.gesture.ui.GesturePath
-import scot.raven.titanpad.settings.domain.UsageConfig
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.channels.Channel

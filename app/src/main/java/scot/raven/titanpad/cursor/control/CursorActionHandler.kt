@@ -7,7 +7,6 @@ import scot.raven.titanpad.core.control.CoreManager.ChannelMessage
 import scot.raven.titanpad.core.control.ModeCoordinator
 import scot.raven.titanpad.core.logs.Logger
 import scot.raven.titanpad.gesture.api.GestureManager
-import scot.raven.titanpad.settings.domain.UsageConfig
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.channels.Channel
@@ -17,7 +16,6 @@ import kotlinx.coroutines.launch
 import scot.raven.titanpad.accessibility.AppAccessibilityService.Companion.BROADCAST_CURSOR_ACTIVATED
 import scot.raven.titanpad.settings.domain.ApplicationSettings
 import scot.raven.titanpad.settings.ui.SettingsActivity.Companion.CONFIG_ID_EXTRA
-import kotlin.reflect.KProperty
 
 /**
  * Handles key events for the standard cursor mode.

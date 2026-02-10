@@ -19,7 +19,6 @@ import scot.raven.titanpad.BuildConfig
 import scot.raven.titanpad.accessibility.AppAccessibilityService
 import scot.raven.titanpad.core.control.HidService
 import scot.raven.titanpad.core.control.IHidService
-import scot.raven.titanpad.core.domain.OrientationHandler
 import scot.raven.titanpad.core.logs.Logger
 import scot.raven.titanpad.gesture.api.GestureManager
 import java.io.BufferedReader
@@ -455,8 +454,6 @@ class TrackpadActionHandler(
     }
 
     companion object {
-        const val DEFAULT_SWIPE_UP_THRESHOLD = 300
-
         // Titan 2 event list
 //        const val DEFAULT_VOLUME_EVENT_DEVICE = "/dev/input/event0" // volume up and down
         const val DEFAULT_LEFT_TOP_EVENT_DEVICE = "/dev/input/event1" // left top button is event 00f9; Power button is also here

@@ -88,7 +88,6 @@ import kotlinx.coroutines.withContext
 import androidx.core.net.toUri
 import kotlinx.coroutines.flow.StateFlow
 import rikka.shizuku.Shizuku
-import scot.raven.titanpad.TitanPad
 import scot.raven.titanpad.accessibility.AppAccessibilityService
 import scot.raven.titanpad.core.logs.Logger
 
@@ -706,19 +705,6 @@ fun SetKeyPreferenceItem(
         title = title,
         subtitle = subtitle,
         onClick = onCaptureKey,
-    )
-}
-
-@Composable
-fun ClearKeyPreferenceItem(
-    title: String = "Clear Activation Key",
-    mode: String,
-    onClearKey: () -> Unit,
-) {
-    SimplePreferenceItem(
-        title = title,
-        subtitle = "Unmaps $mode",
-        onClick = onClearKey,
     )
 }
 

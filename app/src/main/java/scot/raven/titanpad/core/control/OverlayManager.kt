@@ -1,10 +1,8 @@
 package scot.raven.titanpad.core.control
 
-import android.annotation.SuppressLint
 import android.content.Context
 import android.graphics.PixelFormat
 import android.graphics.Rect
-import android.os.Build
 import android.os.Looper
 import android.view.Choreographer
 import android.view.Gravity

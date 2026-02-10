@@ -9,7 +9,6 @@ import scot.raven.titanpad.gesture.ui.GesturePath
 import scot.raven.titanpad.gesture.ui.GestureType
 import scot.raven.titanpad.gesture.ui.endStationaryGesture
 import scot.raven.titanpad.gesture.ui.showStationaryGesture
-import scot.raven.titanpad.settings.domain.UsageConfig
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay

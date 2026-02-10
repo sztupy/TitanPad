@@ -237,12 +237,12 @@ class AppAccessibilityService : AccessibilityService(), LifecycleOwner,
     private fun autoHideCursor() {
         val currentOverlay = modeCoordinator.activeMode.value
         val cursorOff = currentOverlay == ModeCoordinator.OverlayMode.OFF
-        val cursorAlreadyHidden = currentOverlay == ModeCoordinator.OverlayMode.AUTOHIDDEN
+        val cursorAlreadyHidden = currentOverlay == ModeCoordinator.OverlayMode.HIDDEN
         if (cursorOff || cursorAlreadyHidden)
             return
 
         lastOverlayType = currentOverlay
-        if (lastOverlayType == ModeCoordinator.OverlayMode.CURSOR) {
+        if (lastOverlayType == ModeCoordinator.OverlayMode.ON) {
             coreManager.cursorStateManager.cursorState.value?.let { cursor ->
                 coreManager.cursorStateManager.setLastCursorPosition(Offset(cursor.position.x, cursor.position.y))
             }
@@ -254,24 +254,24 @@ class AppAccessibilityService : AccessibilityService(), LifecycleOwner,
 
     private fun attemptCursorRestore() {
         val currentOverlay = modeCoordinator.activeMode.value
-        if (currentOverlay != ModeCoordinator.OverlayMode.AUTOHIDDEN)
+        if (currentOverlay != ModeCoordinator.OverlayMode.HIDDEN)
             return
 
         Logger.d("Restoring cursor overlay")
         val settings = TitanPad.getInstance().getSettingsFlow().value
         val cursorMapped = settings.getActiveConfig().cursorActivationKey != ApplicationConstants.OVERLAY_DISABLED
-        (lastOverlayType == ModeCoordinator.OverlayMode.CURSOR) && !cursorMapped
+        (lastOverlayType == ModeCoordinator.OverlayMode.ON) && !cursorMapped
 
         // If no previous overlay type, default to any mapped cursor
         if (lastOverlayType == ModeCoordinator.OverlayMode.OFF) {
             lastOverlayType = when {
-                cursorMapped -> ModeCoordinator.OverlayMode.CURSOR
+                cursorMapped -> ModeCoordinator.OverlayMode.ON
                 else -> ModeCoordinator.OverlayMode.OFF
             }
         }
 
         when (lastOverlayType) {
-            ModeCoordinator.OverlayMode.CURSOR -> {
+            ModeCoordinator.OverlayMode.ON -> {
                 coreManager.activateCursorMode(configId = settings.getActiveConfig().configId)
             }
 

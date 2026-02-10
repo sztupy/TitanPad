@@ -2,11 +2,15 @@ package scot.raven.titanpad.cursor.control
 
 import kotlinx.coroutines.flow.StateFlow
 import scot.raven.titanpad.core.control.IHidService
+import scot.raven.titanpad.core.control.ModeCoordinator
 import scot.raven.titanpad.core.logs.Logger
 import scot.raven.titanpad.cursor.domain.FuncButtonMap
 import scot.raven.titanpad.settings.domain.ApplicationSettings
 
-class KeyInputHandler(val settingsFlow: StateFlow<ApplicationSettings>) : InputHandler {
+class KeyInputHandler(
+    val settingsFlow: StateFlow<ApplicationSettings>,
+    val modeCoordinator: ModeCoordinator
+) : InputHandler {
     private var hidService: IHidService? = null
 
     fun setHidService(service: IHidService?) {
@@ -24,12 +28,13 @@ class KeyInputHandler(val settingsFlow: StateFlow<ApplicationSettings>) : InputH
                         if (settings.alwaysRemapFuncKeys)
                             hidService?.keyDown(if (settings.alwaysRemapFuncKeysCompat) 0x44 else 0x68)
 
-                        when (settings.getActiveConfig().func1ButtonMap) {
-                            FuncButtonMap.MOUSE_LEFT_CLICK -> hidService?.setMousePosition(0,0,1, 0)
-                            FuncButtonMap.MOUSE_RIGHT_CLICK -> hidService?.setMousePosition(0,0,2, 0)
-                            FuncButtonMap.MOUSE_MIDDLE_CLICK -> hidService?.setMousePosition(0,0,4, 0)
-                            else -> {}
-                        }
+                        if (modeCoordinator.activeMode.value == ModeCoordinator.OverlayMode.ON)
+                            when (settings.getActiveConfig().func1ButtonMap) {
+                                FuncButtonMap.MOUSE_LEFT_CLICK -> hidService?.setMousePosition(0,0,1, 0)
+                                FuncButtonMap.MOUSE_RIGHT_CLICK -> hidService?.setMousePosition(0,0,2, 0)
+                                FuncButtonMap.MOUSE_MIDDLE_CLICK -> hidService?.setMousePosition(0,0,4, 0)
+                                else -> {}
+                            }
 
                     }
                     "00fa" -> {
@@ -37,12 +42,13 @@ class KeyInputHandler(val settingsFlow: StateFlow<ApplicationSettings>) : InputH
                         if (settings.alwaysRemapFuncKeys)
                             hidService?.keyDown(if (settings.alwaysRemapFuncKeysCompat) 0x45 else 0x69)
 
-                        when (settings.getActiveConfig().func2ButtonMap) {
-                            FuncButtonMap.MOUSE_LEFT_CLICK -> hidService?.setMousePosition(0,0,1, 0)
-                            FuncButtonMap.MOUSE_RIGHT_CLICK -> hidService?.setMousePosition(0,0,2, 0)
-                            FuncButtonMap.MOUSE_MIDDLE_CLICK -> hidService?.setMousePosition(0,0,4, 0)
-                            else -> {}
-                        }
+                        if (modeCoordinator.activeMode.value == ModeCoordinator.OverlayMode.ON)
+                            when (settings.getActiveConfig().func2ButtonMap) {
+                                FuncButtonMap.MOUSE_LEFT_CLICK -> hidService?.setMousePosition(0,0,1, 0)
+                                FuncButtonMap.MOUSE_RIGHT_CLICK -> hidService?.setMousePosition(0,0,2, 0)
+                                FuncButtonMap.MOUSE_MIDDLE_CLICK -> hidService?.setMousePosition(0,0,4, 0)
+                                else -> {}
+                            }
                     }
                 }
             }
@@ -56,24 +62,26 @@ class KeyInputHandler(val settingsFlow: StateFlow<ApplicationSettings>) : InputH
                         if (settings.alwaysRemapFuncKeys)
                             hidService?.keyUp(if (settings.alwaysRemapFuncKeysCompat) 0x44 else 0x68)
 
-                        when (settings.getActiveConfig().func1ButtonMap) {
-                            FuncButtonMap.MOUSE_LEFT_CLICK -> hidService?.setMousePosition(0,0,0, 1)
-                            FuncButtonMap.MOUSE_RIGHT_CLICK -> hidService?.setMousePosition(0,0,0, 2)
-                            FuncButtonMap.MOUSE_MIDDLE_CLICK -> hidService?.setMousePosition(0,0,0, 4)
-                            else -> {}
-                        }
+                        if (modeCoordinator.activeMode.value == ModeCoordinator.OverlayMode.ON)
+                            when (settings.getActiveConfig().func1ButtonMap) {
+                                FuncButtonMap.MOUSE_LEFT_CLICK -> hidService?.setMousePosition(0,0,0, 1)
+                                FuncButtonMap.MOUSE_RIGHT_CLICK -> hidService?.setMousePosition(0,0,0, 2)
+                                FuncButtonMap.MOUSE_MIDDLE_CLICK -> hidService?.setMousePosition(0,0,0, 4)
+                                else -> {}
+                            }
                     }
                     "00fa" -> {
                         Logger.d("Func2 key up")
                         if (settings.alwaysRemapFuncKeys)
                             hidService?.keyUp(if (settings.alwaysRemapFuncKeysCompat) 0x45 else 0x69)
 
-                        when (settings.getActiveConfig().func2ButtonMap) {
-                            FuncButtonMap.MOUSE_LEFT_CLICK -> hidService?.setMousePosition(0,0,0, 1)
-                            FuncButtonMap.MOUSE_RIGHT_CLICK -> hidService?.setMousePosition(0,0,0, 2)
-                            FuncButtonMap.MOUSE_MIDDLE_CLICK -> hidService?.setMousePosition(0,0,0, 4)
-                            else -> {}
-                        }
+                        if (modeCoordinator.activeMode.value == ModeCoordinator.OverlayMode.ON)
+                            when (settings.getActiveConfig().func2ButtonMap) {
+                                FuncButtonMap.MOUSE_LEFT_CLICK -> hidService?.setMousePosition(0,0,0, 1)
+                                FuncButtonMap.MOUSE_RIGHT_CLICK -> hidService?.setMousePosition(0,0,0, 2)
+                                FuncButtonMap.MOUSE_MIDDLE_CLICK -> hidService?.setMousePosition(0,0,0, 4)
+                                else -> {}
+                            }
                     }
                 }
             }

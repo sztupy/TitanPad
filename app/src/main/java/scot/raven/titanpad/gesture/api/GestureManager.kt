@@ -37,6 +37,10 @@ class GestureManager(
     private val _isReady = MutableStateFlow(true)
     private var currentTapVisual: String = ""
 
+    private var tapState = false
+    private var lastX = 0f
+    private var lastY = 0f
+
     fun setGestureReady(ready: Boolean) {
         _isReady.value = ready
     }
@@ -77,7 +81,30 @@ class GestureManager(
         }
     }
 
-    suspend fun startTap(x: Float, y: Float): Boolean {
+    suspend fun moveTo(x: Float, y:Float) {
+        if (!tapState) {
+            if (startTap(x, y)) {
+                tapState = true
+                lastX = x
+                lastY = y
+            }
+        } else {
+            if (dragTap(lastX, lastY, x, y)) {
+                lastX = x
+                lastY = y
+            }
+        }
+    }
+
+    suspend fun endTap() {
+        if (tapState) {
+            if (endTap(lastX, lastY)) {
+                tapState = false
+            }
+        }
+    }
+
+    private suspend fun startTap(x: Float, y: Float): Boolean {
         try {
             Logger.d("Starting tap gesture at ($x, $y)")
             if (!getGestureReady()) return false
@@ -99,14 +126,14 @@ class GestureManager(
         return abs(this - other) < epsilon
     }
 
-    suspend fun dragTap(fromX: Float, fromY: Float, toX: Float, toY: Float): Boolean {
+    private suspend fun dragTap(fromX: Float, fromY: Float, toX: Float, toY: Float): Boolean {
         if (VersionUtil.belowVersion(Build.VERSION_CODES.O)) {
             return true
         }
         if (shouldShowGestures) {
             // Need to fix visualization lag; remove drag visualization for now
             endVisualizeTap()
-            // visualizeTap(toX, toY)
+            visualizeTap(toX, toY)
         }
         if (!getGestureReady()) return false
         if (fromX.equalToDecimalPlaces(toX, 4) && fromY.equalToDecimalPlaces(toY, 4)) {
@@ -125,7 +152,7 @@ class GestureManager(
         }
     }
 
-    suspend fun endTap(x: Float, y: Float): Boolean {
+    private suspend fun endTap(x: Float, y: Float): Boolean {
         if (VersionUtil.belowVersion(Build.VERSION_CODES.O)) {
             return true
         }

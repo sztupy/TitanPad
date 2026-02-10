@@ -51,12 +51,12 @@ class NotificationManager(private val context: Context) {
     fun showNotification(mode: ModeCoordinator.OverlayMode) {
         try {
             val (title, text, icon) = when (mode) {
-                ModeCoordinator.OverlayMode.CURSOR -> Triple(
+                ModeCoordinator.OverlayMode.ON -> Triple(
                     "TitanPad Active - ${settingsFlow.value.getActiveConfig().configName}",
                     "Tap to open settings",
                     R.drawable.ic_blur_on
                 )
-                ModeCoordinator.OverlayMode.AUTOHIDDEN -> Triple(
+                ModeCoordinator.OverlayMode.HIDDEN -> Triple(
                     "TitanPad Autohidden - ${settingsFlow.value.getActiveConfig().configName}",
                     "Tap to open settings",
                     R.drawable.ic_blur_off

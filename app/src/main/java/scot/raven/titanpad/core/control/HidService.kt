@@ -268,20 +268,19 @@ class HidService : IHidService.Stub() {
     }
 
     override fun tapScreen(x: Int, y: Int) {
+        val xClamp = x.coerceIn(0, 1440)
+        val yClamp = y.coerceIn(0, 1440)
+
         touchScreenCode[0] = 1
-        touchScreenCode[1] = (x%256).toByte()
-        touchScreenCode[2] = (x/256).toByte()
-        touchScreenCode[3] = (y%256).toByte()
-        touchScreenCode[4] = (y/256).toByte()
+        touchScreenCode[1] = (xClamp%256).toByte()
+        touchScreenCode[2] = (xClamp/256).toByte()
+        touchScreenCode[3] = (yClamp%256).toByte()
+        touchScreenCode[4] = (yClamp/256).toByte()
         touchScreen.sendReport(touchScreenCode)
     }
 
     override fun tapRelease() {
         touchScreenCode[0] = 0
-        touchScreenCode[1] = 0
-        touchScreenCode[2] = 0
-        touchScreenCode[3] = 0
-        touchScreenCode[4] = 0
         touchScreen.sendReport(touchScreenCode)
     }
 

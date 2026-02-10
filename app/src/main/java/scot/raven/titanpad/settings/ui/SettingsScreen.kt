@@ -6,7 +6,6 @@ import android.content.pm.ApplicationInfo
 import android.content.pm.PackageManager
 import android.os.Bundle
 import android.provider.Settings
-import android.view.KeyEvent
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -91,6 +90,7 @@ import rikka.shizuku.Shizuku
 import scot.raven.titanpad.accessibility.AppAccessibilityService
 import scot.raven.titanpad.core.logs.Logger
 import scot.raven.titanpad.core.util.KeyCodeUtil
+import scot.raven.titanpad.cursor.domain.InputType
 
 /**
  * Main settings screen.
@@ -648,6 +648,36 @@ fun <T> DropdownPreferenceItem(
 }
 
 @Composable
+fun InputSelectorItem(
+    title: String,
+    selectedInputType: InputType,
+    onOptionSelected: (InputType) -> Unit
+) {
+    DropdownPreferenceItem(
+        title = title,
+        subtitle =
+            when (selectedInputType) {
+                InputType.OFF -> "Disabled"
+                InputType.SOFTWARE_MOUSE -> "Software Mouse"
+                InputType.HARDWARE_MOUSE -> "Emulated Hardware Mouse"
+                InputType.SOFTWARE_SCROLL -> "Software Scroll Assistant"
+                InputType.HARDWARE_SCROLL -> "Emulated Hardware Scroll Assistant"
+                InputType.HARDWARE_JOYSTICK -> "Emulated Hardware Joystick"
+            },
+        selectedOption = selectedInputType,
+        options =
+            listOf(
+                InputType.OFF to "Disabled",
+                InputType.SOFTWARE_MOUSE to "Mouse (software)",
+                InputType.HARDWARE_MOUSE to "Mouse (hardware)",
+                InputType.SOFTWARE_SCROLL to "Scroll (software)",
+                InputType.HARDWARE_SCROLL to "Scroll (hardware)",
+                InputType.HARDWARE_JOYSTICK to "Joystick"
+            ),
+        onOptionSelected = onOptionSelected,
+    )
+}
+@Composable
 private fun PermissionStatusBanner(
     title: String,
     status: Boolean?,
@@ -709,7 +739,7 @@ fun SetKeyPreferenceItem(
 ) {
     val subtitle =
         if (currentKeyCode == UsageConfig.KEY_NONE) {
-            "Currently not mapped"
+            "No activation key set"
         } else {
             "Current: ${KeyCodeUtil.keyCodeToString(currentKeyCode)}"
         }

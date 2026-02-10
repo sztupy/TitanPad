@@ -31,7 +31,7 @@ object Defaults {
         const val TOUCHPAD_SPLIT_POSITION = 50
         const val MOUSE_TAP_TO_CLICK = true
         const val MOUSE_DOUBLE_TAP_HOLD = true
-        const val MOUSE_TWO_FINGER_HOLD = true
+        const val MOUSE_TWO_FINGER_HOLD = false
         const val MOUSE_TAP_MAX_DURATION = 100
         const val SCROLL_VERTICAL_ONLY = false
         const val TWO_FINGER_SENSITIVITY = 8

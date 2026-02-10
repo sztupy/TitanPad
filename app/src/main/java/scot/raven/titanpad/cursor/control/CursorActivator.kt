@@ -104,12 +104,12 @@ class CursorActivator(
                 activationJob = backgroundScope.launch {
                     delay(settings.getActiveConfig().activationDuration)
                     if (isActivationKeyPressed) {
-                        if (modeCoordinator.requestActivation(ModeCoordinator.OverlayMode.CURSOR)) {
+                        if (modeCoordinator.requestActivation(ModeCoordinator.OverlayMode.ON)) {
                             cursorStateManager.toggleCursorVisibility()
                             wasActivated = cursorStateManager.isCursorVisible()
 
                             if (!wasActivated) {
-                                modeCoordinator.deactivate(ModeCoordinator.OverlayMode.CURSOR, false)
+                                modeCoordinator.deactivate(ModeCoordinator.OverlayMode.ON, false)
                                 gestureManager.setGestureReady(true)
 
                                 val intent = Intent(BROADCAST_CURSOR_ACTIVATED)

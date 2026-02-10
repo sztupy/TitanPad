@@ -135,7 +135,8 @@ class CoreManager(
                 scope = backgroundScope,
                 cursorStateManager = cursorStateManager,
                 gestureManager = gestureManager,
-                settingsFlow = settingsFlow
+                settingsFlow = settingsFlow,
+                modeCoordinator = modeCoordinator
             )
 
             TitanPad.getInstance().setTrackpadActionHandler(inputManager)
@@ -174,9 +175,9 @@ class CoreManager(
             }
 
             if ((!cursorStateManager.isCursorVisible() || keymapToggle) && modeCoordinator.requestActivation(
-                    ModeCoordinator.OverlayMode.CURSOR
+                    ModeCoordinator.OverlayMode.ON
                 )) {
-                cursorStateManager.setCursorVisibiliy(modeCoordinator.activeMode.value == ModeCoordinator.OverlayMode.CURSOR)
+                cursorStateManager.setCursorVisibiliy(modeCoordinator.activeMode.value == ModeCoordinator.OverlayMode.ON)
 
                 val intent = Intent(BROADCAST_CURSOR_ACTIVATED)
                 intent.setPackage(service.packageName)
@@ -263,7 +264,7 @@ class CoreManager(
                 cursorStateManager.hideCursor()
             }
 
-            modeCoordinator.deactivate(ModeCoordinator.OverlayMode.CURSOR, fromAutoHide)
+            modeCoordinator.deactivate(ModeCoordinator.OverlayMode.ON, fromAutoHide)
 
             cursorActivator.cleanup()
         } catch (e: Exception) {

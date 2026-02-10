@@ -40,8 +40,6 @@ import scot.raven.titanpad.core.util.KeyCodeUtil
  */
 @Composable
 fun KeyCaptureOverlay(
-    restrictedKeys: Set<Int>,
-    reservedKeys: Map<Int, String>,
     onKeySelected: (Int) -> Unit,
     onDismiss: () -> Unit,
     showToast: (String) -> Unit = {},
@@ -99,19 +97,6 @@ fun KeyCaptureOverlay(
                     .onKeyEvent { keyEvent ->
                         if (keyEvent.nativeKeyEvent.action == KeyEvent.ACTION_DOWN) {
                             when (val keyCode = keyEvent.nativeKeyEvent.keyCode) {
-                                in restrictedKeys -> showToast(
-                                    "Invalid key: ${
-                                        KeyCodeUtil.keyCodeToString(
-                                            keyCode
-                                        )
-                                    }"
-                                )
-
-                                in reservedKeys.keys -> {
-                                    onKeySelected(keyCode)
-                                    showToast("Overriding reserved key")
-                                }
-
                                 KEYCODE_UNKNOWN -> {
                                     onKeySelected(keyEvent.nativeKeyEvent.scanCode + 10000)
                                     showToast("Key set")

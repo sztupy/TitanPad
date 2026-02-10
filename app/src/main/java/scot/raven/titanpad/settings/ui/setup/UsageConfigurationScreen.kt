@@ -4,7 +4,6 @@ import scot.raven.titanpad.core.ui.KeyCaptureOverlay
 import android.app.Activity
 import android.content.ClipData
 import android.content.ClipboardManager
-import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
 import android.net.Uri
@@ -39,6 +38,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.datastore.core.IOException
+import androidx.datastore.preferences.core.booleanPreferencesKey
+import androidx.datastore.preferences.core.intPreferencesKey
 import scot.raven.titanpad.core.logs.Logger
 import scot.raven.titanpad.settings.domain.UsageConfig
 import scot.raven.titanpad.settings.ui.NoteItem
@@ -54,8 +55,9 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import scot.raven.titanpad.core.constants.ApplicationConstants
 import scot.raven.titanpad.cursor.domain.FuncButtonMap
-import scot.raven.titanpad.settings.domain.AppListType
+import scot.raven.titanpad.cursor.domain.InputType
 import scot.raven.titanpad.settings.ui.DropdownPreferenceItem
+import scot.raven.titanpad.settings.ui.InputSelectorItem
 import scot.raven.titanpad.settings.ui.TextFieldDialog
 import scot.raven.titanpad.settings.ui.startActivity
 import java.io.File
@@ -77,20 +79,8 @@ fun UsageConfigurationScreen(
 ) {
     val uiState by settingsState.uiState.collectAsState()
     var showCursorKeyCaptureOverlay by remember { mutableStateOf(false) }
-    var reservedKeys by remember { mutableStateOf(emptyMap<Int, String>()) }
     var showNameChangeDialog by remember { mutableStateOf(false) }
     val context = LocalContext.current
-
-    val currentKeyDescription =
-        if (
-            uiState.cursorActivationKey != UsageConfig.KEY_NONE &&
-            reservedKeys.isNotEmpty() &&
-            !reservedKeys[uiState.cursorActivationKey].isNullOrEmpty()
-        ) {
-            reservedKeys[uiState.cursorActivationKey]
-        } else {
-            null
-        }
 
     Scaffold(
         topBar = {
@@ -150,15 +140,6 @@ fun UsageConfigurationScreen(
             }
 
             PreferenceCategory(title = "Activation") {
-                if (currentKeyDescription != null) {
-                    NoteItem(
-                        title = "\"$currentKeyDescription\" overridden and disabled",
-                        icon = Icons.Default.Warning,
-                        contentDescription = "Warning",
-                        color = Color(0xFFFFF4E6),
-                    )
-                }
-
                 SetKeyPreferenceItem(
                     title = "Set Activation Key",
                     currentKeyCode = uiState.cursorActivationKey,
@@ -170,7 +151,7 @@ fun UsageConfigurationScreen(
 
                 SimplePreferenceItem(
                     title = "Clear Activation Key",
-                    subtitle = "Removes pre-set activation key",
+                    subtitle = "Removes activation key",
                     onClick = {
                         settingsState.updateCursorActivationKey(UsageConfig.KEY_NONE)
                     },
@@ -178,8 +159,6 @@ fun UsageConfigurationScreen(
 
                 if (showCursorKeyCaptureOverlay) {
                     KeyCaptureOverlay(
-                        restrictedKeys = setOf(),
-                        reservedKeys = reservedKeys,
                         onKeySelected = { settingsState.updateCursorActivationKey(it) },
                         onDismiss = { showCursorKeyCaptureOverlay = false },
                         showToast = { message -> settingsState.showToast(message) },
@@ -200,6 +179,153 @@ fun UsageConfigurationScreen(
                 )
             }
 
+            PreferenceCategory(title = "Inputs") {
+                NoteItem(
+                    "All hardware emulation features require a Shizuku version that has working MTK phone support. The latest official Shizuku version v13.6.0 will NOT work.",
+                    Icons.Default.Warning,
+                    "Warning"
+                )
+                InputSelectorItem(
+                    title = "Trackpad behavior",
+                    selectedInputType = uiState.touchPadMainInputType,
+                    onOptionSelected = { value ->
+                        settingsState.updatePreference(value) { settings, v ->
+                            settings.copy(touchPadMainInputType = v)
+                        }
+                    }
+                )
+                SwitchPreferenceItem(
+                    title = "Separate left side",
+                    subtitle = if (uiState.touchpadSplitInput) "Use different configuration for the left side" else "Use same configuration for entire trackpad",
+                    checked = uiState.touchpadSplitInput,
+                    onCheckedChange = { value ->
+                        settingsState.updatePreference(value) { settings, v ->
+                            settings.copy(touchpadSplitInput = v)
+                        }
+                    },
+                )
+                if (uiState.touchpadSplitInput) {
+                    InputSelectorItem(
+                        title = "Trackpad left side behavior",
+                        selectedInputType = uiState.touchPadLeftInputType,
+                        onOptionSelected = { value ->
+                            settingsState.updatePreference(value) { settings, v ->
+                                settings.copy(touchPadLeftInputType = v)
+                            }
+                        },
+                    )
+
+                    SliderPreferenceItem(
+                        title = "TouchPad split location",
+                        value = uiState.touchpadSplitPosition.toFloat(),
+                        valueRange = 0f .. 100f,
+                        valueText = "${uiState.touchpadSplitPosition}%",
+                        onValueChange = { value ->
+                            settingsState.updatePreference(value) { settings, v ->
+                                settings.copy(touchpadSplitPosition = v.toInt())
+                            }
+                        },
+                        steps = 9,
+                    )
+                }
+                InputSelectorItem(
+                    title = "Back screen behavior",
+                    selectedInputType = uiState.backScreenInputType,
+                    onOptionSelected = { value ->
+                        settingsState.updatePreference(value) { settings, v ->
+                            settings.copy(backScreenInputType = v)
+                        }
+                    }
+                )
+            }
+
+            val combinedInputTypes = setOf(
+                uiState.touchPadMainInputType,
+                uiState.backScreenInputType
+            ) + if (uiState.touchpadSplitInput) uiState.touchPadLeftInputType else uiState.touchPadMainInputType
+
+            if (combinedInputTypes.contains(InputType.HARDWARE_MOUSE) || combinedInputTypes.contains(InputType.SOFTWARE_MOUSE)) {
+                PreferenceCategory(title = "Mouse settings") {
+                    SwitchPreferenceItem(
+                        title = "Tap To Click",
+                        subtitle = "Convert single taps to click events",
+                        checked = uiState.mouseTapToClick,
+                        onCheckedChange = { value ->
+                            settingsState.updatePreference(value) { settings, v ->
+                                settings.copy(mouseTapToClick = v)
+                            }
+                        },
+                    )
+
+                    if (uiState.mouseTapToClick) {
+                        SwitchPreferenceItem(
+                            title = "Double Tap To Drag",
+                            subtitle = "Convert double taps to drag and hold events",
+                            checked = uiState.mouseDoubleTapToHold,
+                            onCheckedChange = { value ->
+                                settingsState.updatePreference(value) { settings, v ->
+                                    settings.copy(mouseDoubleTapToHold = v)
+                                }
+                            },
+                        )
+
+                        SliderPreferenceItem(
+                            title = "Tap Click Sensitivity",
+                            value = uiState.mouseTapMaxDuration.toFloat(),
+                            valueRange = 25f..300f,
+                            valueText = "${uiState.mouseTapMaxDuration}ms",
+                            onValueChange = { value ->
+                                settingsState.updatePreference(value) { settings, v ->
+                                    settings.copy(mouseTapMaxDuration = v.toInt())
+                                }
+                            },
+                            steps = 10,
+                        )
+                    }
+
+                    SwitchPreferenceItem(
+                        title = "Two Finger Touch Clicks",
+                        subtitle = "Convert multi touch taps to click / drag / hold events",
+                        checked = uiState.mouseTwoFingerToHold,
+                        onCheckedChange = { value ->
+                            settingsState.updatePreference(value) { settings, v ->
+                                settings.copy(mouseTwoFingerToHold = v)
+                            }
+                        },
+                    )
+
+                    if (uiState.mouseTwoFingerToHold) {
+                        SliderPreferenceItem(
+                            title = "Multi-Touch Sensitivity",
+                            value = uiState.twoFingerSensitivity.toFloat(),
+                            valueRange = 5f..13f,
+                            valueText = "${uiState.twoFingerSensitivity}",
+                            onValueChange = { value ->
+                                settingsState.updatePreference(value) { settings, v ->
+                                    settings.copy(twoFingerSensitivity = v.toInt())
+                                }
+                            },
+                            steps = 7,
+                        )
+                    }
+                }
+            }
+
+            if (combinedInputTypes.contains(InputType.HARDWARE_SCROLL) || combinedInputTypes.contains(InputType.SOFTWARE_SCROLL)) {
+                PreferenceCategory(title = "Scroll settings") {
+                    SwitchPreferenceItem(
+                        title = "Vertical Scroll Lock",
+                        subtitle = if (uiState.scrollOnlyVertically) "Emitting vertical scroll events only" else "Emitting vertical and horizontal scroll events",
+                        checked = uiState.scrollOnlyVertically,
+                        onCheckedChange = { value ->
+                            settingsState.updatePreference(value) { settings, v ->
+                                settings.copy(scrollOnlyVertically = v)
+                            }
+                        },
+                    )
+                }
+            }
+
             PreferenceCategory(title = "Software Emulation") {
                 SimplePreferenceItem(
                     title = "Software Emulation Setup",
@@ -209,8 +335,6 @@ fun UsageConfigurationScreen(
             }
 
             PreferenceCategory(title = "Hardware Emulation") {
-                NoteItem("All hardware emulation feature require a Shizuku version that has working MTK phone support. The latest official Shizuku version v13.6.0 will NOT work.", Icons.Default.Warning, "Warning")
-
                 SimplePreferenceItem(
                     title = "Cursor Size",
                     subtitle = "Found under 'Display' -> 'Colour and Motion' -> 'Large mouse cursor'",
@@ -290,8 +414,8 @@ fun UsageConfigurationScreen(
 
             PreferenceCategory(title = "Behavior") {
                 SimplePreferenceItem(
-                    title = "Auto-Hide Cursor Options",
-                    subtitle = "Automatically hide and restore the cursor",
+                    title = "Set Up Auto-Disable Options",
+                    subtitle = "Automatically disable and re-enable the config on various events",
                     onClick = onNavigateToAutoHideSettings
                 )
 
@@ -302,17 +426,11 @@ fun UsageConfigurationScreen(
                         contentDescription = "Warning",
                         color = Color(0xFFFFF4E6),
                     )
-                    NoteItem(
-                        title = "Standard cursor control scheme toggle will be disabled",
-                        icon = Icons.Default.Warning,
-                        contentDescription = "Warning",
-                        color = Color(0xFFFFF4E6),
-                    )
                 }
 
                 SwitchPreferenceItem(
                     title = "Show Notification Icon",
-                    subtitle = "Show icon when cursor is activated",
+                    subtitle = "Show icon when config is activated",
                     checked = uiState.showNotification,
                     onCheckedChange = { value ->
                         settingsState.updatePreference(value) { settings, v ->

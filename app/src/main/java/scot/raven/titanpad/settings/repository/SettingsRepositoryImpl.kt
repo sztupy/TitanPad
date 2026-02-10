@@ -298,7 +298,7 @@ class SettingsRepositoryImpl(
             cursorActivationKey = preferences[CURSOR_ACTIVATION_KEY]
                 ?: UsageConfig.DEFAULT.cursorActivationKey,
             touchPadMainInputType = touchPadMainInputType,
-            touchPadLeftInputType = touchPadMainInputType,
+            touchPadLeftInputType = touchPadLeftInputType,
             backScreenInputType = backScreenInputType,
             touchpadSplitInput = preferences[TOUCHPAD_SPLIT_INPUT]?: UsageConfig.DEFAULT.touchpadSplitInput,
             touchpadSplitPosition = preferences[TOUCHPAD_SPLIT_POSITION]?: UsageConfig.DEFAULT.touchpadSplitPosition,

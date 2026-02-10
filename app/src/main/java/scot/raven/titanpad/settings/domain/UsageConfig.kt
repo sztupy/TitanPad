@@ -58,7 +58,6 @@ data class UsageConfig(
     companion object {
         val DEFAULT = UsageConfig()
         const val KEY_NONE = ApplicationConstants.OVERLAY_DISABLED
-        val RESTRICTED_KEYS = emptySet<Int>()
 
         fun randomId() : String {
             val allowedChars = ('a'..'z')
@@ -66,26 +65,14 @@ data class UsageConfig(
         }
     }
 
-    private fun isValidRemappableKey(keyCode: Int): Boolean {
-        if (keyCode == KEY_NONE) return true
-        return keyCode !in RESTRICTED_KEYS
-    }
-
     fun validate(): ApplicationSettings.ValidationResult {
-        val errors =
-            buildList {
-                if (!isValidRemappableKey(cursorActivationKey)) {
-                    add("Invalid cursor activation key: $cursorActivationKey")
-                }
-            }
-
-        return ApplicationSettings.ValidationResult(errors.isEmpty(), errors)
+        return ApplicationSettings.ValidationResult(true, ArrayList())
     }
 
     fun sanitized(): UsageConfig {
         return copy(
             cursorSize = cursorSize.coerceIn(CursorConstants.MIN_SIZE, CursorConstants.MAX_SIZE),
-            cursorActivationKey = if (isValidRemappableKey(cursorActivationKey)) cursorActivationKey else KEY_NONE,
+            cursorActivationKey = cursorActivationKey,
         )
     }
 }

@@ -18,6 +18,7 @@ import rikka.shizuku.Shizuku.UserServiceArgs
 import scot.raven.titanpad.BuildConfig
 import scot.raven.titanpad.core.control.HidService
 import scot.raven.titanpad.core.control.IHidService
+import scot.raven.titanpad.core.control.ModeCoordinator
 import scot.raven.titanpad.core.logs.Logger
 import scot.raven.titanpad.gesture.api.GestureManager
 import scot.raven.titanpad.settings.domain.ApplicationSettings
@@ -32,6 +33,7 @@ class InputManager(
     private val isEnabled: () -> Boolean,
     private val cursorStateManager: CursorStateManager,
     private val gestureManager: GestureManager,
+    private val modeCoordinator: ModeCoordinator,
     private val scope: CoroutineScope,
     private val settingsFlow: StateFlow<ApplicationSettings>,
     private val trackpadEventDevice: String = DEFAULT_TRACKPAD_EVENT_DEVICE,
@@ -47,19 +49,24 @@ class InputManager(
     private var getBottomButtonEventJob: Job? = null
     private var hidService: IHidService? = null
     private var keyboardInputHandler = KeyInputHandler(
-        settingsFlow = settingsFlow
+        settingsFlow = settingsFlow,
+        modeCoordinator = modeCoordinator
     )
     private var trackpadInputHandler = TouchInputHandler(
         cursorStateManager = cursorStateManager,
         gestureManager = gestureManager,
         settingsFlow = settingsFlow,
-        scope = scope
+        scope = scope,
+        modeCoordinator = modeCoordinator,
+        backScreenMode = false
     )
     private var backScreenInputHandler = TouchInputHandler(
         cursorStateManager = cursorStateManager,
         gestureManager = gestureManager,
         settingsFlow = settingsFlow,
-        scope = scope
+        scope = scope,
+        modeCoordinator = modeCoordinator,
+        backScreenMode = true
     )
 
     fun start() {

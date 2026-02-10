@@ -19,7 +19,6 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import scot.raven.titanpad.TitanPad
 import scot.raven.titanpad.accessibility.AppAccessibilityService.Companion.BROADCAST_CURSOR_ACTIVATED
-import scot.raven.titanpad.accessibility.AppAccessibilityService.Companion.BROADCAST_CURSOR_ACTIVATED_EXTRA_KEY
 import scot.raven.titanpad.core.logs.Logger
 import scot.raven.titanpad.core.ui.AppTheme
 import scot.raven.titanpad.settings.ui.setup.SetupOptionsActivity
@@ -40,7 +39,7 @@ class SettingsActivity : ComponentActivity() {
         override fun onReceive(context: Context, intent: Intent) {
             when (intent.action) {
                 BROADCAST_CURSOR_ACTIVATED -> {
-                    _activeConfiguration.value = intent.getStringExtra(BROADCAST_CURSOR_ACTIVATED_EXTRA_KEY).orEmpty()
+                    _activeConfiguration.value = intent.getStringExtra(CONFIG_ID_EXTRA).orEmpty()
 
                     Logger.d("Received active cursor setting change to ${_activeConfiguration.value}")
                 }

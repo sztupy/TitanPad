@@ -29,8 +29,8 @@ import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
 import scot.raven.titanpad.accessibility.AppAccessibilityService.Companion.BROADCAST_CURSOR_ACTIVATED
-import scot.raven.titanpad.accessibility.AppAccessibilityService.Companion.BROADCAST_CURSOR_ACTIVATED_EXTRA_KEY
 import scot.raven.titanpad.settings.domain.ApplicationSettings
+import scot.raven.titanpad.settings.ui.SettingsActivity.Companion.CONFIG_ID_EXTRA
 
 /**
  * Manages standard cursor modes.
@@ -160,7 +160,7 @@ class CoreManager(
         }
     }
 
-    fun activateCursorMode(keymapToggle: Boolean = false): Boolean {
+    fun activateCursorMode(keymapToggle: Boolean = false, configId: String): Boolean {
         try {
             Logger.d("Activating cursor mode")
             if ((!cursorStateManager.isCursorVisible() || keymapToggle) && modeCoordinator.requestActivation(
@@ -170,7 +170,7 @@ class CoreManager(
 
                 val intent = Intent(BROADCAST_CURSOR_ACTIVATED)
                 intent.setPackage(service.packageName)
-                intent.putExtra(BROADCAST_CURSOR_ACTIVATED_EXTRA_KEY, "default")
+                intent.putExtra(CONFIG_ID_EXTRA, configId)
                 service.sendBroadcast(intent)
 
                 return cursorStateManager.isCursorVisible()
@@ -192,7 +192,7 @@ class CoreManager(
 
                 val intent = Intent(BROADCAST_CURSOR_ACTIVATED)
                 intent.setPackage(service.packageName)
-                intent.putExtra(BROADCAST_CURSOR_ACTIVATED_EXTRA_KEY, "")
+                intent.putExtra(CONFIG_ID_EXTRA, "")
                 service.sendBroadcast(intent)
 
                 return !cursorStateManager.isCursorVisible()

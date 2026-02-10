@@ -15,8 +15,8 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 import scot.raven.titanpad.accessibility.AppAccessibilityService.Companion.BROADCAST_CURSOR_ACTIVATED
-import scot.raven.titanpad.accessibility.AppAccessibilityService.Companion.BROADCAST_CURSOR_ACTIVATED_EXTRA_KEY
 import scot.raven.titanpad.settings.domain.ApplicationSettings
+import scot.raven.titanpad.settings.ui.SettingsActivity.Companion.CONFIG_ID_EXTRA
 import kotlin.reflect.KProperty
 
 /**
@@ -112,12 +112,12 @@ class CursorActionHandler(
 
                                 val intent = Intent(BROADCAST_CURSOR_ACTIVATED)
                                 intent.setPackage(service.packageName)
-                                intent.putExtra(BROADCAST_CURSOR_ACTIVATED_EXTRA_KEY, "")
+                                intent.putExtra(CONFIG_ID_EXTRA, "")
                                 service.sendBroadcast(intent)
                             } else {
                                 val intent = Intent(BROADCAST_CURSOR_ACTIVATED)
                                 intent.setPackage(service.packageName)
-                                intent.putExtra(BROADCAST_CURSOR_ACTIVATED_EXTRA_KEY, "default")
+                                intent.putExtra(CONFIG_ID_EXTRA, settings.getActiveConfig().configId)
                                 service.sendBroadcast(intent)
                             }
                         }

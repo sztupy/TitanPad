@@ -14,6 +14,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import scot.raven.titanpad.settings.domain.ApplicationSettings
@@ -29,6 +30,7 @@ class SettingsState(
     val uiState: StateFlow<SettingsUiState> = _uiState.asStateFlow()
 
     private val _validationErrors = MutableStateFlow<List<String>>(emptyList())
+    val validationErrors : StateFlow<List<String>> = _validationErrors.asStateFlow()
 
     private var toastFunction: ((String) -> Unit)? = null
 
@@ -84,7 +86,9 @@ class SettingsState(
                             clickableListType = settings.clickableListType,
                             checkClickable = settings.checkClickable,
                             disableTouchscreen = settings.disableTouchscreen,
-                            alwaysRemapFuncKeys = applicationSettings.alwaysRemapFuncKeys
+
+                            alwaysRemapFuncKeys = applicationSettings.alwaysRemapFuncKeys,
+                            configList = applicationSettings.additionalConfigs.associate { it.configId to it.configName }
                         )
                     }
                 }
@@ -119,18 +123,17 @@ class SettingsState(
 
     private fun updateGlobalSettings(settingsUpdater: (ApplicationSettings) -> ApplicationSettings) {
         viewModelScope.launch {
-            settingsRepository.getSettings().collect { currentSettings ->
-                val updatedSettings = settingsUpdater(currentSettings)
+            val currentSettings = settingsRepository.getSettings().first()
+            val updatedSettings = settingsUpdater(currentSettings)
 
-                val result = settingsRepository.validateAndUpdateSettings(updatedSettings)
+            val result = settingsRepository.validateAndUpdateSettings(updatedSettings)
 
-                if (result.isValid) {
-                    _validationErrors.value = emptyList()
-                    _uiState.update { it.copy(showInvalidSettingError = false) }
-                } else {
-                    _validationErrors.value = result.errors
-                    _uiState.update { it.copy(showInvalidSettingError = true) }
-                }
+            if (result.isValid) {
+                _validationErrors.value = emptyList()
+                _uiState.update { it.copy(showInvalidSettingError = false) }
+            } else {
+                _validationErrors.value = result.errors
+                _uiState.update { it.copy(showInvalidSettingError = true) }
             }
         }
     }
@@ -200,6 +203,29 @@ class SettingsState(
         updateSettings { it.copy(disableTouchscreen = disable) }
     }
 
+    fun addConfig(configId: String) {
+        updateGlobalSettings { settings ->
+            Logger.d("NEW CONFIG")
+            val newConfig = UsageConfig(
+                configId = configId,
+                configName = "Config #${settings.additionalConfigs.size + 2}"
+            )
+
+            Logger.d(newConfig.toString())
+            settings.copy(
+                additionalConfigs = settings.additionalConfigs + newConfig
+            )
+        }
+    }
+
+    fun deleteConfig(configId: String) {
+        updateGlobalSettings { settings ->
+            settings.copy(
+                additionalConfigs = settings.additionalConfigs.filter { it.configId != configId }
+            )
+        }
+    }
+
     class Factory(
         private val settingsRepository: SettingsRepository,
         private val configId: String
@@ -219,6 +245,7 @@ data class SettingsUiState(
     val showInvalidSettingError: Boolean = false,
     val showError: Boolean = false,
     val errorMessage: String = "",
+    val configList: Map<String,String> = HashMap(),
 
     val alwaysRemapFuncKeys: Boolean = Defaults.Settings.ALWAYS_REMAP_FUNC_KEYS,
 

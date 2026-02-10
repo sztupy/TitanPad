@@ -42,6 +42,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import scot.raven.titanpad.settings.ui.SettingsActivity.Companion.CONFIG_ID_EXTRA
 
 /**
  * Receives key events, displays overlays, and performs gestures.
@@ -94,10 +95,14 @@ class AppAccessibilityService : AccessibilityService(), LifecycleOwner,
 
     private val receiver = object : BroadcastReceiver() {
         override fun onReceive(context: Context, intent: Intent) {
+            var configId = intent.getStringExtra(CONFIG_ID_EXTRA)
+            if (configId==null)
+                configId = "default"
+
             when (intent.action) {
                 ACTION_ACTIVATE_CURSOR -> {
                     backgroundScope.launch {
-                        coreManager.activateCursorMode(true)
+                        coreManager.activateCursorMode(true, configId)
                     }
                 }
                 ACTION_DEACTIVATE_CURSOR -> {
@@ -119,17 +124,18 @@ class AppAccessibilityService : AccessibilityService(), LifecycleOwner,
         const val ACTION_ACTIVATE_CURSOR = "scot.raven.titanpad.ACTION_ACTIVATE_CURSOR"
         const val ACTION_DEACTIVATE_CURSOR = "scot.raven.titanpad.ACTION_DEACTIVATE_CURSOR"
         const val BROADCAST_CURSOR_ACTIVATED = "scot.raven.titanpad.BROADCAST_CURSOR_ACTIVATED"
-        const val BROADCAST_CURSOR_ACTIVATED_EXTRA_KEY = "activeConfiguration"
 
-        fun activateStandardCursor(context: Context) {
+        fun activateStandardCursor(context: Context, configId: String) {
             val intent = Intent(ACTION_ACTIVATE_CURSOR)
             intent.setPackage(context.packageName)
+            intent.putExtra(CONFIG_ID_EXTRA, configId)
             context.sendBroadcast(intent, null)
         }
 
-        fun deactivateStandardCursor(context: Context) {
+        fun deactivateStandardCursor(context: Context, configId: String) {
             val intent = Intent(ACTION_DEACTIVATE_CURSOR)
             intent.setPackage(context.packageName)
+            intent.putExtra(CONFIG_ID_EXTRA, configId)
             context.sendBroadcast(intent, null)
         }
     }
@@ -266,7 +272,7 @@ class AppAccessibilityService : AccessibilityService(), LifecycleOwner,
 
         when (lastOverlayType) {
             ModeCoordinator.OverlayMode.CURSOR -> {
-                coreManager.activateCursorMode()
+                coreManager.activateCursorMode(configId = settings.getActiveConfig().configId)
             }
 
             else -> {}
@@ -365,23 +371,6 @@ class AppAccessibilityService : AccessibilityService(), LifecycleOwner,
             }
         }
         return showByDefault
-    }
-
-    fun getActiveCursorConfig() : String {
-        val currentOverlay = modeCoordinator.activeMode.value
-        if (currentOverlay == ModeCoordinator.OverlayMode.OFF) {
-            return ""
-        } else {
-            return "default"
-        }
-    }
-
-    fun setActiveCursorConfig(newConfig: String) {
-        if (newConfig == "default") {
-            coreManager.activateCursorMode()
-        } else {
-            modeCoordinator.deactivate(ModeCoordinator.OverlayMode.OFF, false)
-        }
     }
 
     private fun checkLockScreenVisibility() {

@@ -35,6 +35,7 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material3.AlertDialog
@@ -87,6 +88,7 @@ import kotlinx.coroutines.withContext
 import androidx.core.net.toUri
 import kotlinx.coroutines.flow.StateFlow
 import rikka.shizuku.Shizuku
+import scot.raven.titanpad.TitanPad
 import scot.raven.titanpad.accessibility.AppAccessibilityService
 import scot.raven.titanpad.core.logs.Logger
 
@@ -102,6 +104,7 @@ fun SettingsScreen(
     onNavigateToSetupOptions: () -> Unit,
 ) {
     val uiState by settingsState.uiState.collectAsState()
+    val validationErrors by settingsState.validationErrors.collectAsState()
     val context = LocalContext.current
     var shizukuVersionValid by remember { mutableStateOf(false) }
 
@@ -154,8 +157,17 @@ fun SettingsScreen(
                 NoteItem("Pre-Release Version", Icons.Default.Info, "Information")
             }
 
-            PreferenceCategory(title = "Setup") {
+            if(uiState.showError) {
+                NoteItem(uiState.errorMessage, Icons.Default.Warning, "Error")
+            }
 
+            if(uiState.showInvalidSettingError) {
+                validationErrors.forEach {
+                    NoteItem(it, Icons.Default.Warning, "Error")
+                }
+            }
+
+            PreferenceCategory(title = "Setup") {
                 PermissionStatusBanner(
                     title = "Accessibility Service",
                     status = uiState.isAccessibilityServiceEnabled,
@@ -205,24 +217,63 @@ fun SettingsScreen(
 
             val configurationStatus = activeConfiguration.collectAsState()
             PreferenceCategory(title = "Configurations") {
-                SwitchPreferenceItem(
-                    title = uiState.configName,
-                    subtitle = uiState.configId,
+                SimplePreferenceItem(
+                    title = "New Configuration",
+                    subtitle = "Add new configuration to the list",
                     onClick = {
-                        onNavigateToCursorSettings(uiState.configId)
+                        Logger.d("CLICKED")
+                        settingsState.addConfig(UsageConfig.randomId())
+                    }
+                )
+
+                SwitchPreferenceItem(
+                    title = "Default Settings",
+                    subtitle = "",
+                    onClick = {
+                        onNavigateToCursorSettings("default")
                     },
                     onCheckedChange = { state ->
                         if (AppAccessibilityService.getInstance() == null) {
                             settingsState.showToast("Background system not running, enable Accessibility Services")
                         } else {
                             if (state)
-                                AppAccessibilityService.activateStandardCursor(context)
+                                AppAccessibilityService.activateStandardCursor(context, "default")
                             else
-                                AppAccessibilityService.deactivateStandardCursor(context)
+                                AppAccessibilityService.deactivateStandardCursor(context, "default")
                         }
                     },
                     checked = configurationStatus.value == "default"
                 )
+
+                uiState.configList.forEach { item ->
+                    SwitchPreferenceItem(
+                        title = item.value,
+                        subtitle = "ID ${item.key}",
+                        onClick = {
+                            onNavigateToCursorSettings(item.key)
+                        },
+                        onDeleteClick = {
+                            settingsState.deleteConfig(item.key)
+                        },
+                        onCheckedChange = { state ->
+                            if (AppAccessibilityService.getInstance() == null) {
+                                settingsState.showToast("Background system not running, enable Accessibility Services")
+                            } else {
+                                if (state)
+                                    AppAccessibilityService.activateStandardCursor(
+                                        context,
+                                        item.key
+                                    )
+                                else
+                                    AppAccessibilityService.deactivateStandardCursor(
+                                        context,
+                                        item.key
+                                    )
+                            }
+                        },
+                        checked = configurationStatus.value == item.key
+                    )
+                }
             }
 
             PreferenceCategory(title = "Keys") {
@@ -362,6 +413,7 @@ fun SwitchPreferenceItem(
     checked: Boolean,
     onCheckedChange: (Boolean) -> Unit,
     onClick: (() -> Unit)? = null,
+    onDeleteClick: (() -> Unit)? = null,
     enabled: Boolean = true
 ) {
     Surface(
@@ -380,6 +432,15 @@ fun SwitchPreferenceItem(
                         text = subtitle,
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                }
+            }
+            if (onDeleteClick != null && !checked) {
+                IconButton(onClick = onDeleteClick) {
+                    Icon(
+                        imageVector = Icons.Default.Delete,
+                        contentDescription = "Delete",
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
             }

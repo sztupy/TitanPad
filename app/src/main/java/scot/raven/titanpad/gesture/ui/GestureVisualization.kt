@@ -12,6 +12,7 @@ import scot.raven.titanpad.core.domain.ScreenDimensions
 import scot.raven.titanpad.settings.domain.UsageConfig
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.update
+import scot.raven.titanpad.settings.domain.ApplicationSettings
 
 data class GesturePath(
     val id: String,
@@ -32,9 +33,9 @@ fun GestureVisualization(
     gesturePaths: List<GesturePath>,
     dimensions: ScreenDimensions,
     modifier: Modifier = Modifier,
-    settings: UsageConfig? = null
+    settings: ApplicationSettings? = null
 ) {
-    var visualSize = settings?.visualSize?.toFloat() ?: GestureConstants.DEFAULT_SIZE.toFloat()
+    var visualSize = settings?.getActiveConfig()?.visualSize?.toFloat() ?: GestureConstants.DEFAULT_SIZE.toFloat()
     visualSize *= GestureConstants.SIZE_MULTIPLIER * dimensions.getScreenScaleFactor()
     val circleColor = Color.White.copy(alpha = 0.8f)
 

@@ -30,13 +30,14 @@ import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
 import scot.raven.titanpad.accessibility.AppAccessibilityService.Companion.BROADCAST_CURSOR_ACTIVATED
 import scot.raven.titanpad.accessibility.AppAccessibilityService.Companion.BROADCAST_CURSOR_ACTIVATED_EXTRA_KEY
+import scot.raven.titanpad.settings.domain.ApplicationSettings
 
 /**
  * Manages standard cursor modes.
  */
 class CoreManager(
     private val service: AccessibilityService,
-    private val settingsFlow: StateFlow<UsageConfig>,
+    private val settingsFlow: StateFlow<ApplicationSettings>,
     private val modeCoordinator: ModeCoordinator,
     private val orientationHandler: OrientationHandler,
     private val backgroundScope: CoroutineScope,
@@ -69,7 +70,7 @@ class CoreManager(
 
         if (msg.event.action == KeyEvent.ACTION_DOWN) {
             keysPressed.value += 1
-            if (keysPressed.value == 1 && settings.disableTouchscreen) {
+            if (keysPressed.value == 1 && settings.getActiveConfig().disableTouchscreen) {
                 layoutApplied.first()
             }
         }
@@ -78,7 +79,7 @@ class CoreManager(
 
         if (msg.event.action == KeyEvent.ACTION_UP) {
             keysPressed.value -= 1
-            if (keysPressed.value == 0 && settings.disableTouchscreen) {
+            if (keysPressed.value == 0 && settings.getActiveConfig().disableTouchscreen) {
                 layoutApplied.first()
             }
         }
@@ -181,6 +182,28 @@ class CoreManager(
         }
     }
 
+    fun deactivateCursorMode(keymapToggle: Boolean = false) : Boolean {
+        try {
+            Logger.d("Deactivating cursor mode")
+            if ((cursorStateManager.isCursorVisible() || keymapToggle) && modeCoordinator.requestActivation(
+                    ModeCoordinator.OverlayMode.OFF
+                )) {
+                cursorStateManager.toggleCursorVisibility()
+
+                val intent = Intent(BROADCAST_CURSOR_ACTIVATED)
+                intent.setPackage(service.packageName)
+                intent.putExtra(BROADCAST_CURSOR_ACTIVATED_EXTRA_KEY, "")
+                service.sendBroadcast(intent)
+
+                return !cursorStateManager.isCursorVisible()
+            }
+            return false
+        } catch (e: Exception) {
+            Logger.e("Error activating cursor mode", e)
+            return false
+        }
+    }
+
     fun handleKeyEvent(event: KeyEvent?): Boolean {
         Logger.d("Key event: $event")
         val settings = settingsFlow.value
@@ -188,11 +211,11 @@ class CoreManager(
         try {
             val eventHandled = cursorActionHandler.handleKeyEvent(event, channel)
 
-            if (settings.allowPassthrough) {
+            if (settings.getActiveConfig().allowPassthrough) {
                 Logger.d("Allowing key event to pass through")
             }
 
-            return !settings.allowPassthrough && eventHandled
+            return !settings.getActiveConfig().allowPassthrough && eventHandled
         } catch (e: Exception) {
             Logger.e("Error processing key event", e)
             return false
@@ -203,7 +226,7 @@ class CoreManager(
         val settings = settingsFlow.value
 
         try {
-            if (settings.showNotification) {
+            if (settings.getActiveConfig().showNotification) {
                 when (mode) {
                     ModeCoordinator.OverlayMode.OFF -> {
                         notificationManager.hideNotification()

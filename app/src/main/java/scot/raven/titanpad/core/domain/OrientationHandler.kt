@@ -20,13 +20,14 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
+import scot.raven.titanpad.settings.domain.ApplicationSettings
 
 /**
  * Handles device orientation changes.
  */
 class OrientationHandler(
     private val context: Context,
-    private val settingsFlow: StateFlow<UsageConfig>
+    private val settingsFlow: StateFlow<ApplicationSettings>
 ) {
     private val displayManager = context.getSystemService(Context.DISPLAY_SERVICE) as DisplayManager
     private val windowManager = context.getSystemService(Context.WINDOW_SERVICE) as WindowManager
@@ -65,7 +66,7 @@ class OrientationHandler(
     private fun updateScreenInfo() {
         try {
             val settings = settingsFlow.value
-            val dimensions = if (settings.usePhysicalSize) getPhysicalDimensions() else getUsableDimensions()
+            val dimensions = if (settings.getActiveConfig().usePhysicalSize) getPhysicalDimensions() else getUsableDimensions()
             _screenDimensions.value = dimensions
 
             val orientation = getOrientation()

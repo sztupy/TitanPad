@@ -34,12 +34,8 @@ import scot.raven.titanpad.settings.ui.startActivity
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SetupOptionsScreen(
-    settingsState: SettingsState,
     onNavigateBack: () -> Unit
 ) {
-    val uiState by settingsState.uiState.collectAsState()
-    var showPassthroughDialog by remember { mutableStateOf(false) }
-    var showTouchscreenDialog by remember { mutableStateOf(false) }
     val context = LocalContext.current
 
     Scaffold(

@@ -100,6 +100,11 @@ class AppAccessibilityService : AccessibilityService(), LifecycleOwner,
                         coreManager.activateCursorMode(true)
                     }
                 }
+                ACTION_DEACTIVATE_CURSOR -> {
+                    backgroundScope.launch {
+                        coreManager.deactivateCursorMode(true)
+                    }
+                }
             }
         }
     }
@@ -112,11 +117,18 @@ class AppAccessibilityService : AccessibilityService(), LifecycleOwner,
         }
 
         const val ACTION_ACTIVATE_CURSOR = "scot.raven.titanpad.ACTION_ACTIVATE_CURSOR"
+        const val ACTION_DEACTIVATE_CURSOR = "scot.raven.titanpad.ACTION_DEACTIVATE_CURSOR"
         const val BROADCAST_CURSOR_ACTIVATED = "scot.raven.titanpad.BROADCAST_CURSOR_ACTIVATED"
         const val BROADCAST_CURSOR_ACTIVATED_EXTRA_KEY = "activeConfiguration"
 
         fun activateStandardCursor(context: Context) {
             val intent = Intent(ACTION_ACTIVATE_CURSOR)
+            intent.setPackage(context.packageName)
+            context.sendBroadcast(intent, null)
+        }
+
+        fun deactivateStandardCursor(context: Context) {
+            val intent = Intent(ACTION_DEACTIVATE_CURSOR)
             intent.setPackage(context.packageName)
             context.sendBroadcast(intent, null)
         }
@@ -201,6 +213,7 @@ class AppAccessibilityService : AccessibilityService(), LifecycleOwner,
 
             val filter = IntentFilter().apply {
                 addAction(ACTION_ACTIVATE_CURSOR)
+                addAction(ACTION_DEACTIVATE_CURSOR)
             }
             registerReceiver(receiver, filter, RECEIVER_EXPORTED)
 
@@ -240,7 +253,7 @@ class AppAccessibilityService : AccessibilityService(), LifecycleOwner,
 
         Logger.d("Restoring cursor overlay")
         val settings = TitanPad.getInstance().getSettingsFlow().value
-        val cursorMapped = settings.cursorActivationKey != ApplicationConstants.OVERLAY_DISABLED
+        val cursorMapped = settings.getActiveConfig().cursorActivationKey != ApplicationConstants.OVERLAY_DISABLED
         (lastOverlayType == ModeCoordinator.OverlayMode.CURSOR) && !cursorMapped
 
         // If no previous overlay type, default to any mapped cursor
@@ -266,11 +279,11 @@ class AppAccessibilityService : AccessibilityService(), LifecycleOwner,
         event.let {
             when (event.eventType) {
                 AccessibilityEvent.TYPE_WINDOWS_CHANGED, AccessibilityEvent.TYPE_WINDOW_STATE_CHANGED -> {
-                    if (settings.hideOnKeyboardOpen) {
+                    if (settings.getActiveConfig().hideOnKeyboardOpen) {
                         checkKeyboardVisibility()
                     }
 
-                    if (settings.hideOnLockScreen) {
+                    if (settings.getActiveConfig().hideOnLockScreen) {
                         checkLockScreenVisibility()
                     }
 
@@ -330,24 +343,24 @@ class AppAccessibilityService : AccessibilityService(), LifecycleOwner,
             ?.firstOrNull { it.type == AccessibilityWindowInfo.TYPE_APPLICATION && it.root != null }
         val appName = appWindow?.root?.packageName?.toString()
 
-        if (settings.autoHideApps.isEmpty()) return Pair(appName, settings.applicationListType == AppListType.ALLOW_LIST)
+        if (settings.getActiveConfig().autoHideApps.isEmpty()) return Pair(appName, settings.getActiveConfig().applicationListType == AppListType.ALLOW_LIST)
 
-        if (appWindow != null && appName in settings.autoHideApps) {
-            return Pair(appName, settings.applicationListType == AppListType.DENY_LIST)
+        if (appWindow != null && appName in settings.getActiveConfig().autoHideApps) {
+            return Pair(appName, settings.getActiveConfig().applicationListType == AppListType.DENY_LIST)
         }
 
-        return Pair(appName, settings.applicationListType == AppListType.ALLOW_LIST)
+        return Pair(appName, settings.getActiveConfig().applicationListType == AppListType.ALLOW_LIST)
     }
 
     fun showClickableInCurrentApp(): Boolean {
         val settings = TitanPad.getInstance().getSettingsFlow().value
-        val showByDefault = settings.clickableListType == AppListType.DENY_LIST
+        val showByDefault = settings.getActiveConfig().clickableListType == AppListType.DENY_LIST
 
-        if (settings.clickableApps.isEmpty()) return showByDefault
+        if (settings.getActiveConfig().clickableApps.isEmpty()) return showByDefault
 
         for (window in windows) {
             val pkg = window.root?.packageName?.toString()
-            if (pkg != null && pkg in settings.clickableApps) {
+            if (pkg != null && pkg in settings.getActiveConfig().clickableApps) {
                 return !showByDefault
             }
         }

@@ -38,7 +38,7 @@ data class UsageConfig(
     val applicationListType: AppListType = Defaults.Settings.APPLICATION_LIST_TYPE,
     val clickableListType: AppListType = Defaults.Settings.CLICKABLE_LIST_TYPE,
     val checkClickable: Boolean = Defaults.Settings.CHECK_CLICKABLE,
-    val disableTouchscreen: Boolean = Defaults.Settings.DISABLE_TOUCHSCREEN
+    val disableTouchscreen: Boolean = Defaults.Settings.DISABLE_TOUCHSCREEN,
 ) {
     companion object {
         val DEFAULT = UsageConfig()
@@ -56,7 +56,7 @@ data class UsageConfig(
         return keyCode !in RESTRICTED_KEYS
     }
 
-    fun validate(): ValidationResult {
+    fun validate(): ApplicationSettings.ValidationResult {
         val errors =
             buildList {
                 if (!isValidRemappableKey(cursorActivationKey)) {
@@ -64,7 +64,7 @@ data class UsageConfig(
                 }
             }
 
-        return ValidationResult(errors.isEmpty(), errors)
+        return ApplicationSettings.ValidationResult(errors.isEmpty(), errors)
     }
 
     fun sanitized(): UsageConfig {
@@ -73,9 +73,4 @@ data class UsageConfig(
             cursorActivationKey = if (isValidRemappableKey(cursorActivationKey)) cursorActivationKey else KEY_NONE,
         )
     }
-
-    data class ValidationResult(
-        val isValid: Boolean,
-        val errors: List<String> = emptyList(),
-    )
 }

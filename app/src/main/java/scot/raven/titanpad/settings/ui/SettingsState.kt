@@ -13,14 +13,17 @@ import scot.raven.titanpad.settings.repository.SettingsRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import scot.raven.titanpad.settings.domain.ApplicationSettings
 
 /**
  * Bridges settings with UI.
  */
 class SettingsState(
     private val settingsRepository: SettingsRepository,
+    configId: String
 ) : ViewModel() {
     private val _uiState = MutableStateFlow(SettingsUiState())
     val uiState: StateFlow<SettingsUiState> = _uiState.asStateFlow()
@@ -38,13 +41,17 @@ class SettingsState(
     }
 
     init {
-        loadSettings()
+        loadSettings(configId)
     }
 
-    private fun loadSettings() {
+    private fun loadSettings(configId: String) {
         viewModelScope.launch {
             try {
-                settingsRepository.getSettings().collect { settings ->
+                settingsRepository.getSettings().collect { applicationSettings ->
+                    var settings = applicationSettings.additionalConfigs.find{it.configId == configId}
+                    if (settings == null)
+                        settings = applicationSettings.defaultConfig
+
                     _uiState.update { currentState ->
                         currentState.copy(
                             configId = settings.configId,
@@ -76,7 +83,8 @@ class SettingsState(
                             applicationListType = settings.applicationListType,
                             clickableListType = settings.clickableListType,
                             checkClickable = settings.checkClickable,
-                            disableTouchscreen = settings.disableTouchscreen
+                            disableTouchscreen = settings.disableTouchscreen,
+                            alwaysRemapFuncKeys = applicationSettings.alwaysRemapFuncKeys
                         )
                     }
                 }
@@ -94,9 +102,10 @@ class SettingsState(
 
     private fun updateSettings(settingsUpdater: (UsageConfig) -> UsageConfig) {
         viewModelScope.launch {
-            val currentSettings = createSettingsFromUiState()
+            val currentSettings = createConfigSettingsFromUiState()
             val updatedSettings = settingsUpdater(currentSettings)
-            val result = settingsRepository.validateAndUpdateSettings(updatedSettings)
+
+            val result = settingsRepository.validateAndUpdateSettings(currentSettings.configId, updatedSettings)
 
             if (result.isValid) {
                 _validationErrors.value = emptyList()
@@ -108,7 +117,25 @@ class SettingsState(
         }
     }
 
-    private fun createSettingsFromUiState(): UsageConfig {
+    private fun updateGlobalSettings(settingsUpdater: (ApplicationSettings) -> ApplicationSettings) {
+        viewModelScope.launch {
+            settingsRepository.getSettings().collect { currentSettings ->
+                val updatedSettings = settingsUpdater(currentSettings)
+
+                val result = settingsRepository.validateAndUpdateSettings(updatedSettings)
+
+                if (result.isValid) {
+                    _validationErrors.value = emptyList()
+                    _uiState.update { it.copy(showInvalidSettingError = false) }
+                } else {
+                    _validationErrors.value = result.errors
+                    _uiState.update { it.copy(showInvalidSettingError = true) }
+                }
+            }
+        }
+    }
+
+    private fun createConfigSettingsFromUiState(): UsageConfig {
         return UsageConfig(
             configId = _uiState.value.configId,
             configName = _uiState.value.configName,
@@ -140,12 +167,16 @@ class SettingsState(
             applicationListType = _uiState.value.applicationListType,
             clickableListType = _uiState.value.clickableListType,
             checkClickable = _uiState.value.checkClickable,
-            disableTouchscreen = _uiState.value.disableTouchscreen
+            disableTouchscreen = _uiState.value.disableTouchscreen,
         )
     }
 
     fun <T> updatePreference(value: T, updater: (UsageConfig, T) -> UsageConfig) {
         updateSettings { settings -> updater(settings, value) }
+    }
+
+    fun <T> updateGlobalPreference(value: T, updater: (ApplicationSettings, T) -> ApplicationSettings) {
+        updateGlobalSettings { settings -> updater(settings, value) }
     }
 
     fun updateAccessibilityServiceStatus(isEnabled: Boolean) {
@@ -171,11 +202,12 @@ class SettingsState(
 
     class Factory(
         private val settingsRepository: SettingsRepository,
+        private val configId: String
     ) : ViewModelProvider.Factory {
         @Suppress("UNCHECKED_CAST")
         override fun <T : ViewModel> create(modelClass: Class<T>): T {
             if (modelClass.isAssignableFrom(SettingsState::class.java)) {
-                return SettingsState(settingsRepository) as T
+                return SettingsState(settingsRepository, configId) as T
             }
             throw IllegalArgumentException("Unknown ViewModel class")
         }
@@ -187,6 +219,8 @@ data class SettingsUiState(
     val showInvalidSettingError: Boolean = false,
     val showError: Boolean = false,
     val errorMessage: String = "",
+
+    val alwaysRemapFuncKeys: Boolean = Defaults.Settings.ALWAYS_REMAP_FUNC_KEYS,
 
     val configId: String = Defaults.Settings.DEFAULT_CONFIG_ID,
     val configName: String = Defaults.Settings.DEFAULT_CONFIG_NAME,

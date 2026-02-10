@@ -11,6 +11,7 @@ import scot.raven.titanpad.R
 import scot.raven.titanpad.TitanPad
 import scot.raven.titanpad.core.control.ModeCoordinator
 import scot.raven.titanpad.core.logs.Logger
+import scot.raven.titanpad.settings.domain.ApplicationSettings
 import scot.raven.titanpad.settings.domain.UsageConfig
 import scot.raven.titanpad.settings.repository.SettingsRepository
 import scot.raven.titanpad.settings.ui.SettingsActivity
@@ -27,7 +28,7 @@ class NotificationManager(private val context: Context) {
 
     private val notificationManager = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
 
-    private val settingsFlow : StateFlow<UsageConfig>
+    private val settingsFlow : StateFlow<ApplicationSettings>
 
     init {
         createNotificationChannel()
@@ -53,12 +54,12 @@ class NotificationManager(private val context: Context) {
         try {
             val (title, text, icon) = when (mode) {
                 ModeCoordinator.OverlayMode.CURSOR -> Triple(
-                    "TitanPad Active - ${settingsFlow.value.configName}",
+                    "TitanPad Active - ${settingsFlow.value.getActiveConfig().configName}",
                     "Tap to open settings",
                     R.drawable.ic_blur_on
                 )
                 ModeCoordinator.OverlayMode.AUTOHIDDEN -> Triple(
-                    "TitanPad Autohidden - ${settingsFlow.value.configName}",
+                    "TitanPad Autohidden - ${settingsFlow.value.getActiveConfig().configName}",
                     "Tap to open settings",
                     R.drawable.ic_blur_off
                 )

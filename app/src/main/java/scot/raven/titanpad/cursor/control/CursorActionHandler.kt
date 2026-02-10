@@ -16,6 +16,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 import scot.raven.titanpad.accessibility.AppAccessibilityService.Companion.BROADCAST_CURSOR_ACTIVATED
 import scot.raven.titanpad.accessibility.AppAccessibilityService.Companion.BROADCAST_CURSOR_ACTIVATED_EXTRA_KEY
+import scot.raven.titanpad.settings.domain.ApplicationSettings
 import kotlin.reflect.KProperty
 
 /**
@@ -25,7 +26,7 @@ class CursorActionHandler(
     private val service: AccessibilityService,
     private val cursorStateManager: CursorStateManager,
     private val gestureManager: GestureManager,
-    private val settingsFlow: StateFlow<UsageConfig>,
+    private val settingsFlow: StateFlow<ApplicationSettings>,
     private val backgroundScope: CoroutineScope,
     private val modeCoordinator: ModeCoordinator,
 ) {
@@ -72,7 +73,7 @@ class CursorActionHandler(
             if (event == null) return false
 
             val activateKeys = buildSet {
-                add(settings.cursorActivationKey)
+                add(settings.getActiveConfig().cursorActivationKey)
             }
 
             if (event.keyCode in activateKeys) {
@@ -99,7 +100,7 @@ class CursorActionHandler(
                 wasActivated = false
 
                 activationJob = backgroundScope.launch {
-                    delay(settings.activationDuration)
+                    delay(settings.getActiveConfig().activationDuration)
                     if (isActivationKeyPressed) {
                         if (modeCoordinator.requestActivation(ModeCoordinator.OverlayMode.CURSOR)) {
                             cursorStateManager.toggleCursorVisibility()

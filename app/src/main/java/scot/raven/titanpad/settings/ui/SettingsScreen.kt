@@ -98,13 +98,12 @@ import scot.raven.titanpad.core.logs.Logger
 fun SettingsScreen(
     settingsState: SettingsState,
     activeConfiguration: StateFlow<String>,
-    onNavigateToCursorSettings: () -> Unit,
+    onNavigateToCursorSettings: (String) -> Unit,
     onNavigateToSetupOptions: () -> Unit,
 ) {
     val uiState by settingsState.uiState.collectAsState()
     val context = LocalContext.current
     var shizukuVersionValid by remember { mutableStateOf(false) }
-    var accessibilityService : AppAccessibilityService? = null
 
     LaunchedEffect(shizukuVersionValid) {
         shizukuVersionValid = withContext(Dispatchers.IO) {
@@ -209,22 +208,33 @@ fun SettingsScreen(
                 SwitchPreferenceItem(
                     title = uiState.configName,
                     subtitle = uiState.configId,
-                    onClick = onNavigateToCursorSettings,
+                    onClick = {
+                        onNavigateToCursorSettings(uiState.configId)
+                    },
                     onCheckedChange = { state ->
-                        if (accessibilityService == null) {
-                            accessibilityService = AppAccessibilityService.getInstance()
-                        }
-
-                        if (accessibilityService == null) {
+                        if (AppAccessibilityService.getInstance() == null) {
                             settingsState.showToast("Background system not running, enable Accessibility Services")
                         } else {
                             if (state)
-                                accessibilityService?.setActiveCursorConfig("default")
+                                AppAccessibilityService.activateStandardCursor(context)
                             else
-                                accessibilityService?.setActiveCursorConfig("")
+                                AppAccessibilityService.deactivateStandardCursor(context)
                         }
                     },
                     checked = configurationStatus.value == "default"
+                )
+            }
+
+            PreferenceCategory(title = "Keys") {
+                SwitchPreferenceItem(
+                    title = "Always remap Func keys",
+                    subtitle = "Always map Func1 (top left button) to F13 and Func2 (bottom left button) to F14 so Key Mapper can access them and use them for triggers",
+                    checked = uiState.alwaysRemapFuncKeys,
+                    onCheckedChange = { value ->
+                        settingsState.updateGlobalPreference(value) { settings, v ->
+                            settings.copy(alwaysRemapFuncKeys = v)
+                        }
+                    },
                 )
             }
 

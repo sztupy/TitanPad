@@ -17,6 +17,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import scot.raven.titanpad.settings.domain.ApplicationSettings
 import kotlin.math.abs
 import kotlin.math.pow
 
@@ -25,7 +26,7 @@ import kotlin.math.pow
  */
 class GestureManager(
     private val defaultStrategy: GestureStrategy,
-    private val settingsFlow: StateFlow<UsageConfig>,
+    private val settingsFlow: StateFlow<ApplicationSettings>,
     private val serviceScope: CoroutineScope
 ) {
     private val _gesturePaths = MutableStateFlow<List<GesturePath>>(emptyList())

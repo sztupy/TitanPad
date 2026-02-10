@@ -48,8 +48,9 @@ class SettingsActivity : ComponentActivity() {
         }
     }
 
-    private fun startCustomActivity(context: Context, activityClass: Class<*>) {
+    private fun startCustomActivity(context: Context, activityClass: Class<*>, configId: String) {
         val intent = Intent(context, activityClass)
+        intent.putExtra(CONFIG_ID_EXTRA, configId)
         val options = ActivityOptionsCompat.makeBasic()
         context.startActivity(intent, options.toBundle())
     }
@@ -57,7 +58,7 @@ class SettingsActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        val factory = SettingsState.Factory(TitanPad.getInstance().settingsRepository)
+        val factory = SettingsState.Factory(TitanPad.getInstance().settingsRepository,"default")
 
         settingsState = ViewModelProvider(this, factory)[SettingsState::class.java]
         settingsState.setToastFunction { message ->
@@ -72,8 +73,8 @@ class SettingsActivity : ComponentActivity() {
                 SettingsScreen(
                     settingsState = settingsState,
                     activeConfiguration = activeConfiguration,
-                    onNavigateToCursorSettings = { startCustomActivity(this, UsageConfigurationActivity::class.java) },
-                    onNavigateToSetupOptions = { startCustomActivity(this, SetupOptionsActivity::class.java) },
+                    onNavigateToCursorSettings = { configId -> startCustomActivity(this, UsageConfigurationActivity::class.java, configId) },
+                    onNavigateToSetupOptions = { startCustomActivity(this, SetupOptionsActivity::class.java, "default") },
                 )
             }
         }
@@ -115,5 +116,9 @@ class SettingsActivity : ComponentActivity() {
     override fun onDestroy() {
         contentResolver.unregisterContentObserver(accessibilitySettingsObserver)
         super.onDestroy()
+    }
+
+    companion object {
+        const val CONFIG_ID_EXTRA = "config_id"
     }
 }

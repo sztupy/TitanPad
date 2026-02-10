@@ -11,6 +11,7 @@ import androidx.lifecycle.ViewModelProvider
 import scot.raven.titanpad.TitanPad
 import scot.raven.titanpad.accessibility.AppAccessibilityService
 import scot.raven.titanpad.core.ui.AppTheme
+import scot.raven.titanpad.settings.ui.SettingsActivity.Companion.CONFIG_ID_EXTRA
 import scot.raven.titanpad.settings.ui.SettingsState
 import scot.raven.titanpad.settings.ui.autohide.AutoHideSettingsActivity
 import scot.raven.titanpad.settings.ui.cursor.ClickableAppsActivity
@@ -24,8 +25,9 @@ import scot.raven.titanpad.settings.ui.gesture.CommonGestureSettingsActivity
 class UsageConfigurationActivity : ComponentActivity() {
     private lateinit var settingsState: SettingsState
 
-    private fun startCustomActivity(context: Context, activityClass: Class<*>) {
+    private fun startCustomActivity(context: Context, activityClass: Class<*>, configId: String) {
         val intent = Intent(context, activityClass)
+        intent.putExtra(CONFIG_ID_EXTRA, configId)
         val options = ActivityOptionsCompat.makeBasic()
         context.startActivity(intent, options.toBundle())
     }
@@ -33,9 +35,14 @@ class UsageConfigurationActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
+        var configId = intent.getStringExtra(CONFIG_ID_EXTRA)
+        if (configId == null)
+            configId = "default"
+
         val factory =
             SettingsState.Factory(
                 TitanPad.getInstance().settingsRepository,
+                configId
             )
         settingsState = ViewModelProvider(this, factory)[SettingsState::class.java]
         settingsState.setToastFunction { message ->
@@ -46,12 +53,12 @@ class UsageConfigurationActivity : ComponentActivity() {
             AppTheme {
                 CursorSettingsScreen(
                     settingsState = settingsState,
-                    onNavigateToCursorIcon = { startCustomActivity(this, CursorIconActivity::class.java) },
-                    onNavigateToLocationClickableIcon = { startCustomActivity(this, LocationClickableIconActivity::class.java) },
-                    onNavigateToClickableAppsScreen = { startCustomActivity(this, ClickableAppsActivity::class.java) },
-                    onNavigateToDebugOptions = { startCustomActivity(this, DebugOptionsActivity::class.java) },
-                    onNavigateToAutoHideSettings = { startCustomActivity(this, AutoHideSettingsActivity::class.java) },
-                    onNavigateToCommonGestureSettings = { startCustomActivity(this, CommonGestureSettingsActivity::class.java) },
+                    onNavigateToCursorIcon = { startCustomActivity(this, CursorIconActivity::class.java, configId) },
+                    onNavigateToLocationClickableIcon = { startCustomActivity(this, LocationClickableIconActivity::class.java, configId) },
+                    onNavigateToClickableAppsScreen = { startCustomActivity(this, ClickableAppsActivity::class.java, configId) },
+                    onNavigateToDebugOptions = { startCustomActivity(this, DebugOptionsActivity::class.java, configId) },
+                    onNavigateToAutoHideSettings = { startCustomActivity(this, AutoHideSettingsActivity::class.java, configId) },
+                    onNavigateToCommonGestureSettings = { startCustomActivity(this, CommonGestureSettingsActivity::class.java, configId) },
                     onNavigateBack = {
                         finish()
                     },

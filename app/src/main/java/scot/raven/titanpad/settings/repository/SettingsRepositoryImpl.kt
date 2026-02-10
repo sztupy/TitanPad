@@ -1,6 +1,7 @@
 package scot.raven.titanpad.settings.repository
 
 import androidx.datastore.core.DataStore
+import androidx.datastore.preferences.core.MutablePreferences
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.edit
@@ -8,11 +9,13 @@ import androidx.datastore.preferences.core.emptyPreferences
 import androidx.datastore.preferences.core.intPreferencesKey
 import androidx.datastore.preferences.core.longPreferencesKey
 import androidx.datastore.preferences.core.stringPreferencesKey
+import androidx.datastore.preferences.core.stringSetPreferencesKey
 import scot.raven.titanpad.core.logs.Logger
 import scot.raven.titanpad.settings.domain.UsageConfig
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.map
+import scot.raven.titanpad.settings.domain.ApplicationSettings
 
 /**
  * Persists user settings.
@@ -21,37 +24,8 @@ class SettingsRepositoryImpl(
     private val dataStore: DataStore<Preferences>,
 ) : SettingsRepository {
     companion object {
-        private val CONFIG_ID = stringPreferencesKey("config_id")
-        private val CONFIG_NAME = stringPreferencesKey("config_name")
-        private val ACTIVATION_DURATION = longPreferencesKey("activation_duration")
-        private val SHOW_GESTURE_VISUAL = booleanPreferencesKey("show_gesture_visual")
-        private val VISUAL_SIZE = intPreferencesKey("visual_size")
-        private val CURSOR_SIZE = intPreferencesKey("cursor_size")
-        private val CURSOR_ACCELERATION_START = longPreferencesKey("cursor_acceleration_start")
-        private val CURSOR_ACCELERATION_DURATION = longPreferencesKey("cursor_acceleration_duration")
-        private val CURSOR_ACTIVATION_KEY = intPreferencesKey("cursor_activation_key")
-        private val ALLOW_PASSTHROUGH = booleanPreferencesKey("allow_passthrough")
-        private val HIDE_ON_KEYBOARD_OPEN = booleanPreferencesKey("hide_on_keyboard_open")
-        private val HIDE_ON_LAUNCHER_OPEN = booleanPreferencesKey("hide_on_launcher_open")
-        private val HIDE_ON_LOCK_SCREEN = booleanPreferencesKey("hide_on_lock_screen")
-        private val ROUNDED_CURSOR_CORNERS = booleanPreferencesKey("rounded_cursor_corners")
-        private val USE_PHYSICAL_SIZE = booleanPreferencesKey("use_physical_size")
-        private val STANDARD_CURSOR_HEX = stringPreferencesKey("standard_cursor_hex")
-        private val STANDARD_CURSOR_MATCH_BORDER = booleanPreferencesKey("standard_cursor_match_border")
-        private val CURSOR_IMAGE_PATH = stringPreferencesKey("cursor_image_path")
-        private val CLICKABLE_IMAGE_PATH = stringPreferencesKey("clickable_image_path")
-        private val SCROLL_TOGGLE_IMAGE_PATH = stringPreferencesKey("scroll_toggle_image_path")
-        private val USE_CUSTOM_CURSOR_ICON = booleanPreferencesKey("use_custom_cursor_icon")
-        private val CURSOR_IMAGE_ALIGNMENT = stringPreferencesKey("cursor_image_alignment")
-        private val CLICKABLE_IMAGE_ALIGNMENT = stringPreferencesKey("clickable_image_alignment")
-        private val SCROLL_TOGGLE_IMAGE_ALIGNMENT = stringPreferencesKey("scroll_toggle_image_alignment")
-        private val AUTO_HIDE_APPS = stringPreferencesKey("auto_hide_apps")
-        private val CLICKABLE_APPS = stringPreferencesKey("clickable_apps")
-        private val SHOW_NOTIFICATION = booleanPreferencesKey("show_notification")
-        private val APPLICATION_LIST_TYPE = stringPreferencesKey("application_list_type")
-        private val CLICKABLE_LIST_TYPE = stringPreferencesKey("clickable_list_type")
-        private val CHECK_CLICKABLE = booleanPreferencesKey("check_clickable")
-        private val DISABLE_TOUCHSCREEN = booleanPreferencesKey("disable_touchscreen")
+        private val ALWAYS_REMAP_FUNC_KEYS = booleanPreferencesKey("always_remap_func_keys")
+        private val ADDITIONAL_CONFIG_KEYS = stringSetPreferencesKey("additional_config_keys")
     }
 
     private inline fun <reified T : Enum<T>> getEnumPreference(
@@ -73,175 +47,74 @@ class SettingsRepositoryImpl(
         }
     }
 
-    override fun getSettings(): Flow<UsageConfig> {
+    override fun getSettings(): Flow<ApplicationSettings> {
         return dataStore.data
             .catch { exception ->
                 Logger.e("Error reading settings: ${exception.message}", exception)
                 emit(emptyPreferences())
             }
             .map { preferences ->
-                val cursorImageAlignment = getEnumPreference(
-                    preferences,
-                    CURSOR_IMAGE_ALIGNMENT,
-                    UsageConfig.DEFAULT.cursorImageAlignment,
-                    "cursor image alignment"
-                )
+                val additionalConfigKeys = preferences[ADDITIONAL_CONFIG_KEYS] ?: HashSet()
 
-                val clickableImageAlignment = getEnumPreference(
-                    preferences,
-                    CLICKABLE_IMAGE_ALIGNMENT,
-                    UsageConfig.DEFAULT.clickableImageAlignment,
-                    "clickable image alignment"
-                )
-
-                val scrollToggleImageAlignment = getEnumPreference(
-                    preferences,
-                    SCROLL_TOGGLE_IMAGE_ALIGNMENT,
-                    UsageConfig.DEFAULT.scrollToggleImageAlignment,
-                    "scroll toggle image alignment"
-                )
-
-                val autoHideAppsString = preferences[AUTO_HIDE_APPS] ?: ""
-                val autoHideApps = if (autoHideAppsString.isBlank()) {
-                    emptySet()
-                } else {
-                    autoHideAppsString.split(",").toSet()
-                }
-
-                val applicationListType = getEnumPreference(
-                    preferences,
-                    APPLICATION_LIST_TYPE,
-                    UsageConfig.DEFAULT.applicationListType,
-                    "application list type"
-                )
-
-                val clickableAppsString = preferences[CLICKABLE_APPS] ?: ""
-                val clickableApps = if (clickableAppsString.isBlank()) {
-                    emptySet()
-                } else {
-                    clickableAppsString.split(",").toSet()
-                }
-
-                val clickableListType = getEnumPreference(
-                    preferences,
-                    CLICKABLE_LIST_TYPE,
-                    UsageConfig.DEFAULT.clickableListType,
-                    "clickable list type"
-                )
-
-                val settings = UsageConfig(
-                    configId = preferences[CONFIG_ID] ?: UsageConfig.DEFAULT.configId,
-                    configName = preferences[CONFIG_NAME] ?: UsageConfig.DEFAULT.configName,
-                    activationDuration = preferences[ACTIVATION_DURATION]
-                        ?: UsageConfig.DEFAULT.activationDuration,
-                    showGestureVisualization = preferences[SHOW_GESTURE_VISUAL]
-                        ?: UsageConfig.DEFAULT.showGestureVisualization,
-                    visualSize = preferences[VISUAL_SIZE] ?: UsageConfig.DEFAULT.visualSize,
-                    cursorSize = preferences[CURSOR_SIZE] ?: UsageConfig.DEFAULT.cursorSize,
-                    cursorAccelerationStart = preferences[CURSOR_ACCELERATION_START]
-                        ?: UsageConfig.DEFAULT.cursorAccelerationStart,
-                    cursorAccelerationDuration = preferences[CURSOR_ACCELERATION_DURATION]
-                        ?: UsageConfig.DEFAULT.cursorAccelerationDuration,
-                    cursorActivationKey = preferences[CURSOR_ACTIVATION_KEY]
-                        ?: UsageConfig.DEFAULT.cursorActivationKey,
-                    allowPassthrough = preferences[ALLOW_PASSTHROUGH]
-                        ?: UsageConfig.DEFAULT.allowPassthrough,
-                    hideOnKeyboardOpen = preferences[HIDE_ON_KEYBOARD_OPEN]
-                        ?: UsageConfig.DEFAULT.hideOnKeyboardOpen,
-                    hideOnLauncherOpen = preferences[HIDE_ON_LAUNCHER_OPEN]
-                        ?: UsageConfig.DEFAULT.hideOnLauncherOpen,
-                    hideOnLockScreen = preferences[HIDE_ON_LOCK_SCREEN]
-                        ?: UsageConfig.DEFAULT.hideOnLockScreen,
-                    roundedCursorCorners = preferences[ROUNDED_CURSOR_CORNERS]
-                        ?: UsageConfig.DEFAULT.roundedCursorCorners,
-                    usePhysicalSize = preferences[USE_PHYSICAL_SIZE]
-                        ?: UsageConfig.DEFAULT.usePhysicalSize,
-                    standardCursorHex = preferences[STANDARD_CURSOR_HEX]
-                        ?: UsageConfig.DEFAULT.standardCursorHex,
-                    standardCursorMatchBorder = preferences[STANDARD_CURSOR_MATCH_BORDER]
-                        ?: UsageConfig.DEFAULT.standardCursorMatchBorder,
-                    cursorImagePath = preferences[CURSOR_IMAGE_PATH]
-                        ?: UsageConfig.DEFAULT.cursorImagePath,
-                    clickableImagePath = preferences[CLICKABLE_IMAGE_PATH]
-                        ?: UsageConfig.DEFAULT.clickableImagePath,
-                    scrollToggleImagePath = preferences[SCROLL_TOGGLE_IMAGE_PATH]
-                        ?: UsageConfig.DEFAULT.scrollToggleImagePath,
-                    useCustomCursorIcon = preferences[USE_CUSTOM_CURSOR_ICON]
-                        ?: UsageConfig.DEFAULT.useCustomCursorIcon,
-                    cursorImageAlignment = cursorImageAlignment,
-                    clickableImageAlignment = clickableImageAlignment,
-                    scrollToggleImageAlignment = scrollToggleImageAlignment,
-                    autoHideApps = autoHideApps,
-                    clickableApps = clickableApps,
-                    showNotification = preferences[SHOW_NOTIFICATION]
-                        ?: UsageConfig.DEFAULT.showNotification,
-                    applicationListType = applicationListType,
-                    clickableListType = clickableListType,
-                    checkClickable = preferences[CHECK_CLICKABLE]
-                        ?: UsageConfig.DEFAULT.checkClickable,
-                    disableTouchscreen = preferences[DISABLE_TOUCHSCREEN] ?: UsageConfig.DEFAULT.disableTouchscreen
+                val settings = ApplicationSettings(
+                    defaultConfig = usageConfigPreferenceLoader("default", preferences),
+                    alwaysRemapFuncKeys = preferences[ALWAYS_REMAP_FUNC_KEYS] ?: ApplicationSettings.DEFAULT.alwaysRemapFuncKeys,
+                    additionalConfigs = additionalConfigKeys.map { usageConfigPreferenceLoader(it, preferences) }
                 )
 
                 settings
             }
     }
 
-    override suspend fun updateSettings(settings: UsageConfig) {
+    override suspend fun updateSettings(settings: ApplicationSettings) {
         try {
             dataStore.edit { preferences ->
-                preferences[CONFIG_ID] = settings.configId
-                preferences[CONFIG_NAME] = settings.configName
-                preferences[ACTIVATION_DURATION] = settings.activationDuration
-                preferences[SHOW_GESTURE_VISUAL] = settings.showGestureVisualization
-                preferences[VISUAL_SIZE] = settings.visualSize
-                preferences[CURSOR_SIZE] = settings.cursorSize
-                preferences[CURSOR_ACCELERATION_START] = settings.cursorAccelerationStart
-                preferences[CURSOR_ACCELERATION_DURATION] = settings.cursorAccelerationDuration
-                preferences[CURSOR_ACTIVATION_KEY] = settings.cursorActivationKey
-                preferences[ALLOW_PASSTHROUGH] = settings.allowPassthrough
-                preferences[HIDE_ON_KEYBOARD_OPEN] = settings.hideOnKeyboardOpen
-                preferences[HIDE_ON_LAUNCHER_OPEN] = settings.hideOnLauncherOpen
-                preferences[HIDE_ON_LOCK_SCREEN] = settings.hideOnLockScreen
-                preferences[ROUNDED_CURSOR_CORNERS] = settings.roundedCursorCorners
-                preferences[USE_PHYSICAL_SIZE] = settings.usePhysicalSize
-                preferences[STANDARD_CURSOR_HEX] = settings.standardCursorHex
-                preferences[STANDARD_CURSOR_MATCH_BORDER] = settings.standardCursorMatchBorder
-                preferences[USE_CUSTOM_CURSOR_ICON] = settings.useCustomCursorIcon
-                preferences[CURSOR_IMAGE_ALIGNMENT] = settings.cursorImageAlignment.name
-                preferences[CLICKABLE_IMAGE_ALIGNMENT] = settings.clickableImageAlignment.name
-                preferences[SCROLL_TOGGLE_IMAGE_ALIGNMENT] = settings.scrollToggleImageAlignment.name
-                preferences[AUTO_HIDE_APPS] = settings.autoHideApps.joinToString(",")
-                preferences[CLICKABLE_APPS] = settings.clickableApps.joinToString(",")
-                preferences[SHOW_NOTIFICATION] = settings.showNotification
-                preferences[APPLICATION_LIST_TYPE] = settings.applicationListType.name
-                preferences[CLICKABLE_LIST_TYPE] = settings.clickableListType.name
-                preferences[CHECK_CLICKABLE] = settings.checkClickable
-                preferences[DISABLE_TOUCHSCREEN] = settings.disableTouchscreen
+                preferences[ALWAYS_REMAP_FUNC_KEYS] = settings.alwaysRemapFuncKeys
+                preferences[ADDITIONAL_CONFIG_KEYS] = settings.additionalConfigs.map{it.configId}.toSet()
 
-                if (settings.cursorImagePath != null) {
-                    preferences[CURSOR_IMAGE_PATH] = settings.cursorImagePath
-                } else {
-                    preferences.remove(CURSOR_IMAGE_PATH)
-                }
-
-                if (settings.clickableImagePath != null) {
-                    preferences[CLICKABLE_IMAGE_PATH] = settings.clickableImagePath
-                } else {
-                    preferences.remove(CLICKABLE_IMAGE_PATH)
-                }
-
-                if (settings.scrollToggleImagePath != null) {
-                    preferences[SCROLL_TOGGLE_IMAGE_PATH] = settings.scrollToggleImagePath
-                } else {
-                    preferences.remove(SCROLL_TOGGLE_IMAGE_PATH)
-                }
+                usageConfigPreferenceWriter("default", preferences,settings.defaultConfig)
+                settings.additionalConfigs.forEach { usageConfigPreferenceWriter(it.configId, preferences, it) }
             }
         } catch (e: Exception) {
             Logger.e("Error updating settings", e)
         }
     }
 
-    override suspend fun validateAndUpdateSettings(settings: UsageConfig): UsageConfig.ValidationResult {
+    override suspend fun updateSettings(configId: String, usageConfig: UsageConfig) {
+        try {
+            dataStore.edit { preferences ->
+                usageConfigPreferenceWriter(configId, preferences, usageConfig)
+            }
+        } catch (e: Exception) {
+            Logger.e("Error updating settings", e)
+        }
+    }
+
+    override suspend fun validateAndUpdateSettings(configId: String, usageConfig: UsageConfig): ApplicationSettings.ValidationResult {
+        try {
+            val validationResult = usageConfig.validate()
+
+            val settingsToSave =
+                if (validationResult.isValid) {
+                    usageConfig
+                } else {
+                    Logger.w("Saving sanitized settings due to validation errors: ${validationResult.errors}")
+                    usageConfig.sanitized()
+                }
+
+            updateSettings(configId,settingsToSave)
+
+            return validationResult
+        } catch (e: Exception) {
+            Logger.e("Error updating settings", e)
+            return ApplicationSettings.ValidationResult(
+                isValid = false,
+                errors = listOf("Error updating settings: ${e.message}"),
+            )
+        }
+    }
+
+    override suspend fun validateAndUpdateSettings(settings: ApplicationSettings): ApplicationSettings.ValidationResult {
         try {
             val validationResult = settings.validate()
 
@@ -258,10 +131,227 @@ class SettingsRepositoryImpl(
             return validationResult
         } catch (e: Exception) {
             Logger.e("Error updating settings", e)
-            return UsageConfig.ValidationResult(
+            return ApplicationSettings.ValidationResult(
                 isValid = false,
                 errors = listOf("Error updating settings: ${e.message}"),
             )
+        }
+    }
+
+    fun usageConfigPreferenceLoader(prefix: String, preferences: Preferences) : UsageConfig {
+        val CONFIG_ID = stringPreferencesKey("config_id__$prefix")
+        val CONFIG_NAME = stringPreferencesKey("config_name__$prefix")
+        val ACTIVATION_DURATION = longPreferencesKey("activation_duration__$prefix")
+        val SHOW_GESTURE_VISUAL = booleanPreferencesKey("show_gesture_visual__$prefix")
+        val VISUAL_SIZE = intPreferencesKey("visual_size__$prefix")
+        val CURSOR_SIZE = intPreferencesKey("cursor_size__$prefix")
+        val CURSOR_ACCELERATION_START = longPreferencesKey("cursor_acceleration_start__$prefix")
+        val CURSOR_ACCELERATION_DURATION = longPreferencesKey("cursor_acceleration_duration__$prefix")
+        val CURSOR_ACTIVATION_KEY = intPreferencesKey("cursor_activation_key__$prefix")
+        val ALLOW_PASSTHROUGH = booleanPreferencesKey("allow_passthrough__$prefix")
+        val HIDE_ON_KEYBOARD_OPEN = booleanPreferencesKey("hide_on_keyboard_open__$prefix")
+        val HIDE_ON_LAUNCHER_OPEN = booleanPreferencesKey("hide_on_launcher_open__$prefix")
+        val HIDE_ON_LOCK_SCREEN = booleanPreferencesKey("hide_on_lock_screen__$prefix")
+        val ROUNDED_CURSOR_CORNERS = booleanPreferencesKey("rounded_cursor_corners__$prefix")
+        val USE_PHYSICAL_SIZE = booleanPreferencesKey("use_physical_size__$prefix")
+        val STANDARD_CURSOR_HEX = stringPreferencesKey("standard_cursor_hex__$prefix")
+        val STANDARD_CURSOR_MATCH_BORDER = booleanPreferencesKey("standard_cursor_match_border__$prefix")
+        val CURSOR_IMAGE_PATH = stringPreferencesKey("cursor_image_path__$prefix")
+        val CLICKABLE_IMAGE_PATH = stringPreferencesKey("clickable_image_path__$prefix")
+        val SCROLL_TOGGLE_IMAGE_PATH = stringPreferencesKey("scroll_toggle_image_path__$prefix")
+        val USE_CUSTOM_CURSOR_ICON = booleanPreferencesKey("use_custom_cursor_icon__$prefix")
+        val CURSOR_IMAGE_ALIGNMENT = stringPreferencesKey("cursor_image_alignment__$prefix")
+        val CLICKABLE_IMAGE_ALIGNMENT = stringPreferencesKey("clickable_image_alignment__$prefix")
+        val SCROLL_TOGGLE_IMAGE_ALIGNMENT = stringPreferencesKey("scroll_toggle_image_alignment__$prefix")
+        val AUTO_HIDE_APPS = stringPreferencesKey("auto_hide_apps__$prefix")
+        val CLICKABLE_APPS = stringPreferencesKey("clickable_apps__$prefix")
+        val SHOW_NOTIFICATION = booleanPreferencesKey("show_notification__$prefix")
+        val APPLICATION_LIST_TYPE = stringPreferencesKey("application_list_type__$prefix")
+        val CLICKABLE_LIST_TYPE = stringPreferencesKey("clickable_list_type__$prefix")
+        val CHECK_CLICKABLE = booleanPreferencesKey("check_clickable__$prefix")
+        val DISABLE_TOUCHSCREEN = booleanPreferencesKey("disable_touchscreen__$prefix")
+
+        val cursorImageAlignment = getEnumPreference(
+            preferences,
+            CURSOR_IMAGE_ALIGNMENT,
+            UsageConfig.DEFAULT.cursorImageAlignment,
+            "cursor image alignment"
+        )
+
+        val clickableImageAlignment = getEnumPreference(
+            preferences,
+            CLICKABLE_IMAGE_ALIGNMENT,
+            UsageConfig.DEFAULT.clickableImageAlignment,
+            "clickable image alignment"
+        )
+
+        val scrollToggleImageAlignment = getEnumPreference(
+            preferences,
+            SCROLL_TOGGLE_IMAGE_ALIGNMENT,
+            UsageConfig.DEFAULT.scrollToggleImageAlignment,
+            "scroll toggle image alignment"
+        )
+
+        val autoHideAppsString = preferences[AUTO_HIDE_APPS] ?: ""
+        val autoHideApps = if (autoHideAppsString.isBlank()) {
+            emptySet()
+        } else {
+            autoHideAppsString.split(",").toSet()
+        }
+
+        val applicationListType = getEnumPreference(
+            preferences,
+            APPLICATION_LIST_TYPE,
+            UsageConfig.DEFAULT.applicationListType,
+            "application list type"
+        )
+
+        val clickableAppsString = preferences[CLICKABLE_APPS] ?: ""
+        val clickableApps = if (clickableAppsString.isBlank()) {
+            emptySet()
+        } else {
+            clickableAppsString.split(",").toSet()
+        }
+
+        val clickableListType = getEnumPreference(
+            preferences,
+            CLICKABLE_LIST_TYPE,
+            UsageConfig.DEFAULT.clickableListType,
+            "clickable list type"
+        )
+
+        return UsageConfig(
+            configId = preferences[CONFIG_ID] ?: UsageConfig.DEFAULT.configId,
+            configName = preferences[CONFIG_NAME] ?: UsageConfig.DEFAULT.configName,
+            activationDuration = preferences[ACTIVATION_DURATION]
+                ?: UsageConfig.DEFAULT.activationDuration,
+            showGestureVisualization = preferences[SHOW_GESTURE_VISUAL]
+                ?: UsageConfig.DEFAULT.showGestureVisualization,
+            visualSize = preferences[VISUAL_SIZE] ?: UsageConfig.DEFAULT.visualSize,
+            cursorSize = preferences[CURSOR_SIZE] ?: UsageConfig.DEFAULT.cursorSize,
+            cursorAccelerationStart = preferences[CURSOR_ACCELERATION_START]
+                ?: UsageConfig.DEFAULT.cursorAccelerationStart,
+            cursorAccelerationDuration = preferences[CURSOR_ACCELERATION_DURATION]
+                ?: UsageConfig.DEFAULT.cursorAccelerationDuration,
+            cursorActivationKey = preferences[CURSOR_ACTIVATION_KEY]
+                ?: UsageConfig.DEFAULT.cursorActivationKey,
+            allowPassthrough = preferences[ALLOW_PASSTHROUGH]
+                ?: UsageConfig.DEFAULT.allowPassthrough,
+            hideOnKeyboardOpen = preferences[HIDE_ON_KEYBOARD_OPEN]
+                ?: UsageConfig.DEFAULT.hideOnKeyboardOpen,
+            hideOnLauncherOpen = preferences[HIDE_ON_LAUNCHER_OPEN]
+                ?: UsageConfig.DEFAULT.hideOnLauncherOpen,
+            hideOnLockScreen = preferences[HIDE_ON_LOCK_SCREEN]
+                ?: UsageConfig.DEFAULT.hideOnLockScreen,
+            roundedCursorCorners = preferences[ROUNDED_CURSOR_CORNERS]
+                ?: UsageConfig.DEFAULT.roundedCursorCorners,
+            usePhysicalSize = preferences[USE_PHYSICAL_SIZE]
+                ?: UsageConfig.DEFAULT.usePhysicalSize,
+            standardCursorHex = preferences[STANDARD_CURSOR_HEX]
+                ?: UsageConfig.DEFAULT.standardCursorHex,
+            standardCursorMatchBorder = preferences[STANDARD_CURSOR_MATCH_BORDER]
+                ?: UsageConfig.DEFAULT.standardCursorMatchBorder,
+            cursorImagePath = preferences[CURSOR_IMAGE_PATH]
+                ?: UsageConfig.DEFAULT.cursorImagePath,
+            clickableImagePath = preferences[CLICKABLE_IMAGE_PATH]
+                ?: UsageConfig.DEFAULT.clickableImagePath,
+            scrollToggleImagePath = preferences[SCROLL_TOGGLE_IMAGE_PATH]
+                ?: UsageConfig.DEFAULT.scrollToggleImagePath,
+            useCustomCursorIcon = preferences[USE_CUSTOM_CURSOR_ICON]
+                ?: UsageConfig.DEFAULT.useCustomCursorIcon,
+            cursorImageAlignment = cursorImageAlignment,
+            clickableImageAlignment = clickableImageAlignment,
+            scrollToggleImageAlignment = scrollToggleImageAlignment,
+            autoHideApps = autoHideApps,
+            clickableApps = clickableApps,
+            showNotification = preferences[SHOW_NOTIFICATION]
+                ?: UsageConfig.DEFAULT.showNotification,
+            applicationListType = applicationListType,
+            clickableListType = clickableListType,
+            checkClickable = preferences[CHECK_CLICKABLE]
+                ?: UsageConfig.DEFAULT.checkClickable,
+            disableTouchscreen = preferences[DISABLE_TOUCHSCREEN] ?: UsageConfig.DEFAULT.disableTouchscreen,
+        )
+    }
+
+    fun usageConfigPreferenceWriter(prefix: String, preferences: MutablePreferences, settings: UsageConfig) {
+        val CONFIG_ID = stringPreferencesKey("config_id__$prefix")
+        val CONFIG_NAME = stringPreferencesKey("config_name__$prefix")
+        val ACTIVATION_DURATION = longPreferencesKey("activation_duration__$prefix")
+        val SHOW_GESTURE_VISUAL = booleanPreferencesKey("show_gesture_visual__$prefix")
+        val VISUAL_SIZE = intPreferencesKey("visual_size__$prefix")
+        val CURSOR_SIZE = intPreferencesKey("cursor_size__$prefix")
+        val CURSOR_ACCELERATION_START = longPreferencesKey("cursor_acceleration_start__$prefix")
+        val CURSOR_ACCELERATION_DURATION = longPreferencesKey("cursor_acceleration_duration__$prefix")
+        val CURSOR_ACTIVATION_KEY = intPreferencesKey("cursor_activation_key__$prefix")
+        val ALLOW_PASSTHROUGH = booleanPreferencesKey("allow_passthrough__$prefix")
+        val HIDE_ON_KEYBOARD_OPEN = booleanPreferencesKey("hide_on_keyboard_open__$prefix")
+        val HIDE_ON_LAUNCHER_OPEN = booleanPreferencesKey("hide_on_launcher_open__$prefix")
+        val HIDE_ON_LOCK_SCREEN = booleanPreferencesKey("hide_on_lock_screen__$prefix")
+        val ROUNDED_CURSOR_CORNERS = booleanPreferencesKey("rounded_cursor_corners__$prefix")
+        val USE_PHYSICAL_SIZE = booleanPreferencesKey("use_physical_size__$prefix")
+        val STANDARD_CURSOR_HEX = stringPreferencesKey("standard_cursor_hex__$prefix")
+        val STANDARD_CURSOR_MATCH_BORDER = booleanPreferencesKey("standard_cursor_match_border__$prefix")
+        val CURSOR_IMAGE_PATH = stringPreferencesKey("cursor_image_path__$prefix")
+        val CLICKABLE_IMAGE_PATH = stringPreferencesKey("clickable_image_path__$prefix")
+        val SCROLL_TOGGLE_IMAGE_PATH = stringPreferencesKey("scroll_toggle_image_path__$prefix")
+        val USE_CUSTOM_CURSOR_ICON = booleanPreferencesKey("use_custom_cursor_icon__$prefix")
+        val CURSOR_IMAGE_ALIGNMENT = stringPreferencesKey("cursor_image_alignment__$prefix")
+        val CLICKABLE_IMAGE_ALIGNMENT = stringPreferencesKey("clickable_image_alignment__$prefix")
+        val SCROLL_TOGGLE_IMAGE_ALIGNMENT = stringPreferencesKey("scroll_toggle_image_alignment__$prefix")
+        val AUTO_HIDE_APPS = stringPreferencesKey("auto_hide_apps__$prefix")
+        val CLICKABLE_APPS = stringPreferencesKey("clickable_apps__$prefix")
+        val SHOW_NOTIFICATION = booleanPreferencesKey("show_notification__$prefix")
+        val APPLICATION_LIST_TYPE = stringPreferencesKey("application_list_type__$prefix")
+        val CLICKABLE_LIST_TYPE = stringPreferencesKey("clickable_list_type__$prefix")
+        val CHECK_CLICKABLE = booleanPreferencesKey("check_clickable__$prefix")
+        val DISABLE_TOUCHSCREEN = booleanPreferencesKey("disable_touchscreen__$prefix")
+
+        preferences[CONFIG_ID] = settings.configId
+        preferences[CONFIG_NAME] = settings.configName
+        preferences[ACTIVATION_DURATION] = settings.activationDuration
+        preferences[SHOW_GESTURE_VISUAL] = settings.showGestureVisualization
+        preferences[VISUAL_SIZE] = settings.visualSize
+        preferences[CURSOR_SIZE] = settings.cursorSize
+        preferences[CURSOR_ACCELERATION_START] = settings.cursorAccelerationStart
+        preferences[CURSOR_ACCELERATION_DURATION] = settings.cursorAccelerationDuration
+        preferences[CURSOR_ACTIVATION_KEY] = settings.cursorActivationKey
+        preferences[ALLOW_PASSTHROUGH] = settings.allowPassthrough
+        preferences[HIDE_ON_KEYBOARD_OPEN] = settings.hideOnKeyboardOpen
+        preferences[HIDE_ON_LAUNCHER_OPEN] = settings.hideOnLauncherOpen
+        preferences[HIDE_ON_LOCK_SCREEN] = settings.hideOnLockScreen
+        preferences[ROUNDED_CURSOR_CORNERS] = settings.roundedCursorCorners
+        preferences[USE_PHYSICAL_SIZE] = settings.usePhysicalSize
+        preferences[STANDARD_CURSOR_HEX] = settings.standardCursorHex
+        preferences[STANDARD_CURSOR_MATCH_BORDER] = settings.standardCursorMatchBorder
+        preferences[USE_CUSTOM_CURSOR_ICON] = settings.useCustomCursorIcon
+        preferences[CURSOR_IMAGE_ALIGNMENT] = settings.cursorImageAlignment.name
+        preferences[CLICKABLE_IMAGE_ALIGNMENT] = settings.clickableImageAlignment.name
+        preferences[SCROLL_TOGGLE_IMAGE_ALIGNMENT] = settings.scrollToggleImageAlignment.name
+        preferences[AUTO_HIDE_APPS] = settings.autoHideApps.joinToString(",")
+        preferences[CLICKABLE_APPS] = settings.clickableApps.joinToString(",")
+        preferences[SHOW_NOTIFICATION] = settings.showNotification
+        preferences[APPLICATION_LIST_TYPE] = settings.applicationListType.name
+        preferences[CLICKABLE_LIST_TYPE] = settings.clickableListType.name
+        preferences[CHECK_CLICKABLE] = settings.checkClickable
+        preferences[DISABLE_TOUCHSCREEN] = settings.disableTouchscreen
+
+        if (settings.cursorImagePath != null) {
+            preferences[CURSOR_IMAGE_PATH] = settings.cursorImagePath
+        } else {
+            preferences.remove(CURSOR_IMAGE_PATH)
+        }
+
+        if (settings.clickableImagePath != null) {
+            preferences[CLICKABLE_IMAGE_PATH] = settings.clickableImagePath
+        } else {
+            preferences.remove(CLICKABLE_IMAGE_PATH)
+        }
+
+        if (settings.scrollToggleImagePath != null) {
+            preferences[SCROLL_TOGGLE_IMAGE_PATH] = settings.scrollToggleImagePath
+        } else {
+            preferences.remove(SCROLL_TOGGLE_IMAGE_PATH)
         }
     }
 }

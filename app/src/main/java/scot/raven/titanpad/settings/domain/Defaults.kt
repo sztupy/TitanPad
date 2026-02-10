@@ -44,5 +44,6 @@ object Defaults {
         val CLICKABLE_LIST_TYPE = AppListType.DENY_LIST
         const val CHECK_CLICKABLE = false
         const val DISABLE_TOUCHSCREEN = false
+        const val ALWAYS_REMAP_FUNC_KEYS = false
     }
 }

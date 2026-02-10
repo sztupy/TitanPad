@@ -23,6 +23,7 @@ import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.stateIn
 import scot.raven.titanpad.cursor.control.TrackpadActionHandler
+import scot.raven.titanpad.settings.domain.ApplicationSettings
 
 /**
  * Checks accessibility service and initializes Shizuku service on Android 11.
@@ -38,14 +39,14 @@ class TitanPad : Application() {
     private var shizukuObserverJob: Job? = null
     private var _trackpadActionHandler: TrackpadActionHandler? = null
     private var settingsObserverJob: Job? = null
-    private lateinit var _settingsFlow: StateFlow<UsageConfig>
+    private lateinit var _settingsFlow: StateFlow<ApplicationSettings>
 
-    fun getSettingsFlow(): StateFlow<UsageConfig> {
+    fun getSettingsFlow(): StateFlow<ApplicationSettings> {
         if (!::_settingsFlow.isInitialized) {
             _settingsFlow = settingsRepository.getSettings().stateIn(
                 scope = CoroutineScope(Dispatchers.IO + SupervisorJob()),
                 started = SharingStarted.Eagerly,
-                initialValue = UsageConfig()
+                initialValue = ApplicationSettings()
             )
         }
         return _settingsFlow

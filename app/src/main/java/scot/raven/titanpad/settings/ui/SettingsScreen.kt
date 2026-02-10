@@ -217,17 +217,10 @@ fun SettingsScreen(
 
             val configurationStatus = activeConfiguration.collectAsState()
             PreferenceCategory(title = "Configurations") {
-                SimplePreferenceItem(
-                    title = "New Configuration",
-                    subtitle = "Add new configuration to the list",
-                    onClick = {
-                        Logger.d("CLICKED")
-                        settingsState.addConfig(UsageConfig.randomId())
-                    }
-                )
+                NoteItem("Click on item to edit configuration. Use switcher to activate/deactivate.", Icons.Default.Info, "Information")
 
                 SwitchPreferenceItem(
-                    title = "Default Settings",
+                    title = uiState.defaultConfigName,
                     subtitle = "",
                     onClick = {
                         onNavigateToCursorSettings("default")
@@ -248,7 +241,7 @@ fun SettingsScreen(
                 uiState.configList.forEach { item ->
                     SwitchPreferenceItem(
                         title = item.value,
-                        subtitle = "ID ${item.key}",
+                        subtitle = "",
                         onClick = {
                             onNavigateToCursorSettings(item.key)
                         },
@@ -274,6 +267,15 @@ fun SettingsScreen(
                         checked = configurationStatus.value == item.key
                     )
                 }
+
+                SimplePreferenceItem(
+                    title = "New Configuration",
+                    subtitle = "Add new configuration to the list",
+                    onClick = {
+                        Logger.d("CLICKED")
+                        settingsState.addConfig(UsageConfig.randomId())
+                    }
+                )
             }
 
             PreferenceCategory(title = "Keys") {

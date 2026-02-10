@@ -28,6 +28,14 @@ class CursorStateManager(
         }
     }
 
+    fun setCursorVisibiliy(state: Boolean) {
+        if (state) {
+            showCursor()
+        } else {
+            hideCursor()
+        }
+    }
+
     private fun showCursor() {
         val dimensions = dimensionsFlow.value
         val (centerX, centerY) = dimensions.center()

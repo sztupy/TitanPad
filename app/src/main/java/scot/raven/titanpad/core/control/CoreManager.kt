@@ -163,10 +163,21 @@ class CoreManager(
     fun activateCursorMode(keymapToggle: Boolean = false, configId: String): Boolean {
         try {
             Logger.d("Activating cursor mode")
+
+            val settings = settingsFlow.value
+
+            if (settings.getActiveConfig().configId != configId && modeCoordinator.activeMode.value != ModeCoordinator.OverlayMode.OFF) {
+                modeCoordinator.requestActivation(ModeCoordinator.OverlayMode.OFF)
+            }
+
+            backgroundScope.launch {
+                TitanPad.getInstance().settingsRepository.setActiveKey(configId)
+            }
+
             if ((!cursorStateManager.isCursorVisible() || keymapToggle) && modeCoordinator.requestActivation(
                     ModeCoordinator.OverlayMode.CURSOR
                 )) {
-                cursorStateManager.toggleCursorVisibility()
+                cursorStateManager.setCursorVisibiliy(modeCoordinator.activeMode.value == ModeCoordinator.OverlayMode.CURSOR)
 
                 val intent = Intent(BROADCAST_CURSOR_ACTIVATED)
                 intent.setPackage(service.packageName)
@@ -188,7 +199,7 @@ class CoreManager(
             if ((cursorStateManager.isCursorVisible() || keymapToggle) && modeCoordinator.requestActivation(
                     ModeCoordinator.OverlayMode.OFF
                 )) {
-                cursorStateManager.toggleCursorVisibility()
+                cursorStateManager.setCursorVisibiliy(false)
 
                 val intent = Intent(BROADCAST_CURSOR_ACTIVATED)
                 intent.setPackage(service.packageName)

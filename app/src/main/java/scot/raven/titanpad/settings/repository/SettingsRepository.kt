@@ -6,6 +6,8 @@ import scot.raven.titanpad.settings.domain.ApplicationSettings
 
 interface SettingsRepository {
     fun getSettings(): Flow<ApplicationSettings>
+
+    suspend fun setActiveKey(configId: String)
     suspend fun updateSettings(settings: ApplicationSettings)
     suspend fun validateAndUpdateSettings(settings: ApplicationSettings): ApplicationSettings.ValidationResult
 

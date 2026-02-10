@@ -16,6 +16,8 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.map
 import scot.raven.titanpad.settings.domain.ApplicationSettings
+import kotlin.collections.map
+import kotlin.collections.toSet
 
 /**
  * Persists user settings.
@@ -25,6 +27,7 @@ class SettingsRepositoryImpl(
 ) : SettingsRepository {
     companion object {
         private val ALWAYS_REMAP_FUNC_KEYS = booleanPreferencesKey("always_remap_func_keys")
+        private val LAST_ACTIVE_SETTING = stringPreferencesKey("last_active_setting")
         private val ADDITIONAL_CONFIG_KEYS = stringSetPreferencesKey("additional_config_keys")
     }
 
@@ -58,6 +61,7 @@ class SettingsRepositoryImpl(
 
                 val settings = ApplicationSettings(
                     defaultConfig = usageConfigPreferenceLoader("default", preferences),
+                    lastActiveSetting = preferences[LAST_ACTIVE_SETTING] ?: "default",
                     alwaysRemapFuncKeys = preferences[ALWAYS_REMAP_FUNC_KEYS] ?: ApplicationSettings.DEFAULT.alwaysRemapFuncKeys,
                     additionalConfigs = additionalConfigKeys.map { usageConfigPreferenceLoader(it, preferences) }
                 )
@@ -66,6 +70,15 @@ class SettingsRepositoryImpl(
             }
     }
 
+    override suspend fun setActiveKey(configId: String) {
+        try {
+            dataStore.edit { preferences ->
+                preferences[LAST_ACTIVE_SETTING] = configId
+            }
+        } catch (e: Exception) {
+            Logger.e("Error updating settings", e)
+        }
+    }
     override suspend fun updateSettings(settings: ApplicationSettings) {
         try {
             dataStore.edit { preferences ->

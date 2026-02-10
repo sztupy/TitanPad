@@ -87,6 +87,7 @@ class SettingsState(
                             checkClickable = settings.checkClickable,
                             disableTouchscreen = settings.disableTouchscreen,
 
+                            defaultConfigName = applicationSettings.defaultConfig.configName,
                             alwaysRemapFuncKeys = applicationSettings.alwaysRemapFuncKeys,
                             configList = applicationSettings.additionalConfigs.associate { it.configId to it.configName }
                         )
@@ -246,6 +247,7 @@ data class SettingsUiState(
     val showError: Boolean = false,
     val errorMessage: String = "",
     val configList: Map<String,String> = HashMap(),
+    val defaultConfigName: String = Defaults.Settings.DEFAULT_CONFIG_NAME,
 
     val alwaysRemapFuncKeys: Boolean = Defaults.Settings.ALWAYS_REMAP_FUNC_KEYS,
 

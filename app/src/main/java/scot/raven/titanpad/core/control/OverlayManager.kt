@@ -26,7 +26,6 @@ import scot.raven.titanpad.core.logs.Logger
 import scot.raven.titanpad.core.ui.AppTheme
 import scot.raven.titanpad.cursor.ui.CursorOverlay
 import scot.raven.titanpad.gesture.ui.GestureVisualization
-import scot.raven.titanpad.settings.domain.UsageConfig
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.StateFlow

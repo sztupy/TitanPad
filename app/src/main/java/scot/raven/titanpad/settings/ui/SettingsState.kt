@@ -58,6 +58,7 @@ class SettingsState(
                             configId = settings.configId,
                             configName = settings.configName,
                             activationDuration = settings.activationDuration,
+                            showGestureVisualization = settings.showGestureVisualization,
                             visualSize = settings.visualSize,
                             cursorSize = settings.cursorSize,
                             cursorAccelerationStart = settings.cursorAccelerationStart,

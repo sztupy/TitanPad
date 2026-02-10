@@ -57,7 +57,6 @@ fun DebugOptionsScreen(
                 .padding(paddingValues)
                 .verticalScroll(rememberScrollState())
         ) {
-
             PreferenceCategory(title = "Display") {
                 SwitchPreferenceItem(
                     title = "Use Physical Size",

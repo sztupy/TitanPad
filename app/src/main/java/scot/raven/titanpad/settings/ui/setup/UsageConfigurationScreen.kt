@@ -4,6 +4,7 @@ import scot.raven.titanpad.core.ui.KeyCaptureOverlay
 import android.app.Activity
 import android.content.ClipData
 import android.content.ClipboardManager
+import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
 import android.net.Uri
@@ -208,7 +209,7 @@ fun UsageConfigurationScreen(
                 NoteItem("All hardware emulation feature require a Shizuku version that has working MTK phone support. The latest official Shizuku version v13.6.0 will NOT work.", Icons.Default.Warning, "Warning")
 
                 SimplePreferenceItem(
-                    title = "Hardware mouse display settings",
+                    title = "Cursor Size",
                     subtitle = "Found under 'Display' -> 'Colour and Motion' -> 'Large mouse cursor'",
                     onClick = {
                         if (!startActivity($$"com.android.settings/.Settings$ColorAndMotionActivity")) {
@@ -218,12 +219,20 @@ fun UsageConfigurationScreen(
                 )
 
                 SimplePreferenceItem(
-                    title = "Hardware mouse sensitivity settings",
+                    title = "Sensitivity settings",
                     subtitle = "Found under 'System' -> 'Keyboard' -> 'Pointer Speed'",
                     onClick = {
                         if (!startActivity($$"com.android.settings/.Settings$KeyboardSettingsActivity")) {
                             context.startActivity(Intent(Settings.ACTION_SETTINGS))
                         }
+                    }
+                )
+
+                SimplePreferenceItem(
+                    title = "Show visualization",
+                    subtitle = "Found under 'Developer Options' -> 'Input' -> 'Show taps'",
+                    onClick = {
+                        context.startActivity(Intent(Settings.ACTION_APPLICATION_DEVELOPMENT_SETTINGS))
                     }
                 )
             }

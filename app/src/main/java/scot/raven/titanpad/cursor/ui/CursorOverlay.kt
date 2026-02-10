@@ -223,6 +223,7 @@ private fun DrawScope.drawDefaultCursor(
                 forceMoveTo = false
             )
         }
+        drawPath(path, cursorColor.copy(alpha = opacity))
         drawPath(path, if (matchBorder) cursorColor else Color.Black, style = Stroke(width = cursorSize * 0.1f))
     }
 

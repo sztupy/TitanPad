@@ -50,24 +50,100 @@ Note that unless your device is rooted, you will need to restart the Shizuku ser
 
 ## Overview
 
-The app uses some clever tricks to read the keyboard's capacitive sensor and translate it to virtual mouse events, like a Trackpad. It also has some basic multi-touch functionality based on the fact that the sensor while doesn't support multiple fingers, it does support obtaining the approximate size of your touch, so if you use two fingers close to each other it will return a larger touch point. This information can then be used to differentiate between single finger touches and double finger touches.
+The app uses some clever tricks to read the keyboard's capacitive sensor and translate it to virtual mouse events, like a Trackpad.
 
-The application uses C9 as it's base, including most of the setup, meaning general installation steps are:
+It also has some basic multi-touch functionality based on the fact that the sensor while doesn't support multiple fingers, it does support obtaining the approximate size of your touch, so if you use two fingers close to each other it will return a larger touch point. This information can then be used to differentiate between single finger touches and double finger touches.
 
-* Install application
+## Basic setup
+
+Follow the steps below to get started quickly:
+
+* Install Application
 * Install Shizuku [from this repository](https://github.com/thedjchi/Shizuku/releases). Make sure to use this Shizuku fork as the official version does not support MTK phones (like the Titan 2) properly.
-* Open application
+* Open Application
 * Grant both Accessibility permission and Shizuku permission
-* Assign activation key. Preferred way is to assign "TAB" for the "Func 2" button under "Android Settings -> Shortcuts", and then assign the "TAB" button as the activation key in the settings.
-* Once the activation key is assigned press it and you should be able to access the mouse functionality
+* Enable "Main Config"
 
-Once the mouse is activated it supports the following gestures:
+This will enable a hardware emulated mouse on the entire Trackpad with tap to click features
 
-* Single finger move - moving the mouse around
-* Single finger tap - single click
-* Multi finger move - scroll
+## Supported input methods
 
-Multi finger features are currently calibrated to my fingers which are fairly big.
+### Software based mouse
+
+This will set up a virtual mouse using Android's built in Overlay and Accessibility features, and doesn't rely on emulating a proper hardware.
+(Technically this option could work without Shizuku if there would be support for accessing the Trackpad's motion events without it)
+
+Compared to the hardware emulated mouse
+
+Pros: 
+* All clicks are converted to taps which have better support in Android apps
+* The mouse display can be fully configured including using custom images
+
+Cons:
+* No support for hovering over elements
+* Decreased performance
+
+### Hardware based mouse
+
+This will set up a kernel based mouse as if you connected one using USB / Bluetooth.
+
+Compared to the software based mouse
+
+Pros:
+* Higher performance, doesn't rely on Android features
+* Native support for hovering over elements
+
+Cons:
+* Not all applications accept mouse clicks, and some features only work with taps
+
+### Software based scroll
+
+This will set up a virtual touchpad using Android's built in Overlay and Accessibility features, and doesn't rely on emulating a proper hardware.
+
+This will map touches on the trackpad as taps on the screen at the same location. Afterwards movement on the trackpad will translate to swipes on the main screen.
+
+The software based scroll is fairly finicky right now and it is preferred to use the hardware based scroll which has the same feature set.
+
+### Hardware based scroll
+
+This will set up a hardware emulated touchpad using kernel features.
+
+This will map touches on the trackpad as taps on the screen at the same location. Afterwards movement on the trackpad will translate to swipes on the main screen.
+
+This is more performant than the software based scroll and has the same features.
+
+### Hardware based joystick
+
+This will set up a hardware emulated gamepad using kernel features.
+
+Touching the trackpad will set up the center point for the joystick, then movements up/down/left/right will translate to movements of an analog stick.
+
+Due to how multi touch works on the trackpad it is actually possible to have both of your hands on the trackpad with one using it as a virtual joystick, and the other pressing keys that are mapped to buttons, but the setup is not straightforward.
+
+You basically have two options:
+* Use non-capacitive gloves on your hand that you don't want to use as a joystick.
+* With two bare hands:
+  * First touch the side of the trackpad you want to use as a joystick.
+  * Then with your other hand touch the part where you want to use the keyboard buttons (e.g. WSAD or IJKL)
+  * Then without letting go of the keyboard hand from the touchpad you can now let go of the joystick side
+  * You can touch the joystick side whenever needed, and you can press buttons with your keyboard side
+  * If you let go of the keyboard hand from the trackpad you'll need to do the above setup again (release both hands, touch joystick side first, touch keyboard side second then release joystick side, keeping the keyboard side touching)
+
+## Additional features
+
+### Func1 & Func2 remap
+
+By default the Func1 and Func2 keys (the two buttons on the left hand side) are not visible in the system, so you cannot use Key Mapper and other tools to remap them. This setting will create a separate hardware keyboard that emits keypress actions whenever Func1 or Func2 is pressed that can be caught by Key Mapper and other apps for any use.
+
+By default the buttons will be mapped to F13 and F14, which although is supported by Key Mapper, is not supported by a lot of other apps. The compatibility mode will map them to F11 and F12 which have better support overall, but might clash with some apps that actually read these events, like virtual desktop apps. 
+
+### Multiple configurations
+
+You can set up multiple distinct configurations and switch between them as you need fit for your usage.
+
+### Activation key
+
+When you set an activation key for a config you can press that key to quickly turn on / off that particular config. When Func1&Func2 remapping is enabled you can also use them as the activator
 
 ## Troubleshooting
 

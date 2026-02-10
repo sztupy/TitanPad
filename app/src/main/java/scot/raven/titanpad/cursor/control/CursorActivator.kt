@@ -20,7 +20,7 @@ import scot.raven.titanpad.settings.ui.SettingsActivity.Companion.CONFIG_ID_EXTR
 /**
  * Handles key events for the standard cursor mode.
  */
-class CursorActionHandler(
+class CursorActivator(
     private val service: AccessibilityService,
     private val cursorStateManager: CursorStateManager,
     private val gestureManager: GestureManager,
@@ -72,9 +72,13 @@ class CursorActionHandler(
 
             val activateKeys = buildSet {
                 add(settings.getActiveConfig().cursorActivationKey)
-            }
+            }.filter { it < 10000 }
 
-            if (event.keyCode in activateKeys) {
+            val specialKeys = buildSet {
+                add(settings.getActiveConfig().cursorActivationKey)
+            }.filter { it > 10000 }
+
+            if (event.keyCode in activateKeys || (event.scanCode + 10000) in specialKeys) {
                 return handleActivationKey(event)
             }
             return false

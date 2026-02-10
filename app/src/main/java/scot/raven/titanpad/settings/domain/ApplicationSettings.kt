@@ -2,6 +2,7 @@ package scot.raven.titanpad.settings.domain
 
 data class ApplicationSettings(
     val alwaysRemapFuncKeys: Boolean = Defaults.Settings.ALWAYS_REMAP_FUNC_KEYS,
+    val alwaysRemapFuncKeysCompat: Boolean = Defaults.Settings.ALWAYS_REMAP_FUNC_KEYS_COMPAT,
     val lastActiveSetting: String = "",
 
     val defaultConfig: UsageConfig = UsageConfig(),

@@ -21,7 +21,7 @@ import kotlinx.coroutines.cancel
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.stateIn
-import scot.raven.titanpad.cursor.control.TrackpadActionHandler
+import scot.raven.titanpad.cursor.control.InputManager
 import scot.raven.titanpad.settings.domain.ApplicationSettings
 
 /**
@@ -36,7 +36,7 @@ class TitanPad : Application() {
     val settingsRepository: SettingsRepository by _settingsRepository
     private val applicationScope = CoroutineScope(SupervisorJob() + Dispatchers.Main)
     private var shizukuObserverJob: Job? = null
-    private var _trackpadActionHandler: TrackpadActionHandler? = null
+    private var _inputManager: InputManager? = null
     private var settingsObserverJob: Job? = null
     private lateinit var _settingsFlow: StateFlow<ApplicationSettings>
 
@@ -51,8 +51,8 @@ class TitanPad : Application() {
         return _settingsFlow
     }
 
-    fun setTrackpadActionHandler(handler: TrackpadActionHandler) {
-        _trackpadActionHandler = handler
+    fun setTrackpadActionHandler(handler: InputManager) {
+        _inputManager = handler
     }
 
     override fun onCreate() {
@@ -77,16 +77,16 @@ class TitanPad : Application() {
 
                     ShizukuStatus.NOT_AVAILABLE -> {
                         ShizukuConnection.resetPermissionRetryCount()
-                        _trackpadActionHandler?.stop()
+                        _inputManager?.stop()
                     }
 
                     ShizukuStatus.ERROR -> {
-                        _trackpadActionHandler?.stop()
+                        _inputManager?.stop()
                     }
 
                     ShizukuStatus.READY -> {
                         ShizukuConnection.resetPermissionRetryCount()
-                        _trackpadActionHandler?.start()
+                        _inputManager?.start()
                         Logger.i("Shizuku ready")
                     }
 
@@ -97,7 +97,7 @@ class TitanPad : Application() {
 
     private fun cleanupShizuku() {
         shizukuObserverJob?.cancel()
-        _trackpadActionHandler?.stop()
+        _inputManager?.stop()
         ShizukuConnection.cleanup()
         shizukuObserverJob?.cancel()
     }

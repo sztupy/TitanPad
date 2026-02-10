@@ -90,6 +90,7 @@ import kotlinx.coroutines.flow.StateFlow
 import rikka.shizuku.Shizuku
 import scot.raven.titanpad.accessibility.AppAccessibilityService
 import scot.raven.titanpad.core.logs.Logger
+import scot.raven.titanpad.core.util.KeyCodeUtil
 
 /**
  * Main settings screen.
@@ -279,14 +280,26 @@ fun SettingsScreen(
 
             PreferenceCategory(title = "Keys") {
                 SwitchPreferenceItem(
-                    title = "Always remap Func keys",
-                    subtitle = "Always map Func1 (top left button) to F13 and Func2 (bottom left button) to F14 so Key Mapper can access them and use them for triggers",
+                    title = "Make the Func keys visible to applications",
+                    subtitle = "Make the Func keys (the two buttons on the left side) visible to external apps, e.g. Key Mapper. Also enables these buttons to be used as Activation Keys in the config",
                     checked = uiState.alwaysRemapFuncKeys,
                     onCheckedChange = { value ->
                         settingsState.updateGlobalPreference(value) { settings, v ->
                             settings.copy(alwaysRemapFuncKeys = v)
                         }
                     },
+                )
+
+                SwitchPreferenceItem(
+                    title = "Enable better compatibility",
+                    subtitle = "Map Func1 to KEYCODE_F11 and Func2 to KEYCODE_F12 for better compatibility with external apps",
+                    checked = uiState.alwaysRemapFuncKeysCompat,
+                    onCheckedChange = { value ->
+                        settingsState.updateGlobalPreference(value) { settings, v ->
+                            settings.copy(alwaysRemapFuncKeysCompat = v)
+                        }
+                    },
+                    enabled = uiState.alwaysRemapFuncKeys
                 )
             }
 
@@ -698,7 +711,7 @@ fun SetKeyPreferenceItem(
         if (currentKeyCode == UsageConfig.KEY_NONE) {
             "Currently not mapped"
         } else {
-            "Current: ${KeyEvent.keyCodeToString(currentKeyCode)}"
+            "Current: ${KeyCodeUtil.keyCodeToString(currentKeyCode)}"
         }
 
     SimplePreferenceItem(

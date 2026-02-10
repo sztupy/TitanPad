@@ -9,9 +9,9 @@ import scot.raven.titanpad.core.domain.OrientationHandler
 import scot.raven.titanpad.core.domain.ScreenDimensions
 import scot.raven.titanpad.core.logs.Logger
 import scot.raven.titanpad.core.notification.NotificationManager
-import scot.raven.titanpad.cursor.control.CursorActionHandler
+import scot.raven.titanpad.cursor.control.CursorActivator
 import scot.raven.titanpad.cursor.control.CursorStateManager
-import scot.raven.titanpad.cursor.control.TrackpadActionHandler
+import scot.raven.titanpad.cursor.control.InputManager
 import scot.raven.titanpad.gesture.api.GestureManager
 import scot.raven.titanpad.gesture.standard.DefaultGestureStrategy
 import scot.raven.titanpad.gesture.ui.GesturePath
@@ -44,9 +44,9 @@ class CoreManager(
 ) {
     private lateinit var gestureManager: GestureManager
     lateinit var cursorStateManager: CursorStateManager
-    private lateinit var cursorActionHandler: CursorActionHandler
+    private lateinit var cursorActivator: CursorActivator
     private lateinit var notificationManager: NotificationManager
-    private lateinit var trackpadActionHandler: TrackpadActionHandler
+    private lateinit var inputManager: InputManager
 
     private val screenDimensionsFlow = orientationHandler.screenDimensions
 
@@ -101,7 +101,7 @@ class CoreManager(
             cursorStateManager = CursorStateManager(
                 screenDimensionsFlow
             )
-            cursorActionHandler = CursorActionHandler(
+            cursorActivator = CursorActivator(
                 service,
                 cursorStateManager,
                 gestureManager,
@@ -130,15 +130,16 @@ class CoreManager(
                 }
                 .launchIn(backgroundScope)
 
-            trackpadActionHandler = TrackpadActionHandler(
+            inputManager = InputManager(
                 isEnabled = { true },
                 scope = backgroundScope,
                 cursorStateManager = cursorStateManager,
-                gestureManager = gestureManager
+                gestureManager = gestureManager,
+                settingsFlow = settingsFlow
             )
 
-            TitanPad.getInstance().setTrackpadActionHandler(trackpadActionHandler)
-            trackpadActionHandler.start()
+            TitanPad.getInstance().setTrackpadActionHandler(inputManager)
+            inputManager.start()
 
             Logger.i("CoreManager initialization complete")
         } catch (e: Exception) {
@@ -218,7 +219,7 @@ class CoreManager(
         val settings = settingsFlow.value
 
         try {
-            val eventHandled = cursorActionHandler.handleKeyEvent(event, channel)
+            val eventHandled = cursorActivator.handleKeyEvent(event, channel)
 
             if (settings.getActiveConfig().allowPassthrough) {
                 Logger.d("Allowing key event to pass through")
@@ -264,7 +265,7 @@ class CoreManager(
 
             modeCoordinator.deactivate(ModeCoordinator.OverlayMode.CURSOR, fromAutoHide)
 
-            cursorActionHandler.cleanup()
+            cursorActivator.cleanup()
         } catch (e: Exception) {
             Logger.e("Error force hiding overlays", e)
         }
@@ -279,7 +280,7 @@ class CoreManager(
     }
 
     fun cleanup() {
-        cursorActionHandler.cleanup()
+        cursorActivator.cleanup()
         gestureManager.cleanup()
     }
 }

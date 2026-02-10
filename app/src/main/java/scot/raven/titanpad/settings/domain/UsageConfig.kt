@@ -2,7 +2,9 @@ package scot.raven.titanpad.settings.domain
 
 import scot.raven.titanpad.core.constants.ApplicationConstants
 import scot.raven.titanpad.core.constants.CursorConstants
+import scot.raven.titanpad.cursor.domain.FuncButtonMap
 import scot.raven.titanpad.cursor.domain.IconAlignment
+import scot.raven.titanpad.cursor.domain.InputType
 
 /**
  * Represents default user preferences.
@@ -17,6 +19,19 @@ data class UsageConfig(
     val cursorAccelerationStart: Long = Defaults.Settings.CURSOR_ACCELERATION_START,
     val cursorAccelerationDuration: Long = Defaults.Settings.CURSOR_ACCELERATION_DURATION,
     val cursorActivationKey: Int = Defaults.Settings.CURSOR_ACTIVATION_KEY,
+    val touchPadMainInputType: InputType = Defaults.Settings.TOUCHPAD_MAIN_INPUT,
+    val touchPadLeftInputType: InputType = Defaults.Settings.TOUCHPAD_LEFT_INPUT,
+    val backScreenInputType: InputType = Defaults.Settings.BACK_SCREEN_INPUT,
+    val touchpadSplitInput: Boolean = Defaults.Settings.TOUCHPAD_SPLIT_INPUT,
+    val touchpadSplitPosition: Int = Defaults.Settings.TOUCHPAD_SPLIT_POSITION,
+    val mouseTapToClick: Boolean = Defaults.Settings.MOUSE_TAP_TO_CLICK,
+    val mouseDoubleTapToHold: Boolean = Defaults.Settings.MOUSE_DOUBLE_TAP_HOLD,
+    val mouseTwoFingerToHold: Boolean = Defaults.Settings.MOUSE_TWO_FINGER_HOLD,
+    val mouseTapMaxDuration: Int = Defaults.Settings.MOUSE_TAP_MAX_DURATION,
+    val scrollOnlyVertically: Boolean = Defaults.Settings.SCROLL_VERTICAL_ONLY,
+    val twoFingerSensitivity: Int = Defaults.Settings.TWO_FINGER_SENSITIVITY,
+    val func1ButtonMap: FuncButtonMap = Defaults.Settings.FUNC_1_BUTTON_MAP,
+    val func2ButtonMap: FuncButtonMap = Defaults.Settings.FUNC_2_BUTTON_MAP,
     val allowPassthrough: Boolean = Defaults.Settings.ALLOW_PASSTHROUGH,
     val hideOnKeyboardOpen: Boolean = Defaults.Settings.HIDE_ON_KEYBOARD_OPEN,
     val hideOnLauncherOpen: Boolean = Defaults.Settings.HIDE_ON_LAUNCHER_OPEN,

@@ -15,7 +15,10 @@ import scot.raven.titanpad.settings.domain.UsageConfig
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.map
+import scot.raven.titanpad.cursor.domain.FuncButtonMap
+import scot.raven.titanpad.cursor.domain.InputType
 import scot.raven.titanpad.settings.domain.ApplicationSettings
+import scot.raven.titanpad.settings.domain.Defaults
 import kotlin.collections.map
 import kotlin.collections.toSet
 
@@ -27,6 +30,7 @@ class SettingsRepositoryImpl(
 ) : SettingsRepository {
     companion object {
         private val ALWAYS_REMAP_FUNC_KEYS = booleanPreferencesKey("always_remap_func_keys")
+        private val ALWAYS_REMAP_FUNC_KEYS_COMPAT = booleanPreferencesKey("always_remap_func_keys_compat")
         private val LAST_ACTIVE_SETTING = stringPreferencesKey("last_active_setting")
         private val ADDITIONAL_CONFIG_KEYS = stringSetPreferencesKey("additional_config_keys")
     }
@@ -63,6 +67,7 @@ class SettingsRepositoryImpl(
                     defaultConfig = usageConfigPreferenceLoader("default", preferences),
                     lastActiveSetting = preferences[LAST_ACTIVE_SETTING] ?: "default",
                     alwaysRemapFuncKeys = preferences[ALWAYS_REMAP_FUNC_KEYS] ?: ApplicationSettings.DEFAULT.alwaysRemapFuncKeys,
+                    alwaysRemapFuncKeysCompat = preferences[ALWAYS_REMAP_FUNC_KEYS_COMPAT] ?: ApplicationSettings.DEFAULT.alwaysRemapFuncKeysCompat,
                     additionalConfigs = additionalConfigKeys.map { usageConfigPreferenceLoader(it, preferences) }
                 )
 
@@ -83,6 +88,7 @@ class SettingsRepositoryImpl(
         try {
             dataStore.edit { preferences ->
                 preferences[ALWAYS_REMAP_FUNC_KEYS] = settings.alwaysRemapFuncKeys
+                preferences[ALWAYS_REMAP_FUNC_KEYS_COMPAT] = settings.alwaysRemapFuncKeysCompat
                 preferences[ADDITIONAL_CONFIG_KEYS] = settings.additionalConfigs.map{it.configId}.toSet()
 
                 usageConfigPreferenceWriter("default", preferences,settings.defaultConfig)
@@ -160,6 +166,19 @@ class SettingsRepositoryImpl(
         val CURSOR_ACCELERATION_START = longPreferencesKey("cursor_acceleration_start__$configId")
         val CURSOR_ACCELERATION_DURATION = longPreferencesKey("cursor_acceleration_duration__$configId")
         val CURSOR_ACTIVATION_KEY = intPreferencesKey("cursor_activation_key__$configId")
+        val TOUCHPAD_MAIN_INPUT = stringPreferencesKey("touchpad_main_input__$configId")
+        val TOUCHPAD_LEFT_INPUT = stringPreferencesKey("touchpad_left_input__$configId")
+        val BACK_SCREEN_INPUT = stringPreferencesKey("back_screen_input__$configId")
+        val TOUCHPAD_SPLIT_INPUT = booleanPreferencesKey("touchpad_split_input__$configId")
+        val TOUCHPAD_SPLIT_POSITION = intPreferencesKey("touchpad_split_position__$configId")
+        val MOUSE_TAP_TO_CLICK = booleanPreferencesKey("mouse_tap_to_click__$configId")
+        val MOUSE_DOUBLE_TAP_HOLD = booleanPreferencesKey("mouse_double_tap_hold__$configId")
+        val MOUSE_TWO_FINGER_HOLD = booleanPreferencesKey("mouse_two_finger_hold__$configId")
+        val MOUSE_TAP_MAX_DURATION = intPreferencesKey("mouse_tap_max_duration__$configId")
+        val SCROLL_VERTICAL_ONLY = booleanPreferencesKey("scroll_vertical_only__$configId")
+        val TWO_FINGER_SENSITIVITY = intPreferencesKey("two_finger_sensitivity__$configId")
+        val FUNC_1_BUTTON_MAP = stringPreferencesKey("func_1_button_map__$configId")
+        val FUNC_2_BUTTON_MAP = stringPreferencesKey("func_2_button_map__$configId")
         val ALLOW_PASSTHROUGH = booleanPreferencesKey("allow_passthrough__$configId")
         val HIDE_ON_KEYBOARD_OPEN = booleanPreferencesKey("hide_on_keyboard_open__$configId")
         val HIDE_ON_LAUNCHER_OPEN = booleanPreferencesKey("hide_on_launcher_open__$configId")
@@ -218,6 +237,37 @@ class SettingsRepositoryImpl(
             "application list type"
         )
 
+        val touchPadMainInputType = getEnumPreference(
+            preferences,
+            TOUCHPAD_MAIN_INPUT,
+            UsageConfig.DEFAULT.touchPadMainInputType,
+            "touchpad main input"
+        )
+        val touchPadLeftInputType = getEnumPreference(
+            preferences,
+            TOUCHPAD_LEFT_INPUT,
+            UsageConfig.DEFAULT.touchPadLeftInputType,
+            "touchpad left input"
+        )
+        val backScreenInputType = getEnumPreference(
+            preferences,
+            BACK_SCREEN_INPUT,
+            UsageConfig.DEFAULT.backScreenInputType,
+            "back screen input"
+        )
+        val func1ButtonMap = getEnumPreference(
+            preferences,
+            FUNC_1_BUTTON_MAP,
+            UsageConfig.DEFAULT.func1ButtonMap,
+            "func 1 map"
+        )
+        val func2ButtonMap = getEnumPreference(
+            preferences,
+            FUNC_2_BUTTON_MAP,
+            UsageConfig.DEFAULT.func2ButtonMap,
+            "func 2 map"
+        )
+
         val clickableAppsString = preferences[CLICKABLE_APPS] ?: ""
         val clickableApps = if (clickableAppsString.isBlank()) {
             emptySet()
@@ -247,6 +297,19 @@ class SettingsRepositoryImpl(
                 ?: UsageConfig.DEFAULT.cursorAccelerationDuration,
             cursorActivationKey = preferences[CURSOR_ACTIVATION_KEY]
                 ?: UsageConfig.DEFAULT.cursorActivationKey,
+            touchPadMainInputType = touchPadMainInputType,
+            touchPadLeftInputType = touchPadMainInputType,
+            backScreenInputType = backScreenInputType,
+            touchpadSplitInput = preferences[TOUCHPAD_SPLIT_INPUT]?: UsageConfig.DEFAULT.touchpadSplitInput,
+            touchpadSplitPosition = preferences[TOUCHPAD_SPLIT_POSITION]?: UsageConfig.DEFAULT.touchpadSplitPosition,
+            mouseTapToClick = preferences[MOUSE_TAP_TO_CLICK]?: UsageConfig.DEFAULT.mouseTapToClick,
+            mouseDoubleTapToHold = preferences[MOUSE_DOUBLE_TAP_HOLD]?: UsageConfig.DEFAULT.mouseDoubleTapToHold,
+            mouseTwoFingerToHold = preferences[MOUSE_TWO_FINGER_HOLD]?: UsageConfig.DEFAULT.mouseTwoFingerToHold,
+            mouseTapMaxDuration = preferences[MOUSE_TAP_MAX_DURATION]?: UsageConfig.DEFAULT.mouseTapMaxDuration,
+            scrollOnlyVertically = preferences[SCROLL_VERTICAL_ONLY]?: UsageConfig.DEFAULT.scrollOnlyVertically,
+            twoFingerSensitivity = preferences[TWO_FINGER_SENSITIVITY]?: UsageConfig.DEFAULT.twoFingerSensitivity,
+            func1ButtonMap = func1ButtonMap,
+            func2ButtonMap = func2ButtonMap,
             allowPassthrough = preferences[ALLOW_PASSTHROUGH]
                 ?: UsageConfig.DEFAULT.allowPassthrough,
             hideOnKeyboardOpen = preferences[HIDE_ON_KEYBOARD_OPEN]
@@ -295,6 +358,19 @@ class SettingsRepositoryImpl(
         val CURSOR_ACCELERATION_START = longPreferencesKey("cursor_acceleration_start__$configId")
         val CURSOR_ACCELERATION_DURATION = longPreferencesKey("cursor_acceleration_duration__$configId")
         val CURSOR_ACTIVATION_KEY = intPreferencesKey("cursor_activation_key__$configId")
+        val TOUCHPAD_MAIN_INPUT = stringPreferencesKey("touchpad_main_input__$configId")
+        val TOUCHPAD_LEFT_INPUT = stringPreferencesKey("touchpad_left_input__$configId")
+        val BACK_SCREEN_INPUT = stringPreferencesKey("back_screen_input__$configId")
+        val TOUCHPAD_SPLIT_INPUT = booleanPreferencesKey("touchpad_split_input__$configId")
+        val TOUCHPAD_SPLIT_POSITION = intPreferencesKey("touchpad_split_position__$configId")
+        val MOUSE_TAP_TO_CLICK = booleanPreferencesKey("mouse_tap_to_click__$configId")
+        val MOUSE_DOUBLE_TAP_HOLD = booleanPreferencesKey("mouse_double_tap_hold__$configId")
+        val MOUSE_TWO_FINGER_HOLD = booleanPreferencesKey("mouse_two_finger_hold__$configId")
+        val MOUSE_TAP_MAX_DURATION = intPreferencesKey("mouse_tap_max_duration__$configId")
+        val SCROLL_VERTICAL_ONLY = booleanPreferencesKey("scroll_vertical_only__$configId")
+        val TWO_FINGER_SENSITIVITY = intPreferencesKey("two_finger_sensitivity__$configId")
+        val FUNC_1_BUTTON_MAP = stringPreferencesKey("func_1_button_map__$configId")
+        val FUNC_2_BUTTON_MAP = stringPreferencesKey("func_2_button_map__$configId")
         val ALLOW_PASSTHROUGH = booleanPreferencesKey("allow_passthrough__$configId")
         val HIDE_ON_KEYBOARD_OPEN = booleanPreferencesKey("hide_on_keyboard_open__$configId")
         val HIDE_ON_LAUNCHER_OPEN = booleanPreferencesKey("hide_on_launcher_open__$configId")
@@ -326,6 +402,19 @@ class SettingsRepositoryImpl(
         preferences[CURSOR_ACCELERATION_START] = settings.cursorAccelerationStart
         preferences[CURSOR_ACCELERATION_DURATION] = settings.cursorAccelerationDuration
         preferences[CURSOR_ACTIVATION_KEY] = settings.cursorActivationKey
+        preferences[TOUCHPAD_MAIN_INPUT] = settings.touchPadMainInputType.name
+        preferences[TOUCHPAD_LEFT_INPUT] = settings.touchPadLeftInputType.name
+        preferences[BACK_SCREEN_INPUT] = settings.backScreenInputType.name
+        preferences[TOUCHPAD_SPLIT_INPUT] = settings.touchpadSplitInput
+        preferences[TOUCHPAD_SPLIT_POSITION] = settings.touchpadSplitPosition
+        preferences[MOUSE_TAP_TO_CLICK] = settings.mouseTapToClick
+        preferences[MOUSE_DOUBLE_TAP_HOLD] = settings.mouseDoubleTapToHold
+        preferences[MOUSE_TWO_FINGER_HOLD] = settings.mouseTwoFingerToHold
+        preferences[MOUSE_TAP_MAX_DURATION] = settings.mouseTapMaxDuration
+        preferences[SCROLL_VERTICAL_ONLY] = settings.scrollOnlyVertically
+        preferences[TWO_FINGER_SENSITIVITY] = settings.twoFingerSensitivity
+        preferences[FUNC_1_BUTTON_MAP] = settings.func1ButtonMap.name
+        preferences[FUNC_2_BUTTON_MAP] = settings.func2ButtonMap.name
         preferences[ALLOW_PASSTHROUGH] = settings.allowPassthrough
         preferences[HIDE_ON_KEYBOARD_OPEN] = settings.hideOnKeyboardOpen
         preferences[HIDE_ON_LAUNCHER_OPEN] = settings.hideOnLauncherOpen

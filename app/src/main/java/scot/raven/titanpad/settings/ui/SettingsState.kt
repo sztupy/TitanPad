@@ -16,6 +16,8 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import scot.raven.titanpad.cursor.domain.FuncButtonMap
+import scot.raven.titanpad.cursor.domain.InputType
 import scot.raven.titanpad.settings.domain.ApplicationSettings
 
 /**
@@ -64,6 +66,19 @@ class SettingsState(
                             cursorAccelerationStart = settings.cursorAccelerationStart,
                             cursorAccelerationDuration = settings.cursorAccelerationDuration,
                             cursorActivationKey = settings.cursorActivationKey,
+                            touchPadMainInputType = settings.touchPadMainInputType,
+                            touchPadLeftInputType = settings.touchPadLeftInputType,
+                            backScreenInputType = settings.backScreenInputType,
+                            touchpadSplitInput = settings.touchpadSplitInput,
+                            touchpadSplitPosition = settings.touchpadSplitPosition,
+                            mouseTapToClick = settings.mouseTapToClick,
+                            mouseDoubleTapToHold = settings.mouseDoubleTapToHold,
+                            mouseTwoFingerToHold = settings.mouseTwoFingerToHold,
+                            mouseTapMaxDuration = settings.mouseTapMaxDuration,
+                            scrollOnlyVertically = settings.scrollOnlyVertically,
+                            twoFingerSensitivity = settings.twoFingerSensitivity,
+                            func1ButtonMap = settings.func1ButtonMap,
+                            func2ButtonMap = settings.func2ButtonMap,
                             allowPassthrough = settings.allowPassthrough,
                             hideOnKeyboardOpen = settings.hideOnKeyboardOpen,
                             hideOnLauncherOpen = settings.hideOnLauncherOpen,
@@ -89,6 +104,7 @@ class SettingsState(
 
                             defaultConfigName = applicationSettings.defaultConfig.configName,
                             alwaysRemapFuncKeys = applicationSettings.alwaysRemapFuncKeys,
+                            alwaysRemapFuncKeysCompat = applicationSettings.alwaysRemapFuncKeysCompat,
                             configList = applicationSettings.additionalConfigs.associate { it.configId to it.configName }
                         )
                     }
@@ -150,6 +166,19 @@ class SettingsState(
             cursorAccelerationStart = _uiState.value.cursorAccelerationStart,
             cursorAccelerationDuration = _uiState.value.cursorAccelerationDuration,
             cursorActivationKey = _uiState.value.cursorActivationKey,
+            touchPadMainInputType = _uiState.value.touchPadMainInputType,
+            touchPadLeftInputType = _uiState.value.touchPadLeftInputType,
+            backScreenInputType = _uiState.value.backScreenInputType,
+            touchpadSplitInput = _uiState.value.touchpadSplitInput,
+            touchpadSplitPosition = _uiState.value.touchpadSplitPosition,
+            mouseTapToClick = _uiState.value.mouseTapToClick,
+            mouseDoubleTapToHold = _uiState.value.mouseDoubleTapToHold,
+            mouseTwoFingerToHold = _uiState.value.mouseTwoFingerToHold,
+            mouseTapMaxDuration = _uiState.value.mouseTapMaxDuration,
+            scrollOnlyVertically = _uiState.value.scrollOnlyVertically,
+            twoFingerSensitivity = _uiState.value.twoFingerSensitivity,
+            func1ButtonMap = _uiState.value.func1ButtonMap,
+            func2ButtonMap = _uiState.value.func2ButtonMap,
             allowPassthrough = _uiState.value.allowPassthrough,
             hideOnKeyboardOpen = _uiState.value.hideOnKeyboardOpen,
             hideOnLauncherOpen = _uiState.value.hideOnLauncherOpen,
@@ -248,8 +277,8 @@ data class SettingsUiState(
     val errorMessage: String = "",
     val configList: Map<String,String> = HashMap(),
     val defaultConfigName: String = Defaults.Settings.DEFAULT_CONFIG_NAME,
-
     val alwaysRemapFuncKeys: Boolean = Defaults.Settings.ALWAYS_REMAP_FUNC_KEYS,
+    val alwaysRemapFuncKeysCompat: Boolean = Defaults.Settings.ALWAYS_REMAP_FUNC_KEYS_COMPAT,
 
     val configId: String = Defaults.Settings.DEFAULT_CONFIG_ID,
     val configName: String = Defaults.Settings.DEFAULT_CONFIG_NAME,
@@ -259,6 +288,19 @@ data class SettingsUiState(
     val cursorSize: Int = Defaults.Settings.CURSOR_SIZE,
     val cursorAccelerationStart: Long = Defaults.Settings.CURSOR_ACCELERATION_START,
     val cursorAccelerationDuration: Long = Defaults.Settings.CURSOR_ACCELERATION_DURATION,
+    val touchPadMainInputType: InputType = Defaults.Settings.TOUCHPAD_MAIN_INPUT,
+    val touchPadLeftInputType: InputType = Defaults.Settings.TOUCHPAD_LEFT_INPUT,
+    val backScreenInputType: InputType = Defaults.Settings.BACK_SCREEN_INPUT,
+    val touchpadSplitInput: Boolean = Defaults.Settings.TOUCHPAD_SPLIT_INPUT,
+    val touchpadSplitPosition: Int = Defaults.Settings.TOUCHPAD_SPLIT_POSITION,
+    val mouseTapToClick: Boolean = Defaults.Settings.MOUSE_TAP_TO_CLICK,
+    val mouseDoubleTapToHold: Boolean = Defaults.Settings.MOUSE_DOUBLE_TAP_HOLD,
+    val mouseTwoFingerToHold: Boolean = Defaults.Settings.MOUSE_TWO_FINGER_HOLD,
+    val mouseTapMaxDuration: Int = Defaults.Settings.MOUSE_TAP_MAX_DURATION,
+    val scrollOnlyVertically: Boolean = Defaults.Settings.SCROLL_VERTICAL_ONLY,
+    val twoFingerSensitivity: Int = Defaults.Settings.TWO_FINGER_SENSITIVITY,
+    val func1ButtonMap: FuncButtonMap = Defaults.Settings.FUNC_1_BUTTON_MAP,
+    val func2ButtonMap: FuncButtonMap = Defaults.Settings.FUNC_2_BUTTON_MAP,
     val cursorActivationKey: Int = Defaults.Settings.CURSOR_ACTIVATION_KEY,
     val allowPassthrough: Boolean = Defaults.Settings.ALLOW_PASSTHROUGH,
     val hideOnKeyboardOpen: Boolean = Defaults.Settings.HIDE_ON_KEYBOARD_OPEN,

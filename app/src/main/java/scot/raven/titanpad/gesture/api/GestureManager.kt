@@ -78,6 +78,12 @@ class GestureManager(
     private val completionListener = object : GestureCompletionListener {
         override fun onGestureCompleted(success: Boolean) {
             setGestureReady(true)
+            if (!success) {
+                if (shouldShowGestures) {
+                    endVisualizeTap()
+                }
+                tapState = false;
+            }
         }
     }
 

@@ -72,7 +72,7 @@ class DefaultGestureStrategy(
                 },
                 {
                     Logger.d("DefaultGestureStrategy: start tap was cancelled")
-                    completionListener?.onGestureCompleted(true)
+                    completionListener?.onGestureCompleted(false)
                 }
             )
 
@@ -120,7 +120,7 @@ class DefaultGestureStrategy(
                 },
                 {
                     Logger.d("DefaultGestureStrategy: drag was cancelled")
-                    completionListener?.onGestureCompleted(true)
+                    completionListener?.onGestureCompleted(false)
                 }
             )
 
@@ -165,7 +165,7 @@ class DefaultGestureStrategy(
                 },
                 {
                     Logger.d("DefaultGestureStrategy: end tap was cancelled")
-                    completionListener?.onGestureCompleted(true)
+                    completionListener?.onGestureCompleted(false)
                 }
             )
 
@@ -179,7 +179,7 @@ class DefaultGestureStrategy(
     }
 
     override fun cancelTap(completionListener: GestureCompletionListener?): Boolean {
-        completionListener?.onGestureCompleted(true)
+        completionListener?.onGestureCompleted(false)
 
         if (activeStroke == null) {
             return false

@@ -62,9 +62,10 @@ Follow the steps below to get started quickly:
 * Install Shizuku [from this repository](https://github.com/thedjchi/Shizuku/releases). Make sure to use this Shizuku fork as the official version does not support MTK phones (like the Titan 2) properly.
 * Open Application
 * Grant both Accessibility permission and Shizuku permission
+* Disable built in Titan 2 features, especially Scroll Assistant
 * Enable "Main Config"
 
-This will enable a hardware emulated mouse on the entire Trackpad with tap to click features
+This will enable a hardware emulated mouse on the entire Trackpad with tap to click feature
 
 ## Supported input methods
 
@@ -144,6 +145,14 @@ You can set up multiple distinct configurations and switch between them as you n
 ### Activation key
 
 When you set an activation key for a config you can press that key to quickly turn on / off that particular config. When Func1&Func2 remapping is enabled you can also use them as the activator
+
+### Split trackpad
+
+You can split the trackpad into two sides, with both sides having a different config, like one doing scroll, the other mouse emulation.
+
+### Back screen touch
+
+You can also use the back screen's touch sensor to 
 
 ## Troubleshooting
 

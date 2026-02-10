@@ -73,7 +73,7 @@ fun DebugOptionsScreen(
             PreferenceCategory(title = "Experimental") {
                 SwitchPreferenceItem(
                     title = "Disable Touchscreen",
-                    subtitle = "Disables the touchscreen except during button presses",
+                    subtitle = "Disables the touchscreen when using software mouse",
                     checked = uiState.disableTouchscreen,
                     onCheckedChange = { newValue ->
                         if (newValue && !uiState.disableTouchscreen) {
@@ -130,7 +130,7 @@ fun DebugOptionsScreen(
                     onDismissRequest = { showTouchscreenDialog = false },
                     title = { Text("Disable Touchscreen") },
                     text = {
-                        Text("While the cursor is activated, the touchscreen will be disabled except during button presses to allow the cursor to dispatch gestures. Also, this may introduce a small amount of input lag.")
+                        Text("While the cursor is activated, the touchscreen will be disabled except during button presses to allow the cursor to dispatch gestures. Also, this may introduce a small amount of input lag. Only works for software based mouse mode")
                     },
                     confirmButton = {
                         TextButton(

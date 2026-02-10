@@ -72,14 +72,25 @@ Multi finger features are currently calibrated to my fingers which are fairly bi
 ## Troubleshooting
 
 ### Verifying Shizuku authorization
-A green banner on the main page indicates that Shizuku authorization has been granted to TitanPad. Only the third screenshot below indicates successful authorization.
+A green banner on the main page indicates that Shizuku authorization has been granted to TitanPad. TitanPad also requires Shizuku with support for MTK phones. Only the fourth screenshot below will result in a fully working application.
+
 <div align="center">
-<img src='./docs/imgs/Screenshot_20250328_194724.png' width=200 alt='Screenshot showing shizuku settings missing'>
-<img src='./docs/imgs/Screenshot_20250328_194745.png' width=200 alt='Screenshot showing shizuku not being enabled'>
-<img src='./docs/imgs/Screenshot_20250328_194815.png' width=200 alt='Screenshot showing both accessibility and shizuku enabled'>
+<img src='./docs/imgs/screenshot_1_no_permissions.png' width=200 alt='Screenshot showing no permissions at all'>
+<img src='./docs/imgs/screenshot_2_only_accessibility.png' width=200 alt='Screenshot showing only accessibility permissions being enabled'>
+<img src='./docs/imgs/screenshot_3_wrong_shizuku.png' width=200 alt='Screenshot showing both accessibility and shizuku enabled, but with an invalid Shizuku version'>
+<img src='./docs/imgs/screenshot_4_ok.png' width=200 alt='Screenshot showing both accessibility and Shizuku enabled, and with the correct version of the latter'>
 </div>
 
 **WARNING!** Also note that due to a bug in Shizuku v13.6.0 (the latest official release as of February 2026) it does not work fully on MTK phones. You either have to downgrade to v13.5.4, or use [thedjchi's Shizuku fork](https://github.com/thedjchi/Shizuku/releases), which also contain other fixes and improvements. 
+
+## Screenshots
+
+<div align="center">
+<img src='./docs/imgs/screenshot_example_1.png' width=200 alt='Main menu'>
+<img src='./docs/imgs/screenshot_example_2.png' width=200 alt='Input config'>
+<img src='./docs/imgs/screenshot_example_3.png' width=200 alt='Tap settings'>
+<img src='./docs/imgs/screenshot_example_4.png' width=200 alt='Software emulation'>
+</div>
 
 ## FAQs
 ### Where can I make feature suggestions or report bugs?

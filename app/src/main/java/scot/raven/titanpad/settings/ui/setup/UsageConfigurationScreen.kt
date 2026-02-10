@@ -38,8 +38,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.datastore.core.IOException
-import androidx.datastore.preferences.core.booleanPreferencesKey
-import androidx.datastore.preferences.core.intPreferencesKey
 import scot.raven.titanpad.core.logs.Logger
 import scot.raven.titanpad.settings.domain.UsageConfig
 import scot.raven.titanpad.settings.ui.NoteItem

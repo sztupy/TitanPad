@@ -14,6 +14,8 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.core.app.ActivityOptionsCompat
 import androidx.lifecycle.ViewModelProvider
+import androidx.lifecycle.lifecycleScope
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -64,6 +66,9 @@ class SettingsActivity : ComponentActivity() {
             Toast.makeText(this, message, Toast.LENGTH_SHORT).show()
         }
 
+         _activeConfiguration.value = TitanPad.getInstance().getActiveConfig()
+        Logger.d("Active config for Activity: ${_activeConfiguration.value}")
+
         registerAccessibilitySettingsObserver()
         checkAccessibilityServiceStatus()
 
@@ -99,6 +104,9 @@ class SettingsActivity : ComponentActivity() {
         registerReceiver(receiver, filter, RECEIVER_NOT_EXPORTED)
 
         checkAccessibilityServiceStatus()
+
+        _activeConfiguration.value = TitanPad.getInstance().getActiveConfig()
+        Logger.d("Active config for Activity: ${_activeConfiguration.value}")
     }
 
     public override fun onPause() {

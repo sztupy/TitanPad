@@ -197,9 +197,12 @@ class SettingsRepositoryImpl(
         val CURSOR_IMAGE_ALIGNMENT = stringPreferencesKey("cursor_image_alignment__$configId")
         val CLICKABLE_IMAGE_ALIGNMENT = stringPreferencesKey("clickable_image_alignment__$configId")
         val SCROLL_TOGGLE_IMAGE_ALIGNMENT = stringPreferencesKey("scroll_toggle_image_alignment__$configId")
+        val AUTO_ENABLE_APPS = stringPreferencesKey("auto_enable_apps__$configId")
         val AUTO_HIDE_APPS = stringPreferencesKey("auto_hide_apps__$configId")
         val CLICKABLE_APPS = stringPreferencesKey("clickable_apps__$configId")
         val SHOW_NOTIFICATION = booleanPreferencesKey("show_notification__$configId")
+        val AUTO_ENABLE_LIST_TYPE = stringPreferencesKey("auto_enable_list_type__$configId")
+        val AUTO_DISABLE_ON_SWITCH = booleanPreferencesKey("auto_disable_on_switch__$configId")
         val APPLICATION_LIST_TYPE = stringPreferencesKey("application_list_type__$configId")
         val CLICKABLE_LIST_TYPE = stringPreferencesKey("clickable_list_type__$configId")
         val CHECK_CLICKABLE = booleanPreferencesKey("check_clickable__$configId")
@@ -238,6 +241,20 @@ class SettingsRepositoryImpl(
             APPLICATION_LIST_TYPE,
             UsageConfig.DEFAULT.applicationListType,
             "application list type"
+        )
+
+        val autoEnableAppsString = preferences[AUTO_ENABLE_APPS] ?: ""
+        val autoEnableApps = if (autoEnableAppsString.isBlank()) {
+            emptySet()
+        } else {
+            autoEnableAppsString.split(",").toSet()
+        }
+
+        val autoEnableListType = getEnumPreference(
+            preferences,
+            AUTO_ENABLE_LIST_TYPE,
+            UsageConfig.DEFAULT.autoEnableListType,
+            "auto enable list type"
         )
 
         val touchPadMainInputType = getEnumPreference(
@@ -343,10 +360,13 @@ class SettingsRepositoryImpl(
             cursorImageAlignment = cursorImageAlignment,
             clickableImageAlignment = clickableImageAlignment,
             scrollToggleImageAlignment = scrollToggleImageAlignment,
+            autoEnableApps = autoEnableApps,
             autoHideApps = autoHideApps,
             clickableApps = clickableApps,
             showNotification = preferences[SHOW_NOTIFICATION]
                 ?: UsageConfig.DEFAULT.showNotification,
+            autoEnableListType = autoEnableListType,
+            autoDisableOnSwitch = preferences[AUTO_DISABLE_ON_SWITCH] ?: UsageConfig.DEFAULT.autoDisableOnSwitch,
             applicationListType = applicationListType,
             clickableListType = clickableListType,
             checkClickable = preferences[CHECK_CLICKABLE]
@@ -395,9 +415,12 @@ class SettingsRepositoryImpl(
         val CURSOR_IMAGE_ALIGNMENT = stringPreferencesKey("cursor_image_alignment__$configId")
         val CLICKABLE_IMAGE_ALIGNMENT = stringPreferencesKey("clickable_image_alignment__$configId")
         val SCROLL_TOGGLE_IMAGE_ALIGNMENT = stringPreferencesKey("scroll_toggle_image_alignment__$configId")
+        val AUTO_ENABLE_APPS = stringPreferencesKey("auto_enable_apps__$configId")
         val AUTO_HIDE_APPS = stringPreferencesKey("auto_hide_apps__$configId")
         val CLICKABLE_APPS = stringPreferencesKey("clickable_apps__$configId")
         val SHOW_NOTIFICATION = booleanPreferencesKey("show_notification__$configId")
+        val AUTO_ENABLE_LIST_TYPE = stringPreferencesKey("auto_enable_list_type__$configId")
+        val AUTO_DISABLE_ON_SWITCH = booleanPreferencesKey("auto_disable_on_switch__$configId")
         val APPLICATION_LIST_TYPE = stringPreferencesKey("application_list_type__$configId")
         val CLICKABLE_LIST_TYPE = stringPreferencesKey("clickable_list_type__$configId")
         val CHECK_CLICKABLE = booleanPreferencesKey("check_clickable__$configId")
@@ -439,9 +462,12 @@ class SettingsRepositoryImpl(
         preferences[CURSOR_IMAGE_ALIGNMENT] = settings.cursorImageAlignment.name
         preferences[CLICKABLE_IMAGE_ALIGNMENT] = settings.clickableImageAlignment.name
         preferences[SCROLL_TOGGLE_IMAGE_ALIGNMENT] = settings.scrollToggleImageAlignment.name
+        preferences[AUTO_ENABLE_APPS] = settings.autoEnableApps.joinToString(",")
         preferences[AUTO_HIDE_APPS] = settings.autoHideApps.joinToString(",")
         preferences[CLICKABLE_APPS] = settings.clickableApps.joinToString(",")
         preferences[SHOW_NOTIFICATION] = settings.showNotification
+        preferences[AUTO_ENABLE_LIST_TYPE] = settings.autoEnableListType.name
+        preferences[AUTO_DISABLE_ON_SWITCH] = settings.autoDisableOnSwitch
         preferences[APPLICATION_LIST_TYPE] = settings.applicationListType.name
         preferences[CLICKABLE_LIST_TYPE] = settings.clickableListType.name
         preferences[CHECK_CLICKABLE] = settings.checkClickable

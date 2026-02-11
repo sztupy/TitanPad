@@ -52,6 +52,7 @@ class UsageConfigurationActivity : ComponentActivity() {
                     onNavigateToDebugOptions = { startCustomActivity(this, DebugOptionsActivity::class.java, configId) },
                     onNavigateToAutoHideSettings = { startCustomActivity(this, AutoHideSettingsActivity::class.java, configId) },
                     onNavigateToSoftwareEmulationSettings = { startCustomActivity(this, SoftwareEmulationSettingsActivity::class.java, configId) },
+                    onNavigateToClickableAppsScreen = { startCustomActivity(this, AutoEnableAppsActivity::class.java, configId) },
                     onNavigateBack = {
                         finish()
                     },

@@ -21,6 +21,7 @@ import kotlinx.coroutines.cancel
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.stateIn
+import scot.raven.titanpad.core.control.ModeCoordinator
 import scot.raven.titanpad.cursor.control.InputManager
 import scot.raven.titanpad.settings.domain.ApplicationSettings
 
@@ -37,6 +38,7 @@ class TitanPad : Application() {
     private val applicationScope = CoroutineScope(SupervisorJob() + Dispatchers.Main)
     private var shizukuObserverJob: Job? = null
     private var _inputManager: InputManager? = null
+    private var _modeCoordinator: ModeCoordinator? = null
     private var settingsObserverJob: Job? = null
     private lateinit var _settingsFlow: StateFlow<ApplicationSettings>
 
@@ -53,6 +55,20 @@ class TitanPad : Application() {
 
     fun setTrackpadActionHandler(handler: InputManager) {
         _inputManager = handler
+    }
+
+    fun setModeCoordinator(modeCoordinator: ModeCoordinator) {
+        _modeCoordinator = modeCoordinator
+    }
+
+    fun getActiveConfig() : String {
+        if (_modeCoordinator == null) {
+            return ""
+        }
+        if (_modeCoordinator?.activeMode?.value == ModeCoordinator.OverlayMode.OFF) {
+            return ""
+        }
+        return getSettingsFlow().value.lastActiveSetting
     }
 
     override fun onCreate() {

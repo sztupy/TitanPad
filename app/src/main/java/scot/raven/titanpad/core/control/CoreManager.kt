@@ -143,6 +143,7 @@ class CoreManager(
             )
 
             TitanPad.getInstance().setTrackpadActionHandler(inputManager)
+            TitanPad.getInstance().setModeCoordinator(modeCoordinator)
             inputManager.start()
 
             Logger.i("CoreManager initialization complete")
@@ -200,7 +201,7 @@ class CoreManager(
                 TitanPad.getInstance().settingsRepository.setActiveKey(configId)
             }
 
-            if (modeCoordinator.requestActivation(ModeCoordinator.OverlayMode.ON)) {
+            if (modeCoordinator.activeMode.value != ModeCoordinator.OverlayMode.OFF || modeCoordinator.requestActivation(ModeCoordinator.OverlayMode.ON)) {
                 val intent = Intent(BROADCAST_CURSOR_ACTIVATED)
                 intent.setPackage(service.packageName)
                 intent.putExtra(CONFIG_ID_EXTRA, configId)

@@ -54,6 +54,7 @@ import kotlinx.coroutines.withContext
 import scot.raven.titanpad.core.constants.ApplicationConstants
 import scot.raven.titanpad.cursor.domain.FuncButtonMap
 import scot.raven.titanpad.cursor.domain.InputType
+import scot.raven.titanpad.settings.domain.AppListType
 import scot.raven.titanpad.settings.ui.DropdownPreferenceItem
 import scot.raven.titanpad.settings.ui.InputSelectorItem
 import scot.raven.titanpad.settings.ui.TextFieldDialog
@@ -73,6 +74,7 @@ fun UsageConfigurationScreen(
     onNavigateToDebugOptions: () -> Unit,
     onNavigateToAutoHideSettings: () -> Unit,
     onNavigateToSoftwareEmulationSettings: () -> Unit,
+    onNavigateToClickableAppsScreen: () -> Unit,
     onNavigateBack: () -> Unit,
 ) {
     val uiState by settingsState.uiState.collectAsState()
@@ -174,6 +176,43 @@ fun UsageConfigurationScreen(
                         }
                     },
                     steps = 4,
+                )
+
+                DropdownPreferenceItem(
+                    title = "Activation AppList Behaviour",
+                    subtitle =
+                        when (uiState.autoEnableListType) {
+                            AppListType.ALLOW_LIST -> "Auto enable config for applications on this list"
+                            AppListType.DENY_LIST -> "Auto enable config for every other application not on this list"
+                        },
+                    selectedOption = uiState.autoEnableListType,
+                    options =
+                        listOf(
+                            AppListType.ALLOW_LIST to "Allow list",
+                            AppListType.DENY_LIST to "Ignore list"
+                        ),
+                    onOptionSelected = { value ->
+                        settingsState.updatePreference(value) { settings, v ->
+                            settings.copy(autoEnableListType = v)
+                        }
+                    }
+                )
+
+                SimplePreferenceItem(
+                    title = "Select Applications for Activation",
+                    subtitle = "${if (uiState.autoEnableListType == AppListType.ALLOW_LIST) "Auto Enable" else "Ignore"} in specific apps",
+                    onClick = onNavigateToClickableAppsScreen,
+                )
+
+                SwitchPreferenceItem(
+                    title = "Auto Disable on Switching Apps",
+                    subtitle = "${ if (!uiState.autoDisableOnSwitch) "Don't automatically disable on app switch" else if (uiState.autoEnableListType == AppListType.ALLOW_LIST) "Auto disable in apps not selected above" else "Auto disable in selected apps"}",
+                    checked = uiState.autoDisableOnSwitch,
+                    onCheckedChange = { value ->
+                        settingsState.updatePreference(value) { settings, v ->
+                            settings.copy(autoDisableOnSwitch = v)
+                        }
+                    },
                 )
             }
 
@@ -422,8 +461,8 @@ fun UsageConfigurationScreen(
 
             PreferenceCategory(title = "Behavior") {
                 SimplePreferenceItem(
-                    title = "Set Up Auto-Disable Options",
-                    subtitle = "Automatically disable and re-enable the config on various events",
+                    title = "Set Up Auto-Hide Options",
+                    subtitle = "Automatically hide, but not disable the config on various events",
                     onClick = onNavigateToAutoHideSettings
                 )
 

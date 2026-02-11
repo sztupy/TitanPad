@@ -54,11 +54,14 @@ object Defaults {
         val CURSOR_IMAGE_ALIGNMENT = IconAlignment.TOP_LEFT
         val CLICKABLE_IMAGE_ALIGNMENT = IconAlignment.TOP_LEFT
         val SCROLL_TOGGLE_IMAGE_ALIGNMENT = IconAlignment.TOP_LEFT
+        val AUTO_ENABLE_APPS = emptySet<String>()
         val AUTO_HIDE_APPS = emptySet<String>()
         val CLICKABLE_APPS = emptySet<String>()
         const val SHOW_NOTIFICATION = false
+        val AUTO_ENABLE_LIST_TYPE = AppListType.ALLOW_LIST
         val APPLICATION_LIST_TYPE = AppListType.DENY_LIST
         val CLICKABLE_LIST_TYPE = AppListType.DENY_LIST
+        const val AUTO_DISABLE_ON_SWITCH = false
         const val CHECK_CLICKABLE = false
         const val DISABLE_TOUCHSCREEN = false
         const val ALWAYS_REMAP_FUNC_KEYS = true

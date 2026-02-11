@@ -294,6 +294,8 @@ class AppAccessibilityService : AccessibilityService(), LifecycleOwner,
                     }
 
                     checkAppVisibility()
+
+                    checkAutoEnableSettings()
                 }
 
                 else -> {}
@@ -327,6 +329,42 @@ class AppAccessibilityService : AccessibilityService(), LifecycleOwner,
             }
         }
         return false
+    }
+
+    private fun checkAutoEnableSettings() {
+        val settings = TitanPad.getInstance().getSettingsFlow().value
+        val appWindow = windows
+            ?.firstOrNull { it.type == AccessibilityWindowInfo.TYPE_APPLICATION && it.root != null }
+
+        val appName = appWindow?.root?.packageName?.toString()
+
+        if (appWindow == null)
+            return
+
+        if (modeCoordinator.activeMode.value == ModeCoordinator.OverlayMode.OFF) {
+            (setOf(settings.defaultConfig) + settings.additionalConfigs).forEach { currentSettings ->
+                if (appName in currentSettings.autoEnableApps && currentSettings.autoEnableListType == AppListType.ALLOW_LIST) {
+                    Logger.d("Enabling config ${currentSettings.configId} for app $appName in allowlist")
+                    activateStandardCursor(this, currentSettings.configId)
+                    return
+                } else if (appName !in currentSettings.autoEnableApps && currentSettings.autoEnableListType == AppListType.DENY_LIST) {
+                    Logger.d("Enabling config ${currentSettings.configId} for app $appName not in denylist")
+                    activateStandardCursor(this, currentSettings.configId)
+                    return
+                }
+            }
+        } else {
+            val currentSettings = settings.getActiveConfig()
+            if (currentSettings.autoDisableOnSwitch) {
+                if (appName in currentSettings.autoEnableApps && currentSettings.autoEnableListType == AppListType.DENY_LIST) {
+                    Logger.d("Disabling config ${currentSettings.configId} for app $appName in denylist")
+                    deactivateStandardCursor(this, "")
+                } else if (appName !in currentSettings.autoEnableApps && currentSettings.autoEnableListType == AppListType.ALLOW_LIST) {
+                    Logger.d("Disabling config ${currentSettings.configId} for app $appName not in allowlist")
+                    deactivateStandardCursor(this, "")
+                }
+            }
+        }
     }
 
     private fun checkAppVisibility() {

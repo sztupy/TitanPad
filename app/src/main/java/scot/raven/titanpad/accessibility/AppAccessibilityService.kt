@@ -259,15 +259,10 @@ class AppAccessibilityService : AccessibilityService(), LifecycleOwner,
 
         Logger.d("Restoring cursor overlay")
         val settings = TitanPad.getInstance().getSettingsFlow().value
-        val cursorMapped = settings.getActiveConfig().cursorActivationKey != ApplicationConstants.OVERLAY_DISABLED
-        (lastOverlayType == ModeCoordinator.OverlayMode.ON) && !cursorMapped
 
         // If no previous overlay type, default to any mapped cursor
         if (lastOverlayType == ModeCoordinator.OverlayMode.OFF) {
-            lastOverlayType = when {
-                cursorMapped -> ModeCoordinator.OverlayMode.ON
-                else -> ModeCoordinator.OverlayMode.OFF
-            }
+            lastOverlayType = ModeCoordinator.OverlayMode.ON
         }
 
         when (lastOverlayType) {

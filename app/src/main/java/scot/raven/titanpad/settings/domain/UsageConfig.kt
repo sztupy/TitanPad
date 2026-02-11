@@ -63,7 +63,7 @@ data class UsageConfig(
 ) {
     companion object {
         val DEFAULT = UsageConfig()
-        const val KEY_NONE = ApplicationConstants.OVERLAY_DISABLED
+        const val KEY_NONE = -999
 
         fun randomId() : String {
             val allowedChars = ('a'..'z')

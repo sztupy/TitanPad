@@ -14,7 +14,7 @@ object Logger {
         ERROR,
     }
 
-    private val minLogLevel = if (BuildConfig.DEBUG) Level.VERBOSE else Level.WARNING
+    private val minLogLevel = if (BuildConfig.DEBUG) Level.VERBOSE else Level.DEBUG
 
     fun v(
         message: String,

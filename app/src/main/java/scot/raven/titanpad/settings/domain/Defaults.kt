@@ -6,6 +6,7 @@ import scot.raven.titanpad.core.constants.GestureConstants
 import scot.raven.titanpad.cursor.domain.FuncButtonMap
 import scot.raven.titanpad.cursor.domain.IconAlignment
 import scot.raven.titanpad.cursor.domain.InputType
+import scot.raven.titanpad.settings.domain.UsageConfig.Companion.KEY_NONE
 
 /**
  * Contains default values that can be modified by the user.
@@ -22,7 +23,7 @@ object Defaults {
         const val CURSOR_SIZE = CursorConstants.DEFAULT_SIZE
         const val CURSOR_ACCELERATION_START = GestureConstants.DEFAULT_ACCELERATION_START
         const val CURSOR_ACCELERATION_DURATION = GestureConstants.DEFAULT_ACCELERATION_DURATION
-        const val CURSOR_ACTIVATION_KEY = ApplicationConstants.OVERLAY_DISABLED
+        const val CURSOR_ACTIVATION_KEY = KEY_NONE
         const val ALLOW_PASSTHROUGH = GestureConstants.ALLOW_PASSTHROUGH
         val TOUCHPAD_MAIN_INPUT = InputType.HARDWARE_MOUSE
         val TOUCHPAD_LEFT_INPUT = InputType.HARDWARE_SCROLL

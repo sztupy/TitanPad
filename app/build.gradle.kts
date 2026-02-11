@@ -31,6 +31,7 @@ android {
             )
         }
         debug {
+            resValue("string", "app_name", "TitanPad Debug")
             applicationIdSuffix = ".debug"
             versionNameSuffix = "-debug"
         }

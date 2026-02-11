@@ -102,6 +102,7 @@ fun SettingsScreen(
     activeConfiguration: StateFlow<String>,
     onNavigateToCursorSettings: (String) -> Unit,
     onNavigateToSetupOptions: () -> Unit,
+    onNavigateToDisclosureScreen: () -> Unit,
 ) {
     val uiState by settingsState.uiState.collectAsState()
     val validationErrors by settingsState.validationErrors.collectAsState()
@@ -171,9 +172,7 @@ fun SettingsScreen(
                 PermissionStatusBanner(
                     title = "Accessibility Service",
                     status = uiState.isAccessibilityServiceEnabled,
-                    onClickAction = {
-                        context.startActivity(Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS))
-                    },
+                    onClickAction = onNavigateToDisclosureScreen,
                 )
 
                 val shizukuStatus = ShizukuConnection.statusFlow.collectAsState().value
@@ -678,7 +677,7 @@ fun InputSelectorItem(
     )
 }
 @Composable
-private fun PermissionStatusBanner(
+fun PermissionStatusBanner(
     title: String,
     status: Boolean?,
     onClickAction: () -> Unit,

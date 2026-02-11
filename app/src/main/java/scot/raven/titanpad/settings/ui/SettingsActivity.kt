@@ -14,8 +14,6 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.core.app.ActivityOptionsCompat
 import androidx.lifecycle.ViewModelProvider
-import androidx.lifecycle.lifecycleScope
-import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -23,6 +21,7 @@ import scot.raven.titanpad.TitanPad
 import scot.raven.titanpad.accessibility.AppAccessibilityService.Companion.BROADCAST_CURSOR_ACTIVATED
 import scot.raven.titanpad.core.logs.Logger
 import scot.raven.titanpad.core.ui.AppTheme
+import scot.raven.titanpad.settings.ui.setup.DisclosureActivity
 import scot.raven.titanpad.settings.ui.setup.SetupOptionsActivity
 import scot.raven.titanpad.settings.ui.setup.UsageConfigurationActivity
 
@@ -77,6 +76,7 @@ class SettingsActivity : ComponentActivity() {
                 SettingsScreen(
                     settingsState = settingsState,
                     activeConfiguration = activeConfiguration,
+                    onNavigateToDisclosureScreen = { startCustomActivity(this, DisclosureActivity::class.java, "default") },
                     onNavigateToCursorSettings = { configId -> startCustomActivity(this, UsageConfigurationActivity::class.java, configId) },
                     onNavigateToSetupOptions = { startCustomActivity(this, SetupOptionsActivity::class.java, "default") },
                 )

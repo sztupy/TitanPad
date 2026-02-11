@@ -1,4 +1,3 @@
-<!--suppress CheckImageSize, CheckImageSize -->eckImageSize -->eckImageSize -->
 <div align="center">
 <img src='./app/src/main/ic_launcher-playstore.png' width=100 alt='Application icon'>
 </div>

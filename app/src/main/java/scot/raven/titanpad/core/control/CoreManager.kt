@@ -200,17 +200,12 @@ class CoreManager(
                 TitanPad.getInstance().settingsRepository.setActiveKey(configId)
             }
 
-            if ((!cursorStateManager.isCursorVisible() || keymapToggle) && modeCoordinator.requestActivation(
-                    ModeCoordinator.OverlayMode.ON
-                )) {
-                cursorStateManager.setCursorVisibiliy(modeCoordinator.activeMode.value == ModeCoordinator.OverlayMode.ON)
-
+            if (modeCoordinator.requestActivation(ModeCoordinator.OverlayMode.ON)) {
                 val intent = Intent(BROADCAST_CURSOR_ACTIVATED)
                 intent.setPackage(service.packageName)
                 intent.putExtra(CONFIG_ID_EXTRA, configId)
                 service.sendBroadcast(intent)
-
-                return cursorStateManager.isCursorVisible()
+                return true
             }
             return false
         } catch (e: Exception) {
@@ -222,17 +217,13 @@ class CoreManager(
     fun deactivateCursorMode(keymapToggle: Boolean = false) : Boolean {
         try {
             Logger.d("Deactivating cursor mode")
-            if ((cursorStateManager.isCursorVisible() || keymapToggle) && modeCoordinator.requestActivation(
-                    ModeCoordinator.OverlayMode.OFF
-                )) {
-                cursorStateManager.setCursorVisibiliy(false)
-
+            if (modeCoordinator.requestActivation(ModeCoordinator.OverlayMode.OFF)) {
                 val intent = Intent(BROADCAST_CURSOR_ACTIVATED)
                 intent.setPackage(service.packageName)
                 intent.putExtra(CONFIG_ID_EXTRA, "")
                 service.sendBroadcast(intent)
 
-                return !cursorStateManager.isCursorVisible()
+                return true
             }
             return false
         } catch (e: Exception) {

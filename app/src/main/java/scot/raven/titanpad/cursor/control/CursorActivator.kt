@@ -13,8 +13,10 @@ import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
+import scot.raven.titanpad.TitanPad
 import scot.raven.titanpad.accessibility.AppAccessibilityService.Companion.BROADCAST_CURSOR_ACTIVATED
 import scot.raven.titanpad.settings.domain.ApplicationSettings
+import scot.raven.titanpad.settings.domain.UsageConfig
 import scot.raven.titanpad.settings.ui.SettingsActivity.Companion.CONFIG_ID_EXTRA
 
 /**
@@ -70,16 +72,22 @@ class CursorActivator(
         try {
             if (event == null) return false
 
-            val activateKeys = buildSet {
-                add(settings.getActiveConfig().cursorActivationKey)
-            }.filter { it < 10000 }
+            val activateKeys = (settings.additionalConfigs + settings.defaultConfig).map {
+                it.cursorActivationKey
+            }.filter { it in 0..<10000 }
 
-            val specialKeys = buildSet {
-                add(settings.getActiveConfig().cursorActivationKey)
+            val specialKeys = (settings.additionalConfigs + settings.defaultConfig).map {
+                it.cursorActivationKey
             }.filter { it > 10000 }
 
             if (event.keyCode in activateKeys || (event.scanCode + 10000) in specialKeys) {
-                return handleActivationKey(event)
+                var foundSettings = (settings.additionalConfigs + settings.defaultConfig).find {
+                    it.cursorActivationKey > 0 && (event.keyCode == it.cursorActivationKey || event.scanCode == it.cursorActivationKey + 10000)
+                }
+                if (foundSettings == null)
+                    foundSettings = settings.getActiveConfig()
+
+                return handleActivationKey(event, foundSettings, foundSettings.configId == settings.getActiveConfig().configId)
             }
             return false
         } catch (e: Exception) {
@@ -89,9 +97,8 @@ class CursorActivator(
         }
     }
 
-    private fun handleActivationKey(event: KeyEvent): Boolean {
+    private fun handleActivationKey(event: KeyEvent, config: UsageConfig, isSame: Boolean): Boolean {
         cancelContinuousGesture()
-        val settings = settingsFlow.value
 
         when (event.action) {
             KeyEvent.ACTION_DOWN -> {
@@ -102,10 +109,21 @@ class CursorActivator(
                 wasActivated = false
 
                 activationJob = backgroundScope.launch {
-                    delay(settings.getActiveConfig().activationDuration)
+                    delay(config.activationDuration)
                     if (isActivationKeyPressed) {
+                        Logger.d("Switching config ${config.configId}")
+                        if (!isSame) {
+                            Logger.d("Disabling old config")
+                            modeCoordinator.requestActivation(ModeCoordinator.OverlayMode.OFF)
+                            backgroundScope.launch {
+                                TitanPad.getInstance().settingsRepository.setActiveKey(config.configId)
+                            }
+                        }
+
                         if (modeCoordinator.requestActivation(ModeCoordinator.OverlayMode.ON)) {
+                            Logger.d("Switching config")
                             if (modeCoordinator.activeMode.value == ModeCoordinator.OverlayMode.OFF) {
+                                Logger.d("Switching config OFF")
                                 gestureManager.setGestureReady(true)
 
                                 val intent = Intent(BROADCAST_CURSOR_ACTIVATED)
@@ -113,9 +131,10 @@ class CursorActivator(
                                 intent.putExtra(CONFIG_ID_EXTRA, "")
                                 service.sendBroadcast(intent)
                             } else {
+                                Logger.d("Switching config ON")
                                 val intent = Intent(BROADCAST_CURSOR_ACTIVATED)
                                 intent.setPackage(service.packageName)
-                                intent.putExtra(CONFIG_ID_EXTRA, settings.getActiveConfig().configId)
+                                intent.putExtra(CONFIG_ID_EXTRA, config.configId)
                                 service.sendBroadcast(intent)
                             }
                         }

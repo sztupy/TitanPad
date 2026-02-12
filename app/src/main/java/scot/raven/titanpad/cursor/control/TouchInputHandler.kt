@@ -43,6 +43,7 @@ class TouchInputHandler(
     private var endTime: Long = 0
     private var numFingers = 0
     private var scrollHasStarted = false
+    private var scrollTouchLocation = 0
 
     fun setHidService(service: IHidService?) {
         hidService = service
@@ -134,11 +135,13 @@ class TouchInputHandler(
 
                 var inputType : InputType = if (backScreenMode) settings.backScreenInputType else settings.touchPadMainInputType
                 var scrollConfig = if (backScreenMode) settings.scrollSettings[3] else settings.scrollSettings[0]
+                scrollTouchLocation = 0
 
                 if (settings.touchpadSplitInput && !backScreenMode) {
                     if (startPositionX < TRACKPAD_WIDTH.toFloat() * settings.touchpadSplitPosition.toFloat() / 100f) {
                         inputType = settings.touchPadLeftInputType
                         scrollConfig = settings.scrollSettings[1]
+                        scrollTouchLocation = 1
                     }
                 }
 
@@ -146,6 +149,7 @@ class TouchInputHandler(
                     if (startPositionX > TRACKPAD_WIDTH.toFloat() * settings.touchpadSplitRightPosition.toFloat() / 100f) {
                         inputType = settings.touchPadRightInputType
                         scrollConfig = settings.scrollSettings[2]
+                        scrollTouchLocation = 2
                     }
                 }
 
@@ -203,8 +207,14 @@ class TouchInputHandler(
                 var touchY : Float
                 if (scrollHasStarted) {
                     if (!backScreenMode) {
-                        if (settings.touchpadSplitInput) {
-                            touchX = ((if (scrollConfig.scrollOnlyVertically) startPositionX else currentX).toFloat() / (settings.touchpadSplitPosition.toFloat() / 100f))
+                        if (scrollTouchLocation == 1) {
+                            touchX =
+                                ((if (scrollConfig.scrollOnlyVertically) startPositionX else currentX).toFloat() / (settings.touchpadSplitPosition.toFloat() / 100f))
+                            touchY = currentY.toFloat() * 2
+                        } else if (scrollTouchLocation == 2) {
+                            val leftSide = TRACKPAD_WIDTH.toFloat() * settings.touchpadSplitRightPosition.toFloat() / 100f
+                            touchX =
+                                ((if (scrollConfig.scrollOnlyVertically) startPositionX-leftSide else currentX-leftSide) / ((100 - settings.touchpadSplitRightPosition.toFloat()) / 100f))
                             touchY = currentY.toFloat() * 2
                         } else {
                             touchX = if (scrollConfig.scrollOnlyVertically) startPositionX.toFloat() else currentX.toFloat()

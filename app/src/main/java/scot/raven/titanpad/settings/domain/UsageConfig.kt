@@ -21,15 +21,17 @@ data class UsageConfig(
     val cursorActivationKey: Int = Defaults.Settings.CURSOR_ACTIVATION_KEY,
     val touchPadMainInputType: InputType = Defaults.Settings.TOUCHPAD_MAIN_INPUT,
     val touchPadLeftInputType: InputType = Defaults.Settings.TOUCHPAD_LEFT_INPUT,
+    val touchPadRightInputType: InputType = Defaults.Settings.TOUCHPAD_RIGHT_INPUT,
     val backScreenInputType: InputType = Defaults.Settings.BACK_SCREEN_INPUT,
     val touchpadDisableTopRow: Boolean = Defaults.Settings.TOUCHPAD_DISABLE_TOP_ROW,
     val touchpadSplitInput: Boolean = Defaults.Settings.TOUCHPAD_SPLIT_INPUT,
     val touchpadSplitPosition: Int = Defaults.Settings.TOUCHPAD_SPLIT_POSITION,
+    val touchpadSplitRightInput: Boolean = Defaults.Settings.TOUCHPAD_SPLIT_RIGHT_INPUT,
+    val touchpadSplitRightPosition: Int = Defaults.Settings.TOUCHPAD_SPLIT_RIGHT_POSITION,
     val mouseTapToClick: Boolean = Defaults.Settings.MOUSE_TAP_TO_CLICK,
     val mouseDoubleTapToHold: Boolean = Defaults.Settings.MOUSE_DOUBLE_TAP_HOLD,
     val mouseTwoFingerToHold: Boolean = Defaults.Settings.MOUSE_TWO_FINGER_HOLD,
     val mouseTapMaxDuration: Int = Defaults.Settings.MOUSE_TAP_MAX_DURATION,
-    val scrollOnlyVertically: Boolean = Defaults.Settings.SCROLL_VERTICAL_ONLY,
     val softwareMouseSensitivity: Int = Defaults.Settings.SOFTWARE_MOUSE_SENSITIVITY,
     val softwareMouseExponential: Boolean = Defaults.Settings.SOFTWARE_MOUSE_EXPONENTIAL,
     val twoFingerSensitivity: Int = Defaults.Settings.TWO_FINGER_SENSITIVITY,
@@ -60,9 +62,13 @@ data class UsageConfig(
     val clickableListType: AppListType = Defaults.Settings.CLICKABLE_LIST_TYPE,
     val checkClickable: Boolean = Defaults.Settings.CHECK_CLICKABLE,
     val disableTouchscreen: Boolean = Defaults.Settings.DISABLE_TOUCHSCREEN,
+
+    val scrollSettings: List<ScrollConfig> = Defaults.Settings.SCROLL_SETTINGS,
 ) {
     companion object {
         val DEFAULT = UsageConfig()
+
+        const val SCROLL_SETTING_COUNT = 4
         const val KEY_NONE = -999
 
         fun randomId() : String {
@@ -82,3 +88,12 @@ data class UsageConfig(
         )
     }
 }
+
+data class ScrollConfig(
+    val topCropRegion: Int = 25,
+    val bottomCropRegion: Int = 25,
+    val leftCropRegion: Int = 25,
+    val rightCropRegion: Int = 25,
+    val touchSensitivity: Int = 5,
+    val scrollOnlyVertically: Boolean = false,
+)

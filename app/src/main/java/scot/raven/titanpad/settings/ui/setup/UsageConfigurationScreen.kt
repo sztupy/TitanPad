@@ -76,6 +76,7 @@ fun UsageConfigurationScreen(
     onNavigateToSoftwareEmulationSettings: () -> Unit,
     onNavigateToClickableAppsScreen: () -> Unit,
     onNavigateBack: () -> Unit,
+    onNavigateToScrollSettings: (Int) -> () -> Unit,
 ) {
     val uiState by settingsState.uiState.collectAsState()
     var showCursorKeyCaptureOverlay by remember { mutableStateOf(false) }
@@ -206,7 +207,7 @@ fun UsageConfigurationScreen(
 
                 SwitchPreferenceItem(
                     title = "Auto Disable on Switching Apps",
-                    subtitle = "${ if (!uiState.autoDisableOnSwitch) "Don't automatically disable on app switch" else if (uiState.autoEnableListType == AppListType.ALLOW_LIST) "Auto disable in apps not selected above" else "Auto disable in selected apps"}",
+                    subtitle = if (!uiState.autoDisableOnSwitch) "Don't automatically disable on app switch" else if (uiState.autoEnableListType == AppListType.ALLOW_LIST) "Auto disable in apps not selected above" else "Auto disable in selected apps",
                     checked = uiState.autoDisableOnSwitch,
                     onCheckedChange = { value ->
                         settingsState.updatePreference(value) { settings, v ->
@@ -243,7 +244,7 @@ fun UsageConfigurationScreen(
                 )
                 SwitchPreferenceItem(
                     title = "Separate left side",
-                    subtitle = if (uiState.touchpadSplitInput) "Use different configuration for the left side" else "Use same configuration for entire trackpad",
+                    subtitle = if (uiState.touchpadSplitInput) "Use different configuration for the left side" else "Use same configuration as the centre",
                     checked = uiState.touchpadSplitInput,
                     onCheckedChange = { value ->
                         settingsState.updatePreference(value) { settings, v ->
@@ -272,7 +273,41 @@ fun UsageConfigurationScreen(
                                 settings.copy(touchpadSplitPosition = v.toInt())
                             }
                         },
-                        steps = 9,
+                        steps = 19,
+                    )
+                }
+                SwitchPreferenceItem(
+                    title = "Separate right side",
+                    subtitle = if (uiState.touchpadSplitRightInput) "Use different configuration for the right side" else "Use same configuration as the centre",
+                    checked = uiState.touchpadSplitRightInput,
+                    onCheckedChange = { value ->
+                        settingsState.updatePreference(value) { settings, v ->
+                            settings.copy(touchpadSplitRightInput = v)
+                        }
+                    },
+                )
+                if (uiState.touchpadSplitRightInput) {
+                    InputSelectorItem(
+                        title = "Trackpad right side behavior",
+                        selectedInputType = uiState.touchPadRightInputType,
+                        onOptionSelected = { value ->
+                            settingsState.updatePreference(value) { settings, v ->
+                                settings.copy(touchPadRightInputType = v)
+                            }
+                        },
+                    )
+
+                    SliderPreferenceItem(
+                        title = "TouchPad right split location",
+                        value = uiState.touchpadSplitRightPosition.toFloat(),
+                        valueRange = 0f .. 100f,
+                        valueText = "${uiState.touchpadSplitRightPosition}%",
+                        onValueChange = { value ->
+                            settingsState.updatePreference(value) { settings, v ->
+                                settings.copy(touchpadSplitRightPosition = v.toInt())
+                            }
+                        },
+                        steps = 19,
                     )
                 }
                 InputSelectorItem(
@@ -286,10 +321,11 @@ fun UsageConfigurationScreen(
                 )
             }
 
-            val combinedInputTypes = setOf(
+            val combinedInputTypes = (setOf(
                 uiState.touchPadMainInputType,
                 uiState.backScreenInputType
-            ) + if (uiState.touchpadSplitInput) uiState.touchPadLeftInputType else uiState.touchPadMainInputType
+            ) + (if (uiState.touchpadSplitInput) uiState.touchPadLeftInputType else uiState.touchPadMainInputType)) +
+                (if (uiState.touchpadSplitRightInput) uiState.touchPadRightInputType else uiState.touchPadMainInputType)
 
             if (combinedInputTypes.contains(InputType.HARDWARE_MOUSE) || combinedInputTypes.contains(InputType.SOFTWARE_MOUSE)) {
                 PreferenceCategory(title = "Mouse settings") {
@@ -360,16 +396,37 @@ fun UsageConfigurationScreen(
 
             if (combinedInputTypes.contains(InputType.HARDWARE_SCROLL) || combinedInputTypes.contains(InputType.SOFTWARE_SCROLL)) {
                 PreferenceCategory(title = "Scroll settings") {
-                    SwitchPreferenceItem(
-                        title = "Vertical Scroll Lock",
-                        subtitle = if (uiState.scrollOnlyVertically) "Emitting vertical scroll events only" else "Emitting vertical and horizontal scroll events",
-                        checked = uiState.scrollOnlyVertically,
-                        onCheckedChange = { value ->
-                            settingsState.updatePreference(value) { settings, v ->
-                                settings.copy(scrollOnlyVertically = v)
-                            }
-                        },
-                    )
+                    if (listOf(InputType.HARDWARE_SCROLL, InputType.SOFTWARE_SCROLL).contains(uiState.touchPadMainInputType)) {
+                        SimplePreferenceItem(
+                            title = "Main TouchPad scroll",
+                            subtitle = "Change scroll options for main touchpad",
+                            onClick = onNavigateToScrollSettings(0)
+                        )
+                    }
+
+                    if (uiState.touchpadSplitInput && listOf(InputType.HARDWARE_SCROLL, InputType.SOFTWARE_SCROLL).contains(uiState.touchPadLeftInputType)) {
+                        SimplePreferenceItem(
+                            title = "Left TouchPad scroll",
+                            subtitle = "Change scroll options for left side of touchpad",
+                            onClick = onNavigateToScrollSettings(1)
+                        )
+                    }
+
+                    if (uiState.touchpadSplitRightInput && listOf(InputType.HARDWARE_SCROLL, InputType.SOFTWARE_SCROLL).contains(uiState.touchPadRightInputType)) {
+                        SimplePreferenceItem(
+                            title = "Right TouchPad scroll",
+                            subtitle = "Change scroll options for right side of touchpad",
+                            onClick = onNavigateToScrollSettings(2)
+                        )
+                    }
+
+                    if (listOf(InputType.HARDWARE_SCROLL, InputType.SOFTWARE_SCROLL).contains(uiState.backScreenInputType)) {
+                        SimplePreferenceItem(
+                            title = "Back screen scroll",
+                            subtitle = "Change scroll options for back screen",
+                            onClick = onNavigateToScrollSettings(3)
+                        )
+                    }
                 }
             }
 

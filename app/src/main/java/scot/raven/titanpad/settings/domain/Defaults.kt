@@ -7,6 +7,7 @@ import scot.raven.titanpad.cursor.domain.FuncButtonMap
 import scot.raven.titanpad.cursor.domain.IconAlignment
 import scot.raven.titanpad.cursor.domain.InputType
 import scot.raven.titanpad.settings.domain.UsageConfig.Companion.KEY_NONE
+import scot.raven.titanpad.settings.domain.UsageConfig.Companion.SCROLL_SETTING_COUNT
 
 /**
  * Contains default values that can be modified by the user.
@@ -27,15 +28,55 @@ object Defaults {
         const val ALLOW_PASSTHROUGH = GestureConstants.ALLOW_PASSTHROUGH
         val TOUCHPAD_MAIN_INPUT = InputType.HARDWARE_MOUSE
         val TOUCHPAD_LEFT_INPUT = InputType.HARDWARE_SCROLL
+        val TOUCHPAD_RIGHT_INPUT = InputType.HARDWARE_SCROLL
         val BACK_SCREEN_INPUT = InputType.OFF
         const val TOUCHPAD_DISABLE_TOP_ROW = true
         const val TOUCHPAD_SPLIT_INPUT = false
-        const val TOUCHPAD_SPLIT_POSITION = 50
+        const val TOUCHPAD_SPLIT_POSITION = 25
+        const val TOUCHPAD_SPLIT_RIGHT_INPUT = false
+        const val TOUCHPAD_SPLIT_RIGHT_POSITION = 75
+        val SCROLL_SETTINGS = listOf(
+            // central trackpad
+            ScrollConfig(
+                topCropRegion = 25,
+                bottomCropRegion = 25,
+                leftCropRegion = 0,
+                rightCropRegion = 0,
+                touchSensitivity = 9,
+                scrollOnlyVertically = false
+            ),
+            // left trackpad
+            ScrollConfig(
+                topCropRegion = 25,
+                bottomCropRegion = 25,
+                leftCropRegion = 20,
+                rightCropRegion = 50,
+                touchSensitivity = 9,
+                scrollOnlyVertically = true
+            ),
+            // right trackpad
+            ScrollConfig(
+                topCropRegion = 25,
+                bottomCropRegion = 25,
+                leftCropRegion = 50,
+                rightCropRegion = 20,
+                touchSensitivity = 9,
+                scrollOnlyVertically = true
+            ),
+            // back screen
+            ScrollConfig(
+                topCropRegion = 35,
+                bottomCropRegion = 35,
+                leftCropRegion = 35,
+                rightCropRegion = 35,
+                touchSensitivity = 9,
+                scrollOnlyVertically = false
+            )
+        )
         const val MOUSE_TAP_TO_CLICK = true
         const val MOUSE_DOUBLE_TAP_HOLD = true
         const val MOUSE_TWO_FINGER_HOLD = false
         const val MOUSE_TAP_MAX_DURATION = 100
-        const val SCROLL_VERTICAL_ONLY = false
         const val SOFTWARE_MOUSE_SENSITIVITY = 4
         const val SOFTWARE_MOUSE_EXPONENTIAL = true
         const val TWO_FINGER_SENSITIVITY = 8

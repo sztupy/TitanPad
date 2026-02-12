@@ -1,5 +1,6 @@
 package scot.raven.titanpad.settings.repository
 
+import androidx.compose.ui.platform.isDebugInspectorInfoEnabled
 import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.MutablePreferences
 import androidx.datastore.preferences.core.Preferences
@@ -19,6 +20,8 @@ import scot.raven.titanpad.cursor.domain.FuncButtonMap
 import scot.raven.titanpad.cursor.domain.InputType
 import scot.raven.titanpad.settings.domain.ApplicationSettings
 import scot.raven.titanpad.settings.domain.Defaults
+import scot.raven.titanpad.settings.domain.ScrollConfig
+import scot.raven.titanpad.settings.domain.UsageConfig.Companion.SCROLL_SETTING_COUNT
 import kotlin.collections.map
 import kotlin.collections.toSet
 
@@ -168,15 +171,17 @@ class SettingsRepositoryImpl(
         val CURSOR_ACTIVATION_KEY = intPreferencesKey("cursor_activation_key__$configId")
         val TOUCHPAD_MAIN_INPUT = stringPreferencesKey("touchpad_main_input__$configId")
         val TOUCHPAD_LEFT_INPUT = stringPreferencesKey("touchpad_left_input__$configId")
+        val TOUCHPAD_RIGHT_INPUT = stringPreferencesKey("touchpad_right_input__$configId")
         val BACK_SCREEN_INPUT = stringPreferencesKey("back_screen_input__$configId")
         val TOUCHPAD_DISABLE_TOP_ROW = booleanPreferencesKey("touchpad_disable_top_row__$configId")
         val TOUCHPAD_SPLIT_INPUT = booleanPreferencesKey("touchpad_split_input__$configId")
         val TOUCHPAD_SPLIT_POSITION = intPreferencesKey("touchpad_split_position__$configId")
+        val TOUCHPAD_SPLIT_RIGHT_INPUT = booleanPreferencesKey("touchpad_split_right_input__$configId")
+        val TOUCHPAD_SPLIT_RIGHT_POSITION = intPreferencesKey("touchpad_split_right_position__$configId")
         val MOUSE_TAP_TO_CLICK = booleanPreferencesKey("mouse_tap_to_click__$configId")
         val MOUSE_DOUBLE_TAP_HOLD = booleanPreferencesKey("mouse_double_tap_hold__$configId")
         val MOUSE_TWO_FINGER_HOLD = booleanPreferencesKey("mouse_two_finger_hold__$configId")
         val MOUSE_TAP_MAX_DURATION = intPreferencesKey("mouse_tap_max_duration__$configId")
-        val SCROLL_VERTICAL_ONLY = booleanPreferencesKey("scroll_vertical_only__$configId")
         val SOFTWARE_MOUSE_SENSITIVITY = intPreferencesKey("software_mouse_sensitivity__$configId")
         val SOFTWARE_MOUSE_EXPONENTIAL = booleanPreferencesKey("software_mouse_exponential__$configId")
         val TWO_FINGER_SENSITIVITY = intPreferencesKey("two_finger_sensitivity__$configId")
@@ -269,6 +274,12 @@ class SettingsRepositoryImpl(
             UsageConfig.DEFAULT.touchPadLeftInputType,
             "touchpad left input"
         )
+        val touchPadRightInputType = getEnumPreference(
+            preferences,
+            TOUCHPAD_RIGHT_INPUT,
+            UsageConfig.DEFAULT.touchPadRightInputType,
+            "touchpad right input"
+        )
         val backScreenInputType = getEnumPreference(
             preferences,
             BACK_SCREEN_INPUT,
@@ -302,6 +313,24 @@ class SettingsRepositoryImpl(
             "clickable list type"
         )
 
+        val scrollSettings = List(SCROLL_SETTING_COUNT) { id ->
+            val SCROLL_TOP_CROP_REGION = intPreferencesKey("scroll_top_crop_region__${id}__$configId")
+            val SCROLL_BOTTOM_CROP_REGION = intPreferencesKey("scroll_bottom_crop_region__${id}__$configId")
+            val SCROLL_LEFT_CROP_REGION = intPreferencesKey("scroll_left_crop_region__${id}__$configId")
+            val SCROLL_RIGHT_CROP_REGION = intPreferencesKey("scroll_right_crop_region__${id}__$configId")
+            val SCROLL_TOUCH_SENSITIVITY = intPreferencesKey("scroll_touch_sensitivity__${id}__$configId")
+            val SCROLL_VERTICAL_ONLY = booleanPreferencesKey("scroll_vertical_only__${id}__$configId")
+
+            ScrollConfig(
+                topCropRegion = preferences[SCROLL_TOP_CROP_REGION] ?: UsageConfig.DEFAULT.scrollSettings[id].topCropRegion,
+                bottomCropRegion = preferences[SCROLL_BOTTOM_CROP_REGION] ?: UsageConfig.DEFAULT.scrollSettings[id].bottomCropRegion,
+                leftCropRegion = preferences[SCROLL_LEFT_CROP_REGION] ?: UsageConfig.DEFAULT.scrollSettings[id].leftCropRegion,
+                rightCropRegion = preferences[SCROLL_RIGHT_CROP_REGION] ?: UsageConfig.DEFAULT.scrollSettings[id].rightCropRegion,
+                touchSensitivity = preferences[SCROLL_TOUCH_SENSITIVITY] ?: UsageConfig.DEFAULT.scrollSettings[id].touchSensitivity,
+                scrollOnlyVertically = preferences[SCROLL_VERTICAL_ONLY] ?: UsageConfig.DEFAULT.scrollSettings[id].scrollOnlyVertically
+            )
+        }
+
         return UsageConfig(
             configId = configId,
             configName = preferences[CONFIG_NAME] ?: UsageConfig.DEFAULT.configName,
@@ -319,15 +348,17 @@ class SettingsRepositoryImpl(
                 ?: UsageConfig.DEFAULT.cursorActivationKey,
             touchPadMainInputType = touchPadMainInputType,
             touchPadLeftInputType = touchPadLeftInputType,
+            touchPadRightInputType = touchPadRightInputType,
             backScreenInputType = backScreenInputType,
             touchpadDisableTopRow = preferences[TOUCHPAD_DISABLE_TOP_ROW]?: UsageConfig.DEFAULT.touchpadDisableTopRow,
             touchpadSplitInput = preferences[TOUCHPAD_SPLIT_INPUT]?: UsageConfig.DEFAULT.touchpadSplitInput,
             touchpadSplitPosition = preferences[TOUCHPAD_SPLIT_POSITION]?: UsageConfig.DEFAULT.touchpadSplitPosition,
+            touchpadSplitRightInput = preferences[TOUCHPAD_SPLIT_RIGHT_INPUT] ?: UsageConfig.DEFAULT.touchpadSplitRightInput,
+            touchpadSplitRightPosition = preferences[TOUCHPAD_SPLIT_RIGHT_POSITION] ?: UsageConfig.DEFAULT.touchpadSplitRightPosition,
             mouseTapToClick = preferences[MOUSE_TAP_TO_CLICK]?: UsageConfig.DEFAULT.mouseTapToClick,
             mouseDoubleTapToHold = preferences[MOUSE_DOUBLE_TAP_HOLD]?: UsageConfig.DEFAULT.mouseDoubleTapToHold,
             mouseTwoFingerToHold = preferences[MOUSE_TWO_FINGER_HOLD]?: UsageConfig.DEFAULT.mouseTwoFingerToHold,
             mouseTapMaxDuration = preferences[MOUSE_TAP_MAX_DURATION]?: UsageConfig.DEFAULT.mouseTapMaxDuration,
-            scrollOnlyVertically = preferences[SCROLL_VERTICAL_ONLY]?: UsageConfig.DEFAULT.scrollOnlyVertically,
             softwareMouseSensitivity = preferences[SOFTWARE_MOUSE_SENSITIVITY]?: UsageConfig.DEFAULT.softwareMouseSensitivity,
             softwareMouseExponential = preferences[SOFTWARE_MOUSE_EXPONENTIAL]?: UsageConfig.DEFAULT.softwareMouseExponential,
             twoFingerSensitivity = preferences[TWO_FINGER_SENSITIVITY]?: UsageConfig.DEFAULT.twoFingerSensitivity,
@@ -372,6 +403,8 @@ class SettingsRepositoryImpl(
             checkClickable = preferences[CHECK_CLICKABLE]
                 ?: UsageConfig.DEFAULT.checkClickable,
             disableTouchscreen = preferences[DISABLE_TOUCHSCREEN] ?: UsageConfig.DEFAULT.disableTouchscreen,
+
+            scrollSettings = scrollSettings,
         )
     }
 
@@ -386,10 +419,18 @@ class SettingsRepositoryImpl(
         val CURSOR_ACTIVATION_KEY = intPreferencesKey("cursor_activation_key__$configId")
         val TOUCHPAD_MAIN_INPUT = stringPreferencesKey("touchpad_main_input__$configId")
         val TOUCHPAD_LEFT_INPUT = stringPreferencesKey("touchpad_left_input__$configId")
+        val TOUCHPAD_RIGHT_INPUT = stringPreferencesKey("touchpad_right_input__$configId")
         val BACK_SCREEN_INPUT = stringPreferencesKey("back_screen_input__$configId")
         val TOUCHPAD_DISABLE_TOP_ROW = booleanPreferencesKey("touchpad_disable_top_row__$configId")
         val TOUCHPAD_SPLIT_INPUT = booleanPreferencesKey("touchpad_split_input__$configId")
         val TOUCHPAD_SPLIT_POSITION = intPreferencesKey("touchpad_split_position__$configId")
+        val TOUCHPAD_SPLIT_RIGHT_INPUT = booleanPreferencesKey("touchpad_split_right_input__$configId")
+        val TOUCHPAD_SPLIT_RIGHT_POSITION = intPreferencesKey("touchpad_split_right_position__$configId")
+        val SCROLL_TOP_CROP_REGION = intPreferencesKey("scroll_top_crop_region__$configId")
+        val SCROLL_BOTTOM_CROP_REGION = intPreferencesKey("scroll_bottom_crop_region__$configId")
+        val SCROLL_LEFT_CROP_REGION = intPreferencesKey("scroll_left_crop_region__$configId")
+        val SCROLL_RIGHT_CROP_REGION = intPreferencesKey("scroll_right_crop_region__$configId")
+        val SCROLL_TOUCH_SENSITIVITY = intPreferencesKey("scroll_touch_sensitivity__$configId")
         val MOUSE_TAP_TO_CLICK = booleanPreferencesKey("mouse_tap_to_click__$configId")
         val MOUSE_DOUBLE_TAP_HOLD = booleanPreferencesKey("mouse_double_tap_hold__$configId")
         val MOUSE_TWO_FINGER_HOLD = booleanPreferencesKey("mouse_two_finger_hold__$configId")
@@ -426,6 +467,22 @@ class SettingsRepositoryImpl(
         val CHECK_CLICKABLE = booleanPreferencesKey("check_clickable__$configId")
         val DISABLE_TOUCHSCREEN = booleanPreferencesKey("disable_touchscreen__$configId")
 
+        settings.scrollSettings.forEachIndexed { id, scroll ->
+            val SCROLL_TOP_CROP_REGION = intPreferencesKey("scroll_top_crop_region__${id}__$configId")
+            val SCROLL_BOTTOM_CROP_REGION = intPreferencesKey("scroll_bottom_crop_region__${id}__$configId")
+            val SCROLL_LEFT_CROP_REGION = intPreferencesKey("scroll_left_crop_region__${id}__$configId")
+            val SCROLL_RIGHT_CROP_REGION = intPreferencesKey("scroll_right_crop_region__${id}__$configId")
+            val SCROLL_TOUCH_SENSITIVITY = intPreferencesKey("scroll_touch_sensitivity__${id}__$configId")
+            val SCROLL_VERTICAL_ONLY = booleanPreferencesKey("scroll_vertical_only__${id}__$configId")
+
+            preferences[SCROLL_TOP_CROP_REGION] = scroll.topCropRegion
+            preferences[SCROLL_BOTTOM_CROP_REGION] = scroll.bottomCropRegion
+            preferences[SCROLL_LEFT_CROP_REGION] = scroll.leftCropRegion
+            preferences[SCROLL_RIGHT_CROP_REGION] = scroll.rightCropRegion
+            preferences[SCROLL_TOUCH_SENSITIVITY] = scroll.touchSensitivity
+            preferences[SCROLL_VERTICAL_ONLY] = scroll.scrollOnlyVertically
+        }
+
         preferences[CONFIG_NAME] = settings.configName
         preferences[ACTIVATION_DURATION] = settings.activationDuration
         preferences[SHOW_GESTURE_VISUAL] = settings.showGestureVisualization
@@ -436,15 +493,17 @@ class SettingsRepositoryImpl(
         preferences[CURSOR_ACTIVATION_KEY] = settings.cursorActivationKey
         preferences[TOUCHPAD_MAIN_INPUT] = settings.touchPadMainInputType.name
         preferences[TOUCHPAD_LEFT_INPUT] = settings.touchPadLeftInputType.name
+        preferences[TOUCHPAD_RIGHT_INPUT] = settings.touchPadRightInputType.name
         preferences[BACK_SCREEN_INPUT] = settings.backScreenInputType.name
         preferences[TOUCHPAD_DISABLE_TOP_ROW] = settings.touchpadDisableTopRow
         preferences[TOUCHPAD_SPLIT_INPUT] = settings.touchpadSplitInput
         preferences[TOUCHPAD_SPLIT_POSITION] = settings.touchpadSplitPosition
+        preferences[TOUCHPAD_SPLIT_RIGHT_INPUT] = settings.touchpadSplitRightInput
+        preferences[TOUCHPAD_SPLIT_RIGHT_POSITION] = settings.touchpadSplitRightPosition
         preferences[MOUSE_TAP_TO_CLICK] = settings.mouseTapToClick
         preferences[MOUSE_DOUBLE_TAP_HOLD] = settings.mouseDoubleTapToHold
         preferences[MOUSE_TWO_FINGER_HOLD] = settings.mouseTwoFingerToHold
         preferences[MOUSE_TAP_MAX_DURATION] = settings.mouseTapMaxDuration
-        preferences[SCROLL_VERTICAL_ONLY] = settings.scrollOnlyVertically
         preferences[SOFTWARE_MOUSE_SENSITIVITY] = settings.softwareMouseSensitivity
         preferences[SOFTWARE_MOUSE_EXPONENTIAL] = settings.softwareMouseExponential
         preferences[TWO_FINGER_SENSITIVITY] = settings.twoFingerSensitivity

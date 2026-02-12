@@ -9,9 +9,11 @@ import scot.raven.titanpad.accessibility.AppAccessibilityService
 import scot.raven.titanpad.core.control.IHidService
 import scot.raven.titanpad.core.control.ModeCoordinator
 import scot.raven.titanpad.core.logs.Logger
+import scot.raven.titanpad.core.util.BoundingBoxUtil
 import scot.raven.titanpad.cursor.domain.InputType
 import scot.raven.titanpad.gesture.api.GestureManager
 import scot.raven.titanpad.settings.domain.ApplicationSettings
+import scot.raven.titanpad.settings.domain.ScrollConfig
 import scot.raven.titanpad.settings.domain.UsageConfig
 import kotlin.math.absoluteValue
 import kotlin.math.pow
@@ -40,6 +42,7 @@ class TouchInputHandler(
     private var clickCount: Long = 0
     private var endTime: Long = 0
     private var numFingers = 0
+    private var scrollHasStarted = false
 
     fun setHidService(service: IHidService?) {
         hidService = service
@@ -53,6 +56,7 @@ class TouchInputHandler(
             line.contains("BTN_TOUCH") && line.contains("DOWN") -> {
                 touchDown = true
                 startPosSet = false
+                scrollHasStarted = false
                 val currentTime = System.nanoTime()
                 val elapsedMs = (currentTime - startTime) / 1_000_000.0
                 if (elapsedMs > DOUBLE_TAP_MAX_LENGTH)
@@ -129,24 +133,33 @@ class TouchInputHandler(
                 }
 
                 var inputType : InputType = if (backScreenMode) settings.backScreenInputType else settings.touchPadMainInputType
+                var scrollConfig = if (backScreenMode) settings.scrollSettings[3] else settings.scrollSettings[0]
 
                 if (settings.touchpadSplitInput && !backScreenMode) {
                     if (startPositionX < TRACKPAD_WIDTH.toFloat() * settings.touchpadSplitPosition.toFloat() / 100f) {
                         inputType = settings.touchPadLeftInputType
+                        scrollConfig = settings.scrollSettings[1]
+                    }
+                }
+
+                if (settings.touchpadSplitRightInput && !backScreenMode) {
+                    if (startPositionX > TRACKPAD_WIDTH.toFloat() * settings.touchpadSplitRightPosition.toFloat() / 100f) {
+                        inputType = settings.touchPadRightInputType
+                        scrollConfig = settings.scrollSettings[2]
                     }
                 }
 
                 if (settings.touchpadDisableTopRow && !backScreenMode && startPositionY <= TRACKPAD_HEIGHT/4) {
                     // Do nothing
                 } else {
-                    detectGesture(settings, inputType)
+                    detectGesture(settings, scrollConfig, inputType)
                 }
             }
         }
     }
 
 
-    private fun detectGesture(settings: UsageConfig, inputType: InputType) {
+    private fun detectGesture(settings: UsageConfig, scrollConfig: ScrollConfig, inputType: InputType) {
         val dragEnabled = touchDown &&
                 (settings.mouseTwoFingerToHold && numFingers > 1) ||
                 (settings.mouseDoubleTapToHold && clickCount >= 1)
@@ -154,6 +167,9 @@ class TouchInputHandler(
         if (touchDown && startPosSet) {
             val deltaX = (currentX - lastPositionX + 0.0f) * if (backScreenMode) -1 else 1 // invert input on back screen
             val deltaY = (currentY - lastPositionY + 0.0f)
+
+            if ((startPositionX-currentX).absoluteValue + (startPositionY-currentY).absoluteValue >= (10-scrollConfig.touchSensitivity) * (10-scrollConfig.touchSensitivity))
+                scrollHasStarted = true
 
             if (inputType == InputType.SOFTWARE_MOUSE) {
                 val multiplier = settings.softwareMouseSensitivity.toFloat() / if (settings.softwareMouseExponential) 4f else 6f
@@ -183,26 +199,30 @@ class TouchInputHandler(
             } else if (inputType == InputType.HARDWARE_MOUSE) {
                 hidService?.setMousePosition(deltaX.toInt(), deltaY.toInt(), if (dragEnabled) 1 else 0, 0)
             } else if (inputType == InputType.HARDWARE_SCROLL || inputType == InputType.SOFTWARE_SCROLL) {
-                var touchX = 0
-                var touchY = 0
-                if (!backScreenMode) {
-                    if (settings.touchpadSplitInput) {
-                        touchX = ((if (settings.scrollOnlyVertically) startPositionX else currentX).toFloat() / (settings.touchpadSplitPosition / 100f)).toInt()
-                        touchY = currentY * 2
+                var touchX : Float
+                var touchY : Float
+                if (scrollHasStarted) {
+                    if (!backScreenMode) {
+                        if (settings.touchpadSplitInput) {
+                            touchX = ((if (scrollConfig.scrollOnlyVertically) startPositionX else currentX).toFloat() / (settings.touchpadSplitPosition.toFloat() / 100f))
+                            touchY = currentY.toFloat() * 2
+                        } else {
+                            touchX = if (scrollConfig.scrollOnlyVertically) startPositionX.toFloat() else currentX.toFloat()
+                            touchY = currentY.toFloat() * 2
+                        }
                     } else {
-                        touchX = if (settings.scrollOnlyVertically) startPositionX else currentX
-                        touchY = currentY * 2
+                        touchX = ((BACK_SCREEN_WIDTH-(if (scrollConfig.scrollOnlyVertically) startPositionX else currentX)).toFloat() * (TRACKPAD_WIDTH.toFloat() / BACK_SCREEN_WIDTH.toFloat()))
+                        touchY = (currentY.toFloat() * (TRACKPAD_HEIGHT.toFloat() / BACK_SCREEN_HEIGHT.toFloat())) * 2
                     }
-                } else {
-                    touchX =((BACK_SCREEN_WIDTH-(if (settings.scrollOnlyVertically) startPositionX else currentX)).toFloat() * (TRACKPAD_WIDTH.toFloat() / BACK_SCREEN_WIDTH.toFloat())).toInt()
-                    touchY =(currentY.toFloat() * (TRACKPAD_HEIGHT.toFloat() / BACK_SCREEN_HEIGHT.toFloat())).toInt() * 2
-                }
 
-                if (inputType == InputType.HARDWARE_SCROLL) {
-                    hidService?.tapScreen(touchX, touchY)
-                } else {
-                    scope.launch {
-                        gestureManager.moveTo(touchX.toFloat(), touchY.toFloat())
+                    val box = BoundingBoxUtil.coerceInto(SCREEN_WIDTH.toFloat(), SCREEN_HEIGHT.toFloat(), scrollConfig.leftCropRegion.toFloat(), scrollConfig.topCropRegion.toFloat(), scrollConfig.rightCropRegion.toFloat(),scrollConfig.bottomCropRegion.toFloat(), touchX, touchY)
+
+                    if (inputType == InputType.HARDWARE_SCROLL) {
+                        hidService?.tapScreen(box.x.toInt(), box.y.toInt())
+                    } else {
+                        scope.launch {
+                            gestureManager.moveTo(box.x, box.y)
+                        }
                     }
                 }
             } else if (inputType == InputType.HARDWARE_JOYSTICK) {
@@ -272,10 +292,14 @@ class TouchInputHandler(
                     hidService?.setMousePosition(0,0,0,1)
                 }
             } else if (inputType == InputType.HARDWARE_SCROLL) {
-                hidService?.tapRelease()
+                if (scrollHasStarted) {
+                    hidService?.tapRelease()
+                }
             } else if (inputType == InputType.SOFTWARE_SCROLL) {
-                scope.launch {
-                    gestureManager.endTap()
+                if (scrollHasStarted) {
+                    scope.launch {
+                        gestureManager.endTap()
+                    }
                 }
             } else if (inputType == InputType.HARDWARE_JOYSTICK) {
                 hidService?.setJoystick(0,0)
@@ -289,6 +313,8 @@ class TouchInputHandler(
         private const val DOUBLE_TAP_MAX_LENGTH = 300L
         private const val TRACKPAD_WIDTH = 1440
         private const val TRACKPAD_HEIGHT = 720
+        private const val SCREEN_WIDTH = 1440
+        private const val SCREEN_HEIGHT = 1440
         private const val BACK_SCREEN_WIDTH = 410
         private const val BACK_SCREEN_HEIGHT = 502
     }

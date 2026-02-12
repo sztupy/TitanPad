@@ -127,5 +127,6 @@ class SettingsActivity : ComponentActivity() {
 
     companion object {
         const val CONFIG_ID_EXTRA = "config_id"
+        const val SCROLL_ID_EXTRA = "scroll_id"
     }
 }

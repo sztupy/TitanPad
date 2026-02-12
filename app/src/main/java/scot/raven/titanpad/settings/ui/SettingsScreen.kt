@@ -797,7 +797,7 @@ fun SimplePreferenceItem(
 @Composable
 fun NoteItem(
     title: String,
-    icon: ImageVector,
+    icon: ImageVector?,
     contentDescription: String,
     color: Color? = null
 ) {
@@ -813,13 +813,15 @@ fun NoteItem(
             modifier = Modifier.padding(8.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            Icon(
-                imageVector = icon,
-                contentDescription = contentDescription,
-                tint = Color.Gray,
-                modifier = Modifier.size(16.dp),
-            )
-            Spacer(modifier = Modifier.width(8.dp))
+            if (icon != null) {
+                Icon(
+                    imageVector = icon,
+                    contentDescription = contentDescription,
+                    tint = Color.Gray,
+                    modifier = Modifier.size(16.dp),
+                )
+                Spacer(modifier = Modifier.width(8.dp))
+            }
             Text(
                 text = title,
                 style = MaterialTheme.typography.bodyMedium,

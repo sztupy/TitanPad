@@ -27,10 +27,11 @@ object Defaults {
         const val ALLOW_PASSTHROUGH = GestureConstants.ALLOW_PASSTHROUGH
         val TOUCHPAD_MAIN_INPUT = InputType.HARDWARE_MOUSE
         val TOUCHPAD_LEFT_INPUT = InputType.HARDWARE_SCROLL
+        val TOUCHPAD_RIGHT_INPUT = InputType.HARDWARE_SCROLL
         val BACK_SCREEN_INPUT = InputType.OFF
         const val TOUCHPAD_DISABLE_TOP_ROW = true
         const val TOUCHPAD_SPLIT_INPUT = false
-        const val TOUCHPAD_SPLIT_POSITION = 50
+        const val TOUCHPAD_SPLIT_POSITION = 30
         const val MOUSE_TAP_TO_CLICK = true
         const val MOUSE_DOUBLE_TAP_HOLD = true
         const val MOUSE_TWO_FINGER_HOLD = false

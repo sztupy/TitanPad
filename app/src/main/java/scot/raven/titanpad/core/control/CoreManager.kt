@@ -165,7 +165,7 @@ class CoreManager(
         val combinedInputTypes = setOf(
             currentSettings.touchPadMainInputType,
             currentSettings.backScreenInputType
-        ) + if (currentSettings.touchpadSplitInput) currentSettings.touchPadLeftInputType else currentSettings.touchPadMainInputType
+        ) + if (currentSettings.touchpadSplitLeftInput) currentSettings.touchPadLeftInputType else currentSettings.touchPadMainInputType
 
         val shouldDisplayCursor = combinedInputTypes.contains(InputType.SOFTWARE_MOUSE)
         if (!shouldDisplayCursor) {

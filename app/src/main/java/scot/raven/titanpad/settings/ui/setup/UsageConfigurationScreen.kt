@@ -243,15 +243,15 @@ fun UsageConfigurationScreen(
                 )
                 SwitchPreferenceItem(
                     title = "Separate left side",
-                    subtitle = if (uiState.touchpadSplitInput) "Use different configuration for the left side" else "Use same configuration for entire trackpad",
-                    checked = uiState.touchpadSplitInput,
+                    subtitle = if (uiState.touchpadSplitLeftInput) "Use different configuration for the left side" else "Use same configuration for entire trackpad",
+                    checked = uiState.touchpadSplitLeftInput,
                     onCheckedChange = { value ->
                         settingsState.updatePreference(value) { settings, v ->
-                            settings.copy(touchpadSplitInput = v)
+                            settings.copy(touchpadSplitLeftInput = v)
                         }
                     },
                 )
-                if (uiState.touchpadSplitInput) {
+                if (uiState.touchpadSplitLeftInput) {
                     InputSelectorItem(
                         title = "Trackpad left side behavior",
                         selectedInputType = uiState.touchPadLeftInputType,
@@ -263,13 +263,47 @@ fun UsageConfigurationScreen(
                     )
 
                     SliderPreferenceItem(
-                        title = "TouchPad split location",
-                        value = uiState.touchpadSplitPosition.toFloat(),
+                        title = "TouchPad split left location",
+                        value = uiState.touchpadSplitLeftPosition.toFloat(),
                         valueRange = 0f .. 100f,
-                        valueText = "${uiState.touchpadSplitPosition}%",
+                        valueText = "${uiState.touchpadSplitLeftPosition}%",
                         onValueChange = { value ->
                             settingsState.updatePreference(value) { settings, v ->
-                                settings.copy(touchpadSplitPosition = v.toInt())
+                                settings.copy(touchpadSplitLeftPosition = v.toInt())
+                            }
+                        },
+                        steps = 9,
+                    )
+                }
+                SwitchPreferenceItem(
+                    title = "Separate right side",
+                    subtitle = if (uiState.touchpadSplitRightInput) "Use different configuration for the right side" else "Use same configuration for entire trackpad",
+                    checked = uiState.touchpadSplitRightInput,
+                    onCheckedChange = { value ->
+                        settingsState.updatePreference(value) { settings, v ->
+                            settings.copy(touchpadSplitRightInput = v)
+                        }
+                    },
+                )
+                if (uiState.touchpadSplitRightInput) {
+                    InputSelectorItem(
+                        title = "Trackpad right side behavior",
+                        selectedInputType = uiState.touchPadRightInputType,
+                        onOptionSelected = { value ->
+                            settingsState.updatePreference(value) { settings, v ->
+                                settings.copy(touchPadRightInputType = v)
+                            }
+                        },
+                    )
+
+                    SliderPreferenceItem(
+                        title = "TouchPad split right location",
+                        value = uiState.touchpadSplitRightPosition.toFloat(),
+                        valueRange = 0f .. 100f,
+                        valueText = "${uiState.touchpadSplitRightPosition}%",
+                        onValueChange = { value ->
+                            settingsState.updatePreference(value) { settings, v ->
+                                settings.copy(touchpadSplitRightPosition = v.toInt())
                             }
                         },
                         steps = 9,
@@ -289,7 +323,7 @@ fun UsageConfigurationScreen(
             val combinedInputTypes = setOf(
                 uiState.touchPadMainInputType,
                 uiState.backScreenInputType
-            ) + if (uiState.touchpadSplitInput) uiState.touchPadLeftInputType else uiState.touchPadMainInputType
+            ) + if (uiState.touchpadSplitLeftInput) uiState.touchPadLeftInputType else uiState.touchPadMainInputType
 
             if (combinedInputTypes.contains(InputType.HARDWARE_MOUSE) || combinedInputTypes.contains(InputType.SOFTWARE_MOUSE)) {
                 PreferenceCategory(title = "Mouse settings") {

@@ -1,6 +1,5 @@
 package scot.raven.titanpad.settings.domain
 
-import scot.raven.titanpad.core.constants.ApplicationConstants
 import scot.raven.titanpad.core.constants.CursorConstants
 import scot.raven.titanpad.cursor.domain.FuncButtonMap
 import scot.raven.titanpad.cursor.domain.IconAlignment
@@ -21,10 +20,13 @@ data class UsageConfig(
     val cursorActivationKey: Int = Defaults.Settings.CURSOR_ACTIVATION_KEY,
     val touchPadMainInputType: InputType = Defaults.Settings.TOUCHPAD_MAIN_INPUT,
     val touchPadLeftInputType: InputType = Defaults.Settings.TOUCHPAD_LEFT_INPUT,
+    val touchPadRightInputType: InputType = Defaults.Settings.TOUCHPAD_RIGHT_INPUT,
     val backScreenInputType: InputType = Defaults.Settings.BACK_SCREEN_INPUT,
     val touchpadDisableTopRow: Boolean = Defaults.Settings.TOUCHPAD_DISABLE_TOP_ROW,
-    val touchpadSplitInput: Boolean = Defaults.Settings.TOUCHPAD_SPLIT_INPUT,
-    val touchpadSplitPosition: Int = Defaults.Settings.TOUCHPAD_SPLIT_POSITION,
+    val touchpadSplitLeftInput: Boolean = Defaults.Settings.TOUCHPAD_SPLIT_INPUT,
+    val touchpadSplitRightInput: Boolean = Defaults.Settings.TOUCHPAD_SPLIT_INPUT,
+    val touchpadSplitLeftPosition: Int = Defaults.Settings.TOUCHPAD_SPLIT_POSITION,
+    val touchpadSplitRightPosition: Int = Defaults.Settings.TOUCHPAD_SPLIT_POSITION,
     val mouseTapToClick: Boolean = Defaults.Settings.MOUSE_TAP_TO_CLICK,
     val mouseDoubleTapToHold: Boolean = Defaults.Settings.MOUSE_DOUBLE_TAP_HOLD,
     val mouseTwoFingerToHold: Boolean = Defaults.Settings.MOUSE_TWO_FINGER_HOLD,

@@ -15,10 +15,7 @@ import scot.raven.titanpad.settings.domain.UsageConfig
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.map
-import scot.raven.titanpad.cursor.domain.FuncButtonMap
-import scot.raven.titanpad.cursor.domain.InputType
 import scot.raven.titanpad.settings.domain.ApplicationSettings
-import scot.raven.titanpad.settings.domain.Defaults
 import kotlin.collections.map
 import kotlin.collections.toSet
 
@@ -168,10 +165,13 @@ class SettingsRepositoryImpl(
         val CURSOR_ACTIVATION_KEY = intPreferencesKey("cursor_activation_key__$configId")
         val TOUCHPAD_MAIN_INPUT = stringPreferencesKey("touchpad_main_input__$configId")
         val TOUCHPAD_LEFT_INPUT = stringPreferencesKey("touchpad_left_input__$configId")
+        val TOUCHPAD_RIGHT_INPUT = stringPreferencesKey("touchpad_right_input__$configId")
         val BACK_SCREEN_INPUT = stringPreferencesKey("back_screen_input__$configId")
         val TOUCHPAD_DISABLE_TOP_ROW = booleanPreferencesKey("touchpad_disable_top_row__$configId")
-        val TOUCHPAD_SPLIT_INPUT = booleanPreferencesKey("touchpad_split_input__$configId")
-        val TOUCHPAD_SPLIT_POSITION = intPreferencesKey("touchpad_split_position__$configId")
+        val TOUCHPAD_SPLIT_LEFT_INPUT = booleanPreferencesKey("touchpad_split_left_input__$configId")
+        val TOUCHPAD_SPLIT_LEFT_POSITION = intPreferencesKey("touchpad_split_left_position__$configId")
+        val TOUCHPAD_SPLIT_RIGHT_INPUT = booleanPreferencesKey("touchpad_split_right_input__$configId")
+        val TOUCHPAD_SPLIT_RIGHT_POSITION = intPreferencesKey("touchpad_split_right_position__$configId")
         val MOUSE_TAP_TO_CLICK = booleanPreferencesKey("mouse_tap_to_click__$configId")
         val MOUSE_DOUBLE_TAP_HOLD = booleanPreferencesKey("mouse_double_tap_hold__$configId")
         val MOUSE_TWO_FINGER_HOLD = booleanPreferencesKey("mouse_two_finger_hold__$configId")
@@ -269,6 +269,12 @@ class SettingsRepositoryImpl(
             UsageConfig.DEFAULT.touchPadLeftInputType,
             "touchpad left input"
         )
+        val touchPadRightInputType = getEnumPreference(
+            preferences,
+            TOUCHPAD_RIGHT_INPUT,
+            UsageConfig.DEFAULT.touchPadRightInputType,
+            "touchpad right input"
+        )
         val backScreenInputType = getEnumPreference(
             preferences,
             BACK_SCREEN_INPUT,
@@ -319,10 +325,13 @@ class SettingsRepositoryImpl(
                 ?: UsageConfig.DEFAULT.cursorActivationKey,
             touchPadMainInputType = touchPadMainInputType,
             touchPadLeftInputType = touchPadLeftInputType,
+            touchPadRightInputType = touchPadRightInputType,
             backScreenInputType = backScreenInputType,
             touchpadDisableTopRow = preferences[TOUCHPAD_DISABLE_TOP_ROW]?: UsageConfig.DEFAULT.touchpadDisableTopRow,
-            touchpadSplitInput = preferences[TOUCHPAD_SPLIT_INPUT]?: UsageConfig.DEFAULT.touchpadSplitInput,
-            touchpadSplitPosition = preferences[TOUCHPAD_SPLIT_POSITION]?: UsageConfig.DEFAULT.touchpadSplitPosition,
+            touchpadSplitLeftInput = preferences[TOUCHPAD_SPLIT_LEFT_INPUT]?: UsageConfig.DEFAULT.touchpadSplitLeftInput,
+            touchpadSplitLeftPosition = preferences[TOUCHPAD_SPLIT_LEFT_POSITION]?: UsageConfig.DEFAULT.touchpadSplitLeftPosition,
+            touchpadSplitRightInput = preferences[TOUCHPAD_SPLIT_RIGHT_INPUT]?: UsageConfig.DEFAULT.touchpadSplitRightInput,
+            touchpadSplitRightPosition = preferences[TOUCHPAD_SPLIT_RIGHT_POSITION]?: UsageConfig.DEFAULT.touchpadSplitRightPosition,
             mouseTapToClick = preferences[MOUSE_TAP_TO_CLICK]?: UsageConfig.DEFAULT.mouseTapToClick,
             mouseDoubleTapToHold = preferences[MOUSE_DOUBLE_TAP_HOLD]?: UsageConfig.DEFAULT.mouseDoubleTapToHold,
             mouseTwoFingerToHold = preferences[MOUSE_TWO_FINGER_HOLD]?: UsageConfig.DEFAULT.mouseTwoFingerToHold,
@@ -386,10 +395,13 @@ class SettingsRepositoryImpl(
         val CURSOR_ACTIVATION_KEY = intPreferencesKey("cursor_activation_key__$configId")
         val TOUCHPAD_MAIN_INPUT = stringPreferencesKey("touchpad_main_input__$configId")
         val TOUCHPAD_LEFT_INPUT = stringPreferencesKey("touchpad_left_input__$configId")
+        val TOUCHPAD_RIGHT_INPUT = stringPreferencesKey("touchpad_right_input__$configId")
         val BACK_SCREEN_INPUT = stringPreferencesKey("back_screen_input__$configId")
         val TOUCHPAD_DISABLE_TOP_ROW = booleanPreferencesKey("touchpad_disable_top_row__$configId")
-        val TOUCHPAD_SPLIT_INPUT = booleanPreferencesKey("touchpad_split_input__$configId")
-        val TOUCHPAD_SPLIT_POSITION = intPreferencesKey("touchpad_split_position__$configId")
+        val TOUCHPAD_SPLIT_LEFT_INPUT = booleanPreferencesKey("touchpad_split_left_input__$configId")
+        val TOUCHPAD_SPLIT_LEFT_POSITION = intPreferencesKey("touchpad_split_left_position__$configId")
+        val TOUCHPAD_SPLIT_RIGHT_INPUT = booleanPreferencesKey("touchpad_split_right_input__$configId")
+        val TOUCHPAD_SPLIT_RIGHT_POSITION = intPreferencesKey("touchpad_split_right_position__$configId")
         val MOUSE_TAP_TO_CLICK = booleanPreferencesKey("mouse_tap_to_click__$configId")
         val MOUSE_DOUBLE_TAP_HOLD = booleanPreferencesKey("mouse_double_tap_hold__$configId")
         val MOUSE_TWO_FINGER_HOLD = booleanPreferencesKey("mouse_two_finger_hold__$configId")
@@ -436,10 +448,13 @@ class SettingsRepositoryImpl(
         preferences[CURSOR_ACTIVATION_KEY] = settings.cursorActivationKey
         preferences[TOUCHPAD_MAIN_INPUT] = settings.touchPadMainInputType.name
         preferences[TOUCHPAD_LEFT_INPUT] = settings.touchPadLeftInputType.name
+        preferences[TOUCHPAD_RIGHT_INPUT] = settings.touchPadRightInputType.name
         preferences[BACK_SCREEN_INPUT] = settings.backScreenInputType.name
         preferences[TOUCHPAD_DISABLE_TOP_ROW] = settings.touchpadDisableTopRow
-        preferences[TOUCHPAD_SPLIT_INPUT] = settings.touchpadSplitInput
-        preferences[TOUCHPAD_SPLIT_POSITION] = settings.touchpadSplitPosition
+        preferences[TOUCHPAD_SPLIT_LEFT_INPUT] = settings.touchpadSplitLeftInput
+        preferences[TOUCHPAD_SPLIT_LEFT_POSITION] = settings.touchpadSplitLeftPosition
+        preferences[TOUCHPAD_SPLIT_RIGHT_INPUT] = settings.touchpadSplitRightInput
+        preferences[TOUCHPAD_SPLIT_RIGHT_POSITION] = settings.touchpadSplitRightPosition
         preferences[MOUSE_TAP_TO_CLICK] = settings.mouseTapToClick
         preferences[MOUSE_DOUBLE_TAP_HOLD] = settings.mouseDoubleTapToHold
         preferences[MOUSE_TWO_FINGER_HOLD] = settings.mouseTwoFingerToHold

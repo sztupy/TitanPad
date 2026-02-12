@@ -10,6 +10,7 @@ import scot.raven.titanpad.core.control.IHidService
 import scot.raven.titanpad.core.control.ModeCoordinator
 import scot.raven.titanpad.core.logs.Logger
 import scot.raven.titanpad.cursor.domain.InputType
+import scot.raven.titanpad.cursor.domain.TouchZone
 import scot.raven.titanpad.gesture.api.GestureManager
 import scot.raven.titanpad.settings.domain.ApplicationSettings
 import scot.raven.titanpad.settings.domain.UsageConfig
@@ -130,9 +131,21 @@ class TouchInputHandler(
 
                 var inputType : InputType = if (backScreenMode) settings.backScreenInputType else settings.touchPadMainInputType
 
-                if (settings.touchpadSplitInput && !backScreenMode) {
-                    if (startPositionX < TRACKPAD_WIDTH.toFloat() * settings.touchpadSplitPosition.toFloat() / 100f) {
-                        inputType = settings.touchPadLeftInputType
+                if ((settings.touchpadSplitLeftInput || settings.touchpadSplitRightInput) && !backScreenMode) {
+
+                    val zone = TouchZone.fromPosition(
+                        x = startPositionX.toFloat(),
+                        width = TRACKPAD_WIDTH.toFloat(),
+                        splitLeftPercent = settings.touchpadSplitLeftPosition,
+                        splitRightPercent = settings.touchpadSplitRightPosition,
+                        leftEnabled = settings.touchpadSplitLeftInput,
+                        rightEnabled = settings.touchpadSplitRightInput
+                    )
+
+                    inputType = when (zone) {
+                        TouchZone.LEFT -> settings.touchPadLeftInputType
+                        TouchZone.CENTER -> settings.touchPadMainInputType
+                        TouchZone.RIGHT -> settings.touchPadRightInputType
                     }
                 }
 
@@ -185,18 +198,54 @@ class TouchInputHandler(
             } else if (inputType == InputType.HARDWARE_SCROLL || inputType == InputType.SOFTWARE_SCROLL) {
                 var touchX = 0
                 var touchY = 0
+                val x = if (settings.scrollOnlyVertically)
+                    startPositionX
+                else
+                    currentX
+
                 if (!backScreenMode) {
-                    if (settings.touchpadSplitInput) {
-                        touchX = ((if (settings.scrollOnlyVertically) startPositionX else currentX).toFloat() / (settings.touchpadSplitPosition / 100f)).toInt()
-                        touchY = currentY * 2
-                    } else {
-                        touchX = if (settings.scrollOnlyVertically) startPositionX else currentX
-                        touchY = currentY * 2
+                    val zone = if (settings.touchpadSplitLeftInput || settings.touchpadSplitRightInput)
+                        TouchZone.fromPosition(
+                            x = x.toFloat(),
+                            width = TRACKPAD_WIDTH.toFloat(),
+                            splitLeftPercent = settings.touchpadSplitLeftPosition,
+                            splitRightPercent = settings.touchpadSplitRightPosition,
+                            leftEnabled = settings.touchpadSplitLeftInput,
+                            rightEnabled = settings.touchpadSplitRightInput
+                        )
+                    else
+                        TouchZone.CENTER
+
+                    touchX = when (zone) {
+
+                        TouchZone.LEFT -> {
+                            if (settings.touchpadSplitLeftInput) {
+                                val leftBoundary = TRACKPAD_WIDTH * settings.touchpadSplitLeftPosition / 100f
+                                ((x / leftBoundary) * TRACKPAD_WIDTH).toInt()
+                            } else {
+                                x
+                            }
+                        }
+
+                        TouchZone.CENTER -> x
+
+                        TouchZone.RIGHT -> {
+                            if (settings.touchpadSplitRightInput) {
+                                val rightBoundary = TRACKPAD_WIDTH * settings.touchpadSplitRightPosition / 100f
+                                (((x - rightBoundary) / (TRACKPAD_WIDTH - rightBoundary)) * TRACKPAD_WIDTH).toInt()
+                            } else {
+                                x
+                            }
+                        }
                     }
+
+                    touchY = currentY * 2
+
                 } else {
-                    touchX =((BACK_SCREEN_WIDTH-(if (settings.scrollOnlyVertically) startPositionX else currentX)).toFloat() * (TRACKPAD_WIDTH.toFloat() / BACK_SCREEN_WIDTH.toFloat())).toInt()
+                    touchX =((BACK_SCREEN_WIDTH-x).toFloat() * (TRACKPAD_WIDTH.toFloat() / BACK_SCREEN_WIDTH.toFloat())).toInt()
                     touchY =(currentY.toFloat() * (TRACKPAD_HEIGHT.toFloat() / BACK_SCREEN_HEIGHT.toFloat())).toInt() * 2
                 }
+
 
                 if (inputType == InputType.HARDWARE_SCROLL) {
                     hidService?.tapScreen(touchX, touchY)

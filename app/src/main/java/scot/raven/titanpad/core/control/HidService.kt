@@ -2,6 +2,7 @@ package scot.raven.titanpad.core.control
 
 import android.os.RemoteException
 import android.util.Log
+import android.util.SparseArray
 import com.android.commands.hid.Device
 import kotlin.experimental.and
 import kotlin.experimental.inv
@@ -36,33 +37,76 @@ class HidService : IHidService.Stub() {
     )
 
     val hidMouseDescriptor: ByteArray = byteArrayOf(
-        0x05, 0x01,             // Usage Page (Generic Desktop Ctrls)
-        0x09, 0x02,             // Usage (Mouse)
-        0xA1.toByte(), 0x01,    // Collection (Application)
-        0x09, 0x01,             //   Usage (Pointer)
-        0xA1.toByte(), 0x00,    //   Collection (Physical)
-        0x05, 0x09,             //     Usage Page (Button)
-        0x19, 0x01,             //     Usage Minimum (0x01)
-        0x29, 0x05,             //     Usage Maximum (0x05)
-        0x15, 0x00,             //     Logical Minimum (0)
-        0x25, 0x01,             //     Logical Maximum (1)
-        0x95.toByte(), 0x05,    //     Report Count (5)
-        0x75, 0x01,             //     Report Size (1)
-        0x81.toByte(), 0x02,    //     Input (Data,Var,Abs,No Wrap,Linear,Preferred State,No Null Position)
-        0x95.toByte(), 0x01,    //     Report Count (1)
-        0x75, 0x03,             //     Report Size (3)
-        0x81.toByte(), 0x01,    //     Input (Const,Array,Abs,No Wrap,Linear,Preferred State,No Null Position)
-        0x05, 0x01,             //     Usage Page (Generic Desktop Ctrls)
-        0x09, 0x30,             //     Usage (X)
-        0x09, 0x31,             //     Usage (Y)
-        0x09, 0x38,             //     Usage (Wheel)
-        0x15, 0x81.toByte(),    //     Logical Minimum (-127)
-        0x25, 0x7F,             //     Logical Maximum (127)
-        0x75, 0x08,             //     Report Size (8)
-        0x95.toByte(), 0x03,    //     Report Count (3)
-        0x81.toByte(), 0x06,    //     Input (Data,Var,Rel,No Wrap,Linear,Preferred State,No Null Position)
-        0xC0.toByte(),          //   End Collection
-        0xC0.toByte(),          // End Collection
+        0x05, 0x01,          // USAGE_PAGE (Generic Desktop)
+        0x09, 0x02,          // USAGE (Mouse)
+        0xa1.toByte(), 0x01, // COLLECTION (Application)
+        0x09, 0x02,          //   USAGE (Mouse)
+        0xa1.toByte(), 0x02, //   COLLECTION (Logical)
+        0x09, 0x01,          //     USAGE (Pointer)
+        0xa1.toByte(), 0x00, //     COLLECTION (Physical)
+        // ------------------------------  Buttons
+        0x05, 0x09,          //       USAGE_PAGE (Button)
+        0x19, 0x01,          //       USAGE_MINIMUM (Button 1)
+        0x29, 0x05,          //       USAGE_MAXIMUM (Button 5)
+        0x15, 0x00,          //       LOGICAL_MINIMUM (0)
+        0x25, 0x01,          //       LOGICAL_MAXIMUM (1)
+        0x75, 0x01,          //       REPORT_SIZE (1)
+        0x95.toByte(), 0x05, //       REPORT_COUNT (5 Buttons)
+        0x81.toByte(), 0x02, //       INPUT (Data,Var,Abs)
+        // ------------------------------  Padding
+        0x75, 0x03,          //       REPORT_SIZE (8-5buttons 3)
+        0x95.toByte(), 0x01, //       REPORT_COUNT (1)
+        0x81.toByte(), 0x03, //       INPUT (Cnst,Var,Abs)
+        // ------------------------------  X,Y position
+        0x05, 0x01,          //       USAGE_PAGE (Generic Desktop)
+        0x09, 0x30,          //       USAGE (X)
+        0x09, 0x31,          //       USAGE (Y)
+        0x15, 0x81.toByte(), //       LOGICAL_MINIMUM (-127)
+        0x25, 0x7f,          //       LOGICAL_MAXIMUM (127)
+        0x75, 0x08,          //       REPORT_SIZE (8)
+        0x95.toByte(), 0x02, //       REPORT_COUNT (2)
+        0x81.toByte(), 0x06, //       INPUT (Data,Var,Rel)
+        0xa1.toByte(), 0x02, //       COLLECTION (Logical)
+        // ------------------------------  Vertical wheel res multiplier
+        0x09, 0x48,          //         USAGE (Resolution Multiplier)
+        0x15, 0x00,          //         LOGICAL_MINIMUM (0)
+        0x25, 0x01,          //         LOGICAL_MAXIMUM (1)
+        0x35, 0x78,          //         PHYSICAL_MINIMUM (120)
+        0x45, 0x78,          //         PHYSICAL_MAXIMUM (120) - hardcode resolution to the minimum available
+        0x75, 0x02,          //         REPORT_SIZE (2)
+        0x95.toByte(), 0x01, //         REPORT_COUNT (1)
+        0xa4.toByte(),       //         PUSH
+        0xb1.toByte(), 0x02, //         FEATURE (Data,Var,Abs)
+        // ------------------------------  Vertical wheel
+        0x09, 0x38,          //         USAGE (Wheel)
+        0x15, 0x81.toByte(), //         LOGICAL_MINIMUM (-127)
+        0x25, 0x7f,          //         LOGICAL_MAXIMUM (127)
+        0x35, 0x00,          //         PHYSICAL_MINIMUM (0)        - reset physical
+        0x45, 0x00,          //         PHYSICAL_MAXIMUM (0)
+        0x75, 0x08,          //         REPORT_SIZE (8)
+        0x81.toByte(), 0x06, //         INPUT (Data,Var,Rel)
+        0xc0.toByte(),       //       END_COLLECTION
+        0xa1.toByte(), 0x02, //       COLLECTION (Logical)
+        // ------------------------------  Horizontal wheel res multiplier
+        0x09, 0x48,          //         USAGE (Resolution Multiplier)
+        0xb4.toByte(),       //         POP
+        0xb1.toByte(), 0x02, //         FEATURE (Data,Var,Abs)
+        // ------------------------------  Padding for Feature report
+        0x35, 0x00,          //         PHYSICAL_MINIMUM (0)        - reset physical
+        0x45, 0x00,          //         PHYSICAL_MAXIMUM (0)
+        0x75, 0x04,          //         REPORT_SIZE (4)
+        0xb1.toByte(), 0x03, //         FEATURE (Cnst,Var,Abs)
+        // ------------------------------  Horizontal wheel
+        0x05, 0x0c,          //         USAGE_PAGE (Consumer Devices)
+        0x0a, 0x38, 0x02,    //         USAGE (AC Pan)
+        0x15, 0x81.toByte(), //         LOGICAL_MINIMUM (-127)
+        0x25, 0x7f,          //         LOGICAL_MAXIMUM (127)
+        0x75, 0x08,          //         REPORT_SIZE (8)
+        0x81.toByte(), 0x06, //         INPUT (Data,Var,Rel)
+        0xc0.toByte(),       //       END_COLLECTION
+        0xc0.toByte(),       //     END_COLLECTION
+        0xc0.toByte(),       //   END_COLLECTION
+        0xc0.toByte()        // END_COLLECTION
     )
 
     val hidGamePadDescriptor: ByteArray = byteArrayOf(
@@ -150,13 +194,26 @@ class HidService : IHidService.Stub() {
     val gamePad: Device
     val touchScreen: Device
 
-    val mouseCode: ByteArray = byteArrayOf(0x00, 0x00, 0x00, 0x00)
+    val mouseCode: ByteArray = byteArrayOf(0x00, 0x00, 0x00, 0x00, 0x00)
+
+    val mouseFeatureReportData: ByteArray = byteArrayOf(0x00)
+
     val keyboardCode: ByteArray = byteArrayOf(0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00)
     val gamePadCode: ByteArray = byteArrayOf(0x00, 0x00, 0x00, 0x00, 0x00, 0x00)
+
     val touchScreenCode: ByteArray = byteArrayOf(0x00, 0x00, 0x00, 0x00, 0x00)
+
+    val touchScreenReportData: ByteArray = byteArrayOf(0x01)
 
     init {
         Log.i(LOG_TAG, "Starting TitanPad HidService")
+
+        val mouseFeatureReport = SparseArray<ByteArray>()
+        mouseFeatureReport.append(0, mouseFeatureReportData)
+
+        val touchFeatureReport = SparseArray<ByteArray>()
+        touchFeatureReport.append(0, touchScreenReportData)
+
         mouse = Device(
             1,
             "TitanPadMouse",
@@ -166,7 +223,7 @@ class HidService : IHidService.Stub() {
             0x03,
             hidMouseDescriptor,
             mouseCode,
-            null,
+            mouseFeatureReport,
             null
         )
 
@@ -205,7 +262,7 @@ class HidService : IHidService.Stub() {
             0x03,
             hidTouchScreenDescriptor,
             touchScreenCode,
-            null,
+            touchFeatureReport,
             null
         )
     }
@@ -225,13 +282,15 @@ class HidService : IHidService.Stub() {
     }
 
     @Throws(RemoteException::class)
-    override fun setMousePosition(x: Int, y: Int, buttonDown: Int, buttonUp: Int) {
+    override fun setMousePosition(x: Int, y: Int, buttonDown: Int, buttonUp: Int, scroll: Int, hScroll: Int) {
         val xClamp = x.coerceIn(-127, 127)
         val yClamp = y.coerceIn(-127, 127)
 
         mouseCode[0] = mouseCode[0].or(buttonDown.toByte()).and(buttonUp.toByte().inv())
         mouseCode[1] = xClamp.toByte()
         mouseCode[2] = yClamp.toByte()
+        mouseCode[3] = scroll.toByte()
+        mouseCode[4] = hScroll.toByte()
         mouse.sendReport(mouseCode) //Here we send mouse report data.
     }
 

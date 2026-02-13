@@ -398,6 +398,7 @@ fun InputSelectorItem(
                 InputType.OFF -> "Disabled"
                 InputType.SOFTWARE_MOUSE -> "Software Mouse"
                 InputType.HARDWARE_MOUSE -> "Emulated Hardware Mouse"
+                InputType.HARDWARE_WHEEL -> "Emulated Hardware Mouse Wheel"
                 InputType.SOFTWARE_SCROLL -> "Software Scroll Assistant"
                 InputType.HARDWARE_SCROLL -> "Emulated Hardware Scroll Assistant"
                 InputType.HARDWARE_JOYSTICK -> "Emulated Hardware Joystick"
@@ -408,9 +409,10 @@ fun InputSelectorItem(
                 InputType.OFF to "Disabled",
                 InputType.SOFTWARE_MOUSE to "Mouse (software)",
                 InputType.HARDWARE_MOUSE to "Mouse (hardware)",
+                InputType.HARDWARE_WHEEL to "Mouse Wheel (hardware)",
                 InputType.SOFTWARE_SCROLL to "Scroll (software)",
                 InputType.HARDWARE_SCROLL to "Scroll (hardware)",
-                InputType.HARDWARE_JOYSTICK to "Joystick"
+                InputType.HARDWARE_JOYSTICK to "Joystick",
             ),
         onOptionSelected = onOptionSelected,
     )

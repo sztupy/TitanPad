@@ -30,9 +30,9 @@ class KeyInputHandler(
 
                         if (modeCoordinator.activeMode.value == ModeCoordinator.OverlayMode.ON)
                             when (settings.getActiveConfig().func1ButtonMap) {
-                                FuncButtonMap.MOUSE_LEFT_CLICK -> hidService?.setMousePosition(0,0,1, 0)
-                                FuncButtonMap.MOUSE_RIGHT_CLICK -> hidService?.setMousePosition(0,0,2, 0)
-                                FuncButtonMap.MOUSE_MIDDLE_CLICK -> hidService?.setMousePosition(0,0,4, 0)
+                                FuncButtonMap.MOUSE_LEFT_CLICK -> hidService?.setMousePosition(0,0,1, 0, 0, 0)
+                                FuncButtonMap.MOUSE_RIGHT_CLICK -> hidService?.setMousePosition(0,0,2, 0, 0, 0)
+                                FuncButtonMap.MOUSE_MIDDLE_CLICK -> hidService?.setMousePosition(0,0,4, 0, 0, 0)
                                 else -> {}
                             }
 
@@ -44,9 +44,9 @@ class KeyInputHandler(
 
                         if (modeCoordinator.activeMode.value == ModeCoordinator.OverlayMode.ON)
                             when (settings.getActiveConfig().func2ButtonMap) {
-                                FuncButtonMap.MOUSE_LEFT_CLICK -> hidService?.setMousePosition(0,0,1, 0)
-                                FuncButtonMap.MOUSE_RIGHT_CLICK -> hidService?.setMousePosition(0,0,2, 0)
-                                FuncButtonMap.MOUSE_MIDDLE_CLICK -> hidService?.setMousePosition(0,0,4, 0)
+                                FuncButtonMap.MOUSE_LEFT_CLICK -> hidService?.setMousePosition(0,0,1, 0, 0, 0)
+                                FuncButtonMap.MOUSE_RIGHT_CLICK -> hidService?.setMousePosition(0,0,2, 0, 0, 0)
+                                FuncButtonMap.MOUSE_MIDDLE_CLICK -> hidService?.setMousePosition(0,0,4, 0, 0, 0)
                                 else -> {}
                             }
                     }
@@ -64,9 +64,9 @@ class KeyInputHandler(
 
                         if (modeCoordinator.activeMode.value == ModeCoordinator.OverlayMode.ON)
                             when (settings.getActiveConfig().func1ButtonMap) {
-                                FuncButtonMap.MOUSE_LEFT_CLICK -> hidService?.setMousePosition(0,0,0, 1)
-                                FuncButtonMap.MOUSE_RIGHT_CLICK -> hidService?.setMousePosition(0,0,0, 2)
-                                FuncButtonMap.MOUSE_MIDDLE_CLICK -> hidService?.setMousePosition(0,0,0, 4)
+                                FuncButtonMap.MOUSE_LEFT_CLICK -> hidService?.setMousePosition(0,0,0, 1, 0, 0)
+                                FuncButtonMap.MOUSE_RIGHT_CLICK -> hidService?.setMousePosition(0,0,0, 2, 0, 0)
+                                FuncButtonMap.MOUSE_MIDDLE_CLICK -> hidService?.setMousePosition(0,0,0, 4, 0, 0)
                                 else -> {}
                             }
                     }
@@ -77,9 +77,9 @@ class KeyInputHandler(
 
                         if (modeCoordinator.activeMode.value == ModeCoordinator.OverlayMode.ON)
                             when (settings.getActiveConfig().func2ButtonMap) {
-                                FuncButtonMap.MOUSE_LEFT_CLICK -> hidService?.setMousePosition(0,0,0, 1)
-                                FuncButtonMap.MOUSE_RIGHT_CLICK -> hidService?.setMousePosition(0,0,0, 2)
-                                FuncButtonMap.MOUSE_MIDDLE_CLICK -> hidService?.setMousePosition(0,0,0, 4)
+                                FuncButtonMap.MOUSE_LEFT_CLICK -> hidService?.setMousePosition(0,0,0, 1, 0, 0)
+                                FuncButtonMap.MOUSE_RIGHT_CLICK -> hidService?.setMousePosition(0,0,0, 2, 0, 0)
+                                FuncButtonMap.MOUSE_MIDDLE_CLICK -> hidService?.setMousePosition(0,0,0, 4, 0, 0)
                                 else -> {}
                             }
                     }

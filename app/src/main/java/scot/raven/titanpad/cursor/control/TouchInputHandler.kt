@@ -201,7 +201,23 @@ class TouchInputHandler(
                     }
                 }
             } else if (inputType == InputType.HARDWARE_MOUSE) {
-                hidService?.setMousePosition(deltaX.toInt(), deltaY.toInt(), if (dragEnabled) 1 else 0, 0)
+                hidService?.setMousePosition(
+                    deltaX.toInt(),
+                    deltaY.toInt(),
+                    if (dragEnabled) 1 else 0,
+                    0,
+                    0,
+                    0
+                )
+            } else if (inputType == InputType.HARDWARE_WHEEL) {
+                hidService?.setMousePosition(
+                    0,
+                    0,
+                    if (dragEnabled) 1 else 0,
+                    0,
+                    deltaY.toInt(),
+                    deltaX.toInt(),
+                )
             } else if (inputType == InputType.HARDWARE_SCROLL || inputType == InputType.SOFTWARE_SCROLL) {
                 var touchX : Float
                 var touchY : Float
@@ -298,15 +314,17 @@ class TouchInputHandler(
             } else if (inputType == InputType.HARDWARE_MOUSE) {
                 if (isClick) {
                     scope.launch {
-                        hidService?.setMousePosition(0,0,1,0)
+                        hidService?.setMousePosition(0, 0, 1, 0, 0, 0)
                         delay(TAP_CLICK_LENGTH)
                         if (!dragEnabled) {
-                            hidService?.setMousePosition(0, 0, 0, 1)
+                            hidService?.setMousePosition(0, 0, 0, 1, 0, 0)
                         }
                     }
                 } else {
-                    hidService?.setMousePosition(0,0,0,1)
+                    hidService?.setMousePosition(0, 0, 0, 1, 0, 0)
                 }
+            } else if (inputType == InputType.HARDWARE_WHEEL) {
+                // do nothing
             } else if (inputType == InputType.HARDWARE_SCROLL) {
                 if (scrollHasStarted) {
                     hidService?.tapRelease()

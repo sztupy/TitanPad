@@ -114,6 +114,7 @@ class SettingsState(
 
                             scrollSettings = settings.scrollSettings,
 
+                            disclosureAccepted = applicationSettings.disclosureAccepted,
                             defaultConfigName = applicationSettings.defaultConfig.configName,
                             alwaysRemapFuncKeys = applicationSettings.alwaysRemapFuncKeys,
                             alwaysRemapFuncKeysCompat = applicationSettings.alwaysRemapFuncKeysCompat,
@@ -298,6 +299,7 @@ data class SettingsUiState(
     val showInvalidSettingError: Boolean = false,
     val showError: Boolean = false,
     val errorMessage: String = "",
+    val disclosureAccepted: Boolean = false,
     val configList: Map<String,String> = HashMap(),
     val defaultConfigName: String = Defaults.Settings.DEFAULT_CONFIG_NAME,
     val alwaysRemapFuncKeys: Boolean = Defaults.Settings.ALWAYS_REMAP_FUNC_KEYS,

@@ -1,5 +1,7 @@
 package scot.raven.titanpad.settings.ui
 
+import android.content.Intent
+import android.provider.Settings
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -56,7 +58,6 @@ fun SettingsScreen(
     activeConfiguration: StateFlow<String>,
     onNavigateToCursorSettings: (String) -> Unit,
     onNavigateToSetupOptions: () -> Unit,
-    onNavigateToDisclosureScreen: () -> Unit,
 ) {
     val uiState by settingsState.uiState.collectAsState()
     val validationErrors by settingsState.validationErrors.collectAsState()
@@ -127,7 +128,9 @@ fun SettingsScreen(
                 PermissionStatusBanner(
                     title = "Accessibility Service",
                     status = uiState.isAccessibilityServiceEnabled,
-                    onClickAction = onNavigateToDisclosureScreen,
+                    onClickAction = {
+                        context.startActivity(Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS))
+                    },
                 )
 
                 val shizukuStatus = ShizukuConnection.statusFlow.collectAsState().value

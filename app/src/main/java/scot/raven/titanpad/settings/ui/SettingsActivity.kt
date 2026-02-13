@@ -76,7 +76,6 @@ class SettingsActivity : ComponentActivity() {
                 SettingsScreen(
                     settingsState = settingsState,
                     activeConfiguration = activeConfiguration,
-                    onNavigateToDisclosureScreen = { startCustomActivity(this, DisclosureActivity::class.java, "default") },
                     onNavigateToCursorSettings = { configId -> startCustomActivity(this, UsageConfigurationActivity::class.java, configId) },
                     onNavigateToSetupOptions = { startCustomActivity(this, SetupOptionsActivity::class.java, "default") },
                 )

@@ -1,15 +1,15 @@
 package scot.raven.titanpad.settings.ui.setup
 
-import android.database.ContentObserver
+import android.content.Context
+import android.content.Intent
 import android.os.Bundle
-import android.os.Handler
-import android.os.Looper
-import android.provider.Settings
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.core.app.ActivityOptionsCompat
 import androidx.lifecycle.ViewModelProvider
 import scot.raven.titanpad.TitanPad
 import scot.raven.titanpad.core.ui.AppTheme
+import scot.raven.titanpad.settings.ui.SettingsActivity
 import scot.raven.titanpad.settings.ui.SettingsState
 
 /**
@@ -17,7 +17,12 @@ import scot.raven.titanpad.settings.ui.SettingsState
  */
 class DisclosureActivity : ComponentActivity() {
     private lateinit var settingsState: SettingsState
-    private lateinit var accessibilitySettingsObserver: ContentObserver
+
+    private fun startCustomActivity(context: Context, activityClass: Class<*>) {
+        val intent = Intent(context, activityClass)
+        val options = ActivityOptionsCompat.makeBasic()
+        context.startActivity(intent, options.toBundle())
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -25,13 +30,16 @@ class DisclosureActivity : ComponentActivity() {
         val factory = SettingsState.Factory(TitanPad.getInstance().settingsRepository, "default")
         settingsState = ViewModelProvider(this, factory)[SettingsState::class.java]
 
-        registerAccessibilitySettingsObserver()
-        checkAccessibilityServiceStatus()
+        val onNavigateToSettingsPage = {
+            startCustomActivity(this, SettingsActivity::class.java)
+            finish()
+        }
 
         setContent {
             AppTheme {
                 DisclosureScreen (
                     settingsState = settingsState,
+                    onNavigateToSettingsPage = onNavigateToSettingsPage,
                     onNavigateBack = {
                         finish()
                     }
@@ -42,24 +50,5 @@ class DisclosureActivity : ComponentActivity() {
 
     override fun onResume() {
         super.onResume()
-
-        checkAccessibilityServiceStatus()
-    }
-
-    private fun registerAccessibilitySettingsObserver() {
-        accessibilitySettingsObserver =
-            object : ContentObserver(Handler(Looper.getMainLooper())) {
-                override fun onChange(selfChange: Boolean) {
-                    checkAccessibilityServiceStatus()
-                }
-            }
-
-        val uri = Settings.Secure.getUriFor(Settings.Secure.ENABLED_ACCESSIBILITY_SERVICES)
-        contentResolver.registerContentObserver(uri, false, accessibilitySettingsObserver)
-    }
-
-    private fun checkAccessibilityServiceStatus() {
-        val isServiceEnabled = TitanPad.isAccessibilityServiceEnabled(this)
-        settingsState.updateAccessibilityServiceStatus(isServiceEnabled)
     }
 }

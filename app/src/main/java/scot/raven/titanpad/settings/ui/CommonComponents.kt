@@ -422,6 +422,7 @@ fun PermissionStatusBanner(
     onClickAction: () -> Unit,
     passText: String = "Permission Granted",
     failText: String = "Permission Required",
+    hideIcon: Boolean = false
 ) {
     Column {
         Surface(
@@ -437,13 +438,17 @@ fun PermissionStatusBanner(
                 modifier = Modifier.padding(16.dp),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
-                Icon(
-                    imageVector = if (status == null) Icons.Default.Info else if (status) Icons.Default.Check else Icons.Default.Warning,
-                    contentDescription = null,
-                    tint = if (status == null) Color(0xFF0492C2) else if (status) Color(0xFF4CAF50) else Color(0xFFFF9800),
-                    modifier = Modifier.size(24.dp),
-                )
-                Spacer(modifier = Modifier.width(12.dp))
+                if (!hideIcon) {
+                    Icon(
+                        imageVector = if (status == null) Icons.Default.Info else if (status) Icons.Default.Check else Icons.Default.Warning,
+                        contentDescription = null,
+                        tint = if (status == null) Color(0xFF0492C2) else if (status) Color(
+                            0xFF4CAF50
+                        ) else Color(0xFFFF9800),
+                        modifier = Modifier.size(24.dp),
+                    )
+                    Spacer(modifier = Modifier.width(12.dp))
+                }
                 Column(modifier = Modifier.weight(10f, fill = true)) {
                     Text(
                         text = title,
@@ -456,7 +461,7 @@ fun PermissionStatusBanner(
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
                 }
-                if (status == null || !status) {
+                if (!hideIcon && (status == null || !status)) {
                     Spacer(modifier = Modifier.weight(1f))
                     Icon(
                         imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,

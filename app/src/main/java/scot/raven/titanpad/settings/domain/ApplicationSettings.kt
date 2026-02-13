@@ -10,6 +10,7 @@ data class ApplicationSettings(
     val alwaysRemapFuncKeys: Boolean = Defaults.Settings.ALWAYS_REMAP_FUNC_KEYS,
     val alwaysRemapFuncKeysCompat: Boolean = Defaults.Settings.ALWAYS_REMAP_FUNC_KEYS_COMPAT,
     val lastActiveSetting: String = "",
+    var disclosureAccepted: Boolean = false,
 
     val defaultConfig: UsageConfig = UsageConfig(),
     val additionalConfigs: List<UsageConfig> = ArrayList()

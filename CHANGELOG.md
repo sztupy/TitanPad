@@ -19,6 +19,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Allow more granular slider (every 5%) for the trackpad split
 - Instead of an "auto disable" option you can now also select to enable another config when switching away from an app
+- Changed the Disclosure page to be more compliant to Google Play rules
 
 ## [0.1.0] - 2026-02-10
 

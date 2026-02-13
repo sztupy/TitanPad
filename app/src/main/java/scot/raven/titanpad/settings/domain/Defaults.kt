@@ -108,5 +108,6 @@ object Defaults {
         const val DISABLE_TOUCHSCREEN = false
         const val ALWAYS_REMAP_FUNC_KEYS = true
         const val ALWAYS_REMAP_FUNC_KEYS_COMPAT = false
+        const val RUN_AFTER_BOOT = ""
     }
 }

@@ -224,6 +224,20 @@ class AppAccessibilityService : AccessibilityService(), LifecycleOwner,
 
             lifecycleRegistry.handleLifecycleEvent(Lifecycle.Event.ON_RESUME)
 
+            backgroundScope.launch {
+                delay(1000)
+                val settings = TitanPad.getInstance().getSettingsFlow().value
+                val runAfterBoot = settings.runAfterBoot
+                Logger.d("Run after boot settings: $runAfterBoot")
+
+                when(runAfterBoot) {
+                    "previous" -> activateStandardCursor(instance!!, settings.lastActiveSetting)
+                    "default" -> activateStandardCursor(instance!!, "default")
+                    in settings.additionalConfigs.map{ it.configId } -> activateStandardCursor(instance!!, runAfterBoot)
+                    else -> {}
+                }
+            }
+
             Logger.i("Overlay accessibility service connected")
         } catch (e: Exception) {
             Logger.e("Error initializing service", e)

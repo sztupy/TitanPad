@@ -35,6 +35,7 @@ class SettingsRepositoryImpl(
         private val ALWAYS_REMAP_FUNC_KEYS_COMPAT = booleanPreferencesKey("always_remap_func_keys_compat")
         private val LAST_ACTIVE_SETTING = stringPreferencesKey("last_active_setting")
         private val ADDITIONAL_CONFIG_KEYS = stringSetPreferencesKey("additional_config_keys")
+        private val RUN_AFTER_BOOT = stringPreferencesKey("run_after_boot")
         private val DISCLOSURE_ACCPTED = booleanPreferencesKey("disclosure_accepted")
         private val VERSION_CODE = intPreferencesKey("version_code")
     }
@@ -76,6 +77,7 @@ class SettingsRepositoryImpl(
                     lastActiveSetting = preferences[LAST_ACTIVE_SETTING] ?: "default",
                     alwaysRemapFuncKeys = preferences[ALWAYS_REMAP_FUNC_KEYS] ?: ApplicationSettings.DEFAULT.alwaysRemapFuncKeys,
                     alwaysRemapFuncKeysCompat = preferences[ALWAYS_REMAP_FUNC_KEYS_COMPAT] ?: ApplicationSettings.DEFAULT.alwaysRemapFuncKeysCompat,
+                    runAfterBoot = preferences[RUN_AFTER_BOOT] ?: ApplicationSettings.DEFAULT.runAfterBoot,
                     additionalConfigs = additionalConfigKeys.map { usageConfigPreferenceLoader(it, preferences) }
                 )
 
@@ -100,6 +102,7 @@ class SettingsRepositoryImpl(
                 preferences[ALWAYS_REMAP_FUNC_KEYS_COMPAT] = settings.alwaysRemapFuncKeysCompat
                 preferences[ADDITIONAL_CONFIG_KEYS] = settings.additionalConfigs.map{it.configId}.toSet()
                 preferences[DISCLOSURE_ACCPTED] = settings.disclosureAccepted
+                preferences[RUN_AFTER_BOOT] = settings.runAfterBoot
 
                 usageConfigPreferenceWriter("default", preferences,settings.defaultConfig)
                 settings.additionalConfigs.forEach { usageConfigPreferenceWriter(it.configId, preferences, it) }

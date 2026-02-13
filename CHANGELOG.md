@@ -11,15 +11,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Support for right side trackpad split
 - Support for setting up screen areas for the scroll events for all 4 different input areas (left trackpad, main trackpad, right trackpad and back screen)
-- Add support to only auto-enable a config if TitanPad is already enabled. Can be used if you want to add an app-specific config but you only want to run it if you have TitanPad (like the default config) already enabled
+- Add support to only auto-enable a config if TitanPad is already enabled. Can be used if you want to add an app-specific config but you only want to run it if you have TitanPad (like the Main Config) already enabled
 - Add support for backing up and restoring the application config to a json file
 - Add support for backing up and restoring a single configuration to a json file. Can be used to duplicate configs or to share configs with others
+- Add support for auto-enable config on boot. Useful to counter the effects when killing the app in the app switcher. Also useful during boot if Shizuku can auto-start
 
 ### Changed
 
 - Allow more granular slider (every 5%) for the trackpad split
 - Instead of an "auto disable" option you can now also select to enable another config when switching away from an app
 - Changed the Disclosure page to be more compliant to Google Play rules
+- Made the debug build's icon slightly different so it can be easier separated from production builds
 
 ## [0.1.0] - 2026-02-10
 

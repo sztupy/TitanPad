@@ -33,6 +33,7 @@ android {
         }
         debug {
             resValue("string", "app_name", "TitanPad Debug")
+            resValue("color", "ic_launcher_background", value="#FFAAAA")
             applicationIdSuffix = ".debug"
             versionNameSuffix = "-debug"
         }

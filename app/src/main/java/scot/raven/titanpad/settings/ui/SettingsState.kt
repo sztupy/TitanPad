@@ -118,6 +118,7 @@ class SettingsState(
                             defaultConfigName = applicationSettings.defaultConfig.configName,
                             alwaysRemapFuncKeys = applicationSettings.alwaysRemapFuncKeys,
                             alwaysRemapFuncKeysCompat = applicationSettings.alwaysRemapFuncKeysCompat,
+                            runAfterBoot = applicationSettings.runAfterBoot,
                             configList = applicationSettings.additionalConfigs.associate { it.configId to it.configName },
                         )
                     }
@@ -358,6 +359,7 @@ data class SettingsUiState(
     val clickableListType: AppListType = Defaults.Settings.CLICKABLE_LIST_TYPE,
     val checkClickable: Boolean = Defaults.Settings.CHECK_CLICKABLE,
     val disableTouchscreen: Boolean = Defaults.Settings.DISABLE_TOUCHSCREEN,
+    val runAfterBoot: String = Defaults.Settings.RUN_AFTER_BOOT,
 
     val scrollSettings: List<ScrollConfig> = Defaults.Settings.SCROLL_SETTINGS,
 )

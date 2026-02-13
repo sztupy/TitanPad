@@ -233,6 +233,30 @@ fun SettingsScreen(
                         settingsState.addConfig(UsageConfig.randomId())
                     }
                 )
+
+                DropdownPreferenceItem(
+                    title = "Auto-start on Boot",
+                    subtitle =
+                        when (uiState.runAfterBoot) {
+                            in uiState.configList.keys -> "Start up ${uiState.configList.getValue(uiState.runAfterBoot)} after boot or application restart"
+                            "default" -> "Start up main config after boot or application restart"
+                            "previous" -> "Start up last active config after boot or application restart"
+                            else -> "Don't enable anything after boot or application restart"
+                        },
+                    selectedOption = uiState.runAfterBoot,
+                    options =
+                        listOf(
+                            "" to "Disabled",
+                            "previous" to "Last Active",
+                            "default" to "Main Config",
+                        ) +
+                        uiState.configList.map{ e -> e.key to "Switch to ${e.value}" },
+                    onOptionSelected = { value ->
+                        settingsState.updateGlobalPreference(value) { settings, v ->
+                            settings.copy(runAfterBoot = v)
+                        }
+                    },
+                )
             }
 
             PreferenceCategory(title = "Keys") {

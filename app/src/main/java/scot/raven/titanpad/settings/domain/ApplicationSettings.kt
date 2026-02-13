@@ -9,6 +9,7 @@ data class ApplicationSettings(
     val versionCode: Int = BuildConfig.VERSION_CODE,
     val alwaysRemapFuncKeys: Boolean = Defaults.Settings.ALWAYS_REMAP_FUNC_KEYS,
     val alwaysRemapFuncKeysCompat: Boolean = Defaults.Settings.ALWAYS_REMAP_FUNC_KEYS_COMPAT,
+    val runAfterBoot: String = Defaults.Settings.RUN_AFTER_BOOT,
     val lastActiveSetting: String = "",
     var disclosureAccepted: Boolean = false,
 

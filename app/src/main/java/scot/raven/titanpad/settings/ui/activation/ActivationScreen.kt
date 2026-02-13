@@ -36,8 +36,9 @@ import scot.raven.titanpad.settings.ui.SwitchPreferenceItem
 @Composable
 fun ActivationScreen(
     settingsState: SettingsState,
+    onNavigateToEnableAppsScreen: () -> Unit,
+    onNavigateToAutoHideSettings: () -> Unit,
     onNavigateBack: () -> Unit,
-    onNavigateToEnableAppsScreen: () -> Unit
 ) {
     val uiState by settingsState.uiState.collectAsState()
     var showCursorKeyCaptureOverlay by remember { mutableStateOf(false) }
@@ -131,14 +132,46 @@ fun ActivationScreen(
                 )
 
                 SwitchPreferenceItem(
-                    title = "Auto Disable on Switching Apps",
-                    subtitle = if (!uiState.autoDisableOnSwitch) "Don't automatically disable on app switch" else if (uiState.autoEnableListType == AppListType.ALLOW_LIST) "Auto disable in apps not selected above" else "Auto disable in selected apps",
-                    checked = uiState.autoDisableOnSwitch,
+                    title = "Only enable if TitanPad already running",
+                    subtitle = if (uiState.autoEnableIfOnOnly) "Only switch if any other config is already enabled" else "Start this config even if TitanPad is not yet active",
+                    checked = uiState.autoEnableIfOnOnly,
                     onCheckedChange = { value ->
                         settingsState.updatePreference(value) { settings, v ->
-                            settings.copy(autoDisableOnSwitch = v)
+                            settings.copy(autoEnableIfOnOnly = v)
                         }
                     },
+                )
+
+                DropdownPreferenceItem(
+                    title = "Action when switching away",
+                    subtitle =
+                        when (uiState.autoDisableActivity) {
+                            in uiState.configList.keys -> "Switch to ${uiState.configList.getValue(uiState.autoDisableActivity)}"
+                            "default" -> "Switch to default settings"
+                            "disable" -> "Disable config"
+                            else -> "Keep active"
+                        },
+                    selectedOption = uiState.autoDisableActivity,
+                    options =
+                        listOf(
+                            "" to "Keep active",
+                            "disable" to "Disable config",
+                            "default" to "Switch to default",
+                        ) +
+                        uiState.configList.map{ e -> e.key to "Switch to ${e.value}" },
+                    onOptionSelected = { value ->
+                        settingsState.updatePreference(value) { settings, v ->
+                            settings.copy(autoDisableActivity = v)
+                        }
+                    },
+                )
+            }
+
+            PreferenceCategory(title = "Auto hide settings") {
+                SimplePreferenceItem(
+                    title = "Set Up Auto-Hide Options",
+                    subtitle = "Automatically hide, but not disable the config on various events",
+                    onClick = onNavigateToAutoHideSettings
                 )
             }
         }

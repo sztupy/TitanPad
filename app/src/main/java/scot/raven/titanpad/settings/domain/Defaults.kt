@@ -102,7 +102,8 @@ object Defaults {
         val AUTO_ENABLE_LIST_TYPE = AppListType.ALLOW_LIST
         val APPLICATION_LIST_TYPE = AppListType.DENY_LIST
         val CLICKABLE_LIST_TYPE = AppListType.DENY_LIST
-        const val AUTO_DISABLE_ON_SWITCH = false
+        const val AUTO_ENABLE_IF_ON_ONLY = true
+        const val AUTO_DISABLE_ACTIVITY = ""
         const val CHECK_CLICKABLE = false
         const val DISABLE_TOUCHSCREEN = false
         const val ALWAYS_REMAP_FUNC_KEYS = true

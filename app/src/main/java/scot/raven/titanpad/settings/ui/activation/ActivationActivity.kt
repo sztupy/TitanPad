@@ -48,6 +48,7 @@ class ActivationActivity : ComponentActivity() {
                 ActivationScreen(
                     settingsState = settingsState,
                     onNavigateToEnableAppsScreen = { startCustomActivity(this, AutoEnableAppsActivity::class.java, configId) },
+                    onNavigateToAutoHideSettings = { startCustomActivity(this, AutoHideSettingsActivity::class.java, configId) },
                     onNavigateBack = {
                         finish()
                     }

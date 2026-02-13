@@ -60,7 +60,8 @@ data class UsageConfig(
     val clickableApps: Set<String> = Defaults.Settings.CLICKABLE_APPS,
     val showNotification: Boolean = Defaults.Settings.SHOW_NOTIFICATION,
     val autoEnableListType: AppListType = Defaults.Settings.AUTO_ENABLE_LIST_TYPE,
-    val autoDisableOnSwitch: Boolean = Defaults.Settings.AUTO_DISABLE_ON_SWITCH,
+    val autoEnableIfOnOnly: Boolean = Defaults.Settings.AUTO_ENABLE_IF_ON_ONLY,
+    val autoDisableActivity: String = Defaults.Settings.AUTO_DISABLE_ACTIVITY,
     val applicationListType: AppListType = Defaults.Settings.APPLICATION_LIST_TYPE,
     val clickableListType: AppListType = Defaults.Settings.CLICKABLE_LIST_TYPE,
     val checkClickable: Boolean = Defaults.Settings.CHECK_CLICKABLE,
@@ -99,7 +100,8 @@ data class UsageConfig(
             autoEnableApps = Defaults.Settings.AUTO_ENABLE_APPS,
             autoHideApps = Defaults.Settings.AUTO_HIDE_APPS,
             clickableApps = Defaults.Settings.CLICKABLE_APPS,
-            autoDisableOnSwitch = Defaults.Settings.AUTO_DISABLE_ON_SWITCH,
+            autoEnableIfOnOnly = Defaults.Settings.AUTO_ENABLE_IF_ON_ONLY,
+            autoDisableActivity = Defaults.Settings.AUTO_DISABLE_ACTIVITY,
             cursorActivationKey = Defaults.Settings.CURSOR_ACTIVATION_KEY,
             activationDuration = Defaults.Settings.ACTIVATION_DURATION
         )

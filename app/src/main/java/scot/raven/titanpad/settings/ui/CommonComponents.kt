@@ -1,10 +1,18 @@
 package scot.raven.titanpad.settings.ui
 
+import android.app.Activity
 import android.content.Context
 import android.content.Intent
 import android.content.pm.ApplicationInfo
 import android.content.pm.PackageManager
+import android.net.Uri
 import android.os.Bundle
+import android.provider.MediaStore
+import android.webkit.MimeTypeMap
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.ActivityResultLauncher
+import androidx.activity.result.PickVisualMediaRequest
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -73,7 +81,10 @@ import androidx.compose.ui.unit.dp
 import androidx.core.graphics.drawable.toBitmap
 import androidx.core.graphics.toColorInt
 import androidx.core.net.toUri
+import androidx.datastore.core.IOException
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import rikka.shizuku.Shizuku
 import scot.raven.titanpad.R
@@ -81,6 +92,10 @@ import scot.raven.titanpad.core.logs.Logger
 import scot.raven.titanpad.core.util.KeyCodeUtil
 import scot.raven.titanpad.cursor.domain.InputType
 import scot.raven.titanpad.settings.domain.UsageConfig
+import java.io.File
+import java.io.FileOutputStream
+import java.util.Locale
+import java.util.UUID
 
 
 @Composable
@@ -945,5 +960,145 @@ fun startActivity(activity: String): Boolean {
     } else {
         Logger.e("Shizuku unavailable to start activity $activity")
         return false
+    }
+}
+
+
+fun clearImage(imagePath: String?, onCleared: () -> Unit) {
+    imagePath?.takeIf { it.isNotEmpty() }?.let { path ->
+        File(path).takeIf { it.exists() }?.delete()
+        Logger.d("Custom icon deleted")
+    }
+    onCleared()
+}
+
+suspend fun savePickedImage(
+    context: Context,
+    uri: Uri,
+    oldPath: String?,
+    onCleared: () -> Unit,
+    updatePreference: (String) -> Unit
+) {
+    clearImage(oldPath, onCleared)
+    val savedImagePath = saveImageToAppStorage(context, uri)
+    updatePreference(savedImagePath)
+}
+
+suspend fun saveImageToAppStorage(context: Context, uri: Uri): String = withContext(Dispatchers.IO) {
+    val mimeType = context.contentResolver.getType(uri)
+
+    val extension = MimeTypeMap.getSingleton()
+        .getExtensionFromMimeType(mimeType)
+        ?.lowercase(Locale.getDefault())
+        ?.takeIf {
+            it in listOf("jpg", "jpeg", "png", "gif", "bmp", "webp")
+        } ?: run {
+        val uriPath = uri.path
+        uriPath?.substringAfterLast('.')?.lowercase(Locale.getDefault())?.takeIf {
+            it in listOf("jpg", "jpeg", "png", "gif", "bmp", "webp")
+        } ?: "png"
+    }
+
+    val fileName = "cursor_${UUID.randomUUID()}.$extension"
+    val file = File(context.filesDir, fileName)
+
+    try {
+        context.contentResolver.openInputStream(uri)?.use { input ->
+            FileOutputStream(file).use { output ->
+                input.copyTo(output)
+            }
+        }
+    } catch (e: IOException) {
+        Logger.e("Failed to save image from uri $uri to file ${file.name}", e)
+        throw e
+    }
+
+    return@withContext file.absolutePath
+}
+
+@Composable
+fun rememberUnifiedImagePickerLauncher(
+    coroutineScope: CoroutineScope,
+    context: Context,
+    oldPath: String?,
+    onCleared: () -> Unit,
+    updatePreference: (String) -> Unit
+): UnifiedImagePickerLauncher {
+    val intentLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.StartActivityForResult()
+    ) { result ->
+        if (result.resultCode == Activity.RESULT_OK) {
+            result.data?.data?.let { uri ->
+                coroutineScope.launch {
+                    try {
+                        savePickedImage(context, uri, oldPath, onCleared, updatePreference)
+                    } catch (e: Exception) {
+                        Logger.e("Failed to process picked image (Intent)", e)
+                    }
+                }
+            }
+        }
+    }
+
+    val pickVisualMediaLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.PickVisualMedia()
+    ) { uri ->
+        uri?.let {
+            coroutineScope.launch {
+                try {
+                    savePickedImage(context, it, oldPath, onCleared, updatePreference)
+                } catch (e: Exception) {
+                    Logger.e("Failed to process picked image (PickVisualMedia)", e)
+                }
+            }
+        }
+    }
+
+    return remember(intentLauncher, pickVisualMediaLauncher) {
+        UnifiedImagePickerLauncher(intentLauncher, pickVisualMediaLauncher)
+    }
+}
+
+class UnifiedImagePickerLauncher(
+    private val intentLauncher: ActivityResultLauncher<Intent>,
+    private val pickVisualMediaLauncher: ActivityResultLauncher<PickVisualMediaRequest>
+) {
+    fun launch(context: Context) {
+        try {
+            Logger.d("Launching PickVisualMedia")
+            pickVisualMediaLauncher.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly))
+            return
+        } catch (e: Exception) {
+            Logger.e("PickVisualMedia launch failed, falling back to Intent", e)
+        }
+
+        val intents = mutableListOf<Intent>()
+        intents += Intent(MediaStore.ACTION_PICK_IMAGES).apply {
+            type = "image/*"
+            putExtra(MediaStore.EXTRA_PICK_IMAGES_MAX, 1)
+        }
+        intents += listOf(
+            Intent(Intent.ACTION_GET_CONTENT).apply {
+                type = "image/*"
+                addCategory(Intent.CATEGORY_OPENABLE)
+            },
+            Intent(Intent.ACTION_PICK).apply {
+                setDataAndType(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, "image/*")
+            }
+        )
+
+        for (intent in intents) {
+            try {
+                if (intent.resolveActivity(context.packageManager) != null) {
+                    Logger.d("Launching fallback intent: $intent")
+                    intentLauncher.launch(intent)
+                    return
+                }
+            } catch (e: Exception) {
+                Logger.e("Failed to launch fallback intent", e)
+            }
+        }
+
+        Logger.e("No available image pickers found")
     }
 }

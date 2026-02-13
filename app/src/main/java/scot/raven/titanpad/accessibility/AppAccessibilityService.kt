@@ -336,26 +336,53 @@ class AppAccessibilityService : AccessibilityService(), LifecycleOwner,
             return
 
         if (modeCoordinator.activeMode.value == ModeCoordinator.OverlayMode.OFF) {
+            // TitanPad is turned off. Let's see if any config will activate it
             (setOf(settings.defaultConfig) + settings.additionalConfigs).forEach { currentSettings ->
-                if (appName in currentSettings.autoEnableApps && currentSettings.autoEnableListType == AppListType.ALLOW_LIST) {
+                if (appName in currentSettings.autoEnableApps && currentSettings.autoEnableListType == AppListType.ALLOW_LIST && !currentSettings.autoEnableIfOnOnly) {
                     Logger.d("Enabling config ${currentSettings.configId} for app $appName in allowlist")
                     activateStandardCursor(this, currentSettings.configId)
                     return
-                } else if (appName !in currentSettings.autoEnableApps && currentSettings.autoEnableListType == AppListType.DENY_LIST) {
+                } else if (appName !in currentSettings.autoEnableApps && currentSettings.autoEnableListType == AppListType.DENY_LIST && !currentSettings.autoEnableIfOnOnly) {
                     Logger.d("Enabling config ${currentSettings.configId} for app $appName not in denylist")
                     activateStandardCursor(this, currentSettings.configId)
                     return
                 }
             }
         } else {
+            // TitanPad is turned on. Let's see if any config want to switch over
+            (setOf(settings.defaultConfig) + settings.additionalConfigs).forEach { currentSettings ->
+                if (currentSettings.configId != settings.lastActiveSetting) {
+                    if (appName in currentSettings.autoEnableApps && currentSettings.autoEnableListType == AppListType.ALLOW_LIST) {
+                        Logger.d("Enabling config ${currentSettings.configId} for app $appName in allowlist")
+                        activateStandardCursor(this, currentSettings.configId)
+                        return
+                    } else if (appName !in currentSettings.autoEnableApps && currentSettings.autoEnableListType == AppListType.DENY_LIST) {
+                        Logger.d("Enabling config ${currentSettings.configId} for app $appName not in denylist")
+                        activateStandardCursor(this, currentSettings.configId)
+                        return
+                    }
+                }
+            }
+
+            // TitanPad is turned on. Let's see if the current config needs to turn it off, or switch to other app
             val currentSettings = settings.getActiveConfig()
-            if (currentSettings.autoDisableOnSwitch) {
+            if (currentSettings.autoDisableActivity != "") {
+                var disable = false
                 if (appName in currentSettings.autoEnableApps && currentSettings.autoEnableListType == AppListType.DENY_LIST) {
                     Logger.d("Disabling config ${currentSettings.configId} for app $appName in denylist")
-                    deactivateStandardCursor(this, "")
+                    disable = true
                 } else if (appName !in currentSettings.autoEnableApps && currentSettings.autoEnableListType == AppListType.ALLOW_LIST) {
                     Logger.d("Disabling config ${currentSettings.configId} for app $appName not in allowlist")
-                    deactivateStandardCursor(this, "")
+                    disable = true
+                }
+
+                if (disable) {
+                    when(currentSettings.autoDisableActivity) {
+                        in settings.additionalConfigs.map{config -> config.configId} -> { activateStandardCursor(this, currentSettings.autoDisableActivity) }
+                        "default" -> { activateStandardCursor(this, "default") }
+                        "disable" -> { deactivateStandardCursor(this, "") }
+                        else -> {}
+                    }
                 }
             }
         }

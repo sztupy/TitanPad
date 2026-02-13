@@ -260,7 +260,8 @@ class SettingsRepositoryImpl(
         val CLICKABLE_APPS = stringPreferencesKey("clickable_apps__$configId")
         val SHOW_NOTIFICATION = booleanPreferencesKey("show_notification__$configId")
         val AUTO_ENABLE_LIST_TYPE = stringPreferencesKey("auto_enable_list_type__$configId")
-        val AUTO_DISABLE_ON_SWITCH = booleanPreferencesKey("auto_disable_on_switch__$configId")
+        val AUTO_ENABLE_IF_ON_ONLY = booleanPreferencesKey("auto_enable_if_on_only__$configId")
+        val AUTO_DISABLE_ACTIVITY = stringPreferencesKey("auto_disable_activity__$configId")
         val APPLICATION_LIST_TYPE = stringPreferencesKey("application_list_type__$configId")
         val CLICKABLE_LIST_TYPE = stringPreferencesKey("clickable_list_type__$configId")
         val CHECK_CLICKABLE = booleanPreferencesKey("check_clickable__$configId")
@@ -451,7 +452,8 @@ class SettingsRepositoryImpl(
             showNotification = preferences[SHOW_NOTIFICATION]
                 ?: UsageConfig.DEFAULT.showNotification,
             autoEnableListType = autoEnableListType,
-            autoDisableOnSwitch = preferences[AUTO_DISABLE_ON_SWITCH] ?: UsageConfig.DEFAULT.autoDisableOnSwitch,
+            autoEnableIfOnOnly = preferences[AUTO_ENABLE_IF_ON_ONLY] ?: UsageConfig.DEFAULT.autoEnableIfOnOnly,
+            autoDisableActivity = preferences[AUTO_DISABLE_ACTIVITY] ?: UsageConfig.DEFAULT.autoDisableActivity,
             applicationListType = applicationListType,
             clickableListType = clickableListType,
             checkClickable = preferences[CHECK_CLICKABLE]
@@ -510,7 +512,8 @@ class SettingsRepositoryImpl(
         val CLICKABLE_APPS = stringPreferencesKey("clickable_apps__$configId")
         val SHOW_NOTIFICATION = booleanPreferencesKey("show_notification__$configId")
         val AUTO_ENABLE_LIST_TYPE = stringPreferencesKey("auto_enable_list_type__$configId")
-        val AUTO_DISABLE_ON_SWITCH = booleanPreferencesKey("auto_disable_on_switch__$configId")
+        val AUTO_ENABLE_IF_ON_ONLY = booleanPreferencesKey("auto_enable_if_on_only__$configId")
+        val AUTO_DISABLE_ACTIVITY = stringPreferencesKey("auto_disable_activity__$configId")
         val APPLICATION_LIST_TYPE = stringPreferencesKey("application_list_type__$configId")
         val CLICKABLE_LIST_TYPE = stringPreferencesKey("clickable_list_type__$configId")
         val CHECK_CLICKABLE = booleanPreferencesKey("check_clickable__$configId")
@@ -576,7 +579,8 @@ class SettingsRepositoryImpl(
         preferences[CLICKABLE_APPS] = settings.clickableApps.joinToString(",")
         preferences[SHOW_NOTIFICATION] = settings.showNotification
         preferences[AUTO_ENABLE_LIST_TYPE] = settings.autoEnableListType.name
-        preferences[AUTO_DISABLE_ON_SWITCH] = settings.autoDisableOnSwitch
+        preferences[AUTO_ENABLE_IF_ON_ONLY] = settings.autoEnableIfOnOnly
+        preferences[AUTO_DISABLE_ACTIVITY] = settings.autoDisableActivity
         preferences[APPLICATION_LIST_TYPE] = settings.applicationListType.name
         preferences[CLICKABLE_LIST_TYPE] = settings.clickableListType.name
         preferences[CHECK_CLICKABLE] = settings.checkClickable

@@ -207,18 +207,24 @@ class TouchInputHandler(
                 var touchY : Float
                 if (scrollHasStarted) {
                     if (!backScreenMode) {
-                        if (scrollTouchLocation == 1) {
-                            touchX =
-                                ((if (scrollConfig.scrollOnlyVertically) startPositionX else currentX).toFloat() / (settings.touchpadSplitPosition.toFloat() / 100f))
-                            touchY = currentY.toFloat() * 2
-                        } else if (scrollTouchLocation == 2) {
-                            val leftSide = TRACKPAD_WIDTH.toFloat() * settings.touchpadSplitRightPosition.toFloat() / 100f
-                            touchX =
-                                ((if (scrollConfig.scrollOnlyVertically) startPositionX-leftSide else currentX-leftSide) / ((100 - settings.touchpadSplitRightPosition.toFloat()) / 100f))
-                            touchY = currentY.toFloat() * 2
-                        } else {
-                            touchX = if (scrollConfig.scrollOnlyVertically) startPositionX.toFloat() else currentX.toFloat()
-                            touchY = currentY.toFloat() * 2
+                        when (scrollTouchLocation) {
+                            1 -> {
+                                touchX =
+                                    ((if (scrollConfig.scrollOnlyVertically) startPositionX else currentX).toFloat() / (settings.touchpadSplitPosition.toFloat() / 100f))
+                                touchY = currentY.toFloat() * 2
+                            }
+                            2 -> {
+                                val leftSide =
+                                    TRACKPAD_WIDTH.toFloat() * settings.touchpadSplitRightPosition.toFloat() / 100f
+                                touchX =
+                                    ((if (scrollConfig.scrollOnlyVertically) startPositionX - leftSide else currentX - leftSide) / ((100 - settings.touchpadSplitRightPosition.toFloat()) / 100f))
+                                touchY = currentY.toFloat() * 2
+                            }
+                            else -> {
+                                touchX =
+                                    if (scrollConfig.scrollOnlyVertically) startPositionX.toFloat() else currentX.toFloat()
+                                touchY = currentY.toFloat() * 2
+                            }
                         }
                     } else {
                         touchX = ((BACK_SCREEN_WIDTH-(if (scrollConfig.scrollOnlyVertically) startPositionX else currentX)).toFloat() * (TRACKPAD_WIDTH.toFloat() / BACK_SCREEN_WIDTH.toFloat()))

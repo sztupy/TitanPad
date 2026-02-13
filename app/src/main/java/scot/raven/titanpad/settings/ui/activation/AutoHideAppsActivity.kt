@@ -1,4 +1,4 @@
-package scot.raven.titanpad.settings.ui.setup
+package scot.raven.titanpad.settings.ui.activation
 
 import android.os.Bundle
 import androidx.activity.ComponentActivity
@@ -12,7 +12,7 @@ import scot.raven.titanpad.settings.ui.SettingsState
 /**
  * Auto-hide apps screen.
  */
-class AutoEnableAppsActivity : ComponentActivity() {
+class AutoHideAppsActivity : ComponentActivity() {
     private lateinit var settingsState: SettingsState
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -31,7 +31,7 @@ class AutoEnableAppsActivity : ComponentActivity() {
 
         setContent {
             AppTheme {
-                AutoEnableAppsScreen(
+                AutoHideAppsScreen(
                     settingsState = settingsState,
                     onNavigateBack = {
                         finish()

@@ -22,7 +22,6 @@ import androidx.savedstate.SavedStateRegistry
 import androidx.savedstate.SavedStateRegistryController
 import androidx.savedstate.SavedStateRegistryOwner
 import scot.raven.titanpad.TitanPad
-import scot.raven.titanpad.core.constants.ApplicationConstants
 import scot.raven.titanpad.core.control.CoreManager
 import scot.raven.titanpad.core.control.ModeCoordinator
 import scot.raven.titanpad.core.control.OverlayManager

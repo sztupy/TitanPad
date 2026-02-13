@@ -1,4 +1,4 @@
-package scot.raven.titanpad.settings.ui.autohide
+package scot.raven.titanpad.settings.ui.activation
 
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize

@@ -1,6 +1,11 @@
 package scot.raven.titanpad.settings.domain
 
+import kotlinx.serialization.Serializable
+import scot.raven.titanpad.BuildConfig
+
+@Serializable
 data class ApplicationSettings(
+    val versionCode: Int = BuildConfig.VERSION_CODE,
     val alwaysRemapFuncKeys: Boolean = Defaults.Settings.ALWAYS_REMAP_FUNC_KEYS,
     val alwaysRemapFuncKeysCompat: Boolean = Defaults.Settings.ALWAYS_REMAP_FUNC_KEYS_COMPAT,
     val lastActiveSetting: String = "",
@@ -13,11 +18,8 @@ data class ApplicationSettings(
     }
 
     fun getActiveConfig() : UsageConfig {
-        var result = additionalConfigs.find{ it.configId == lastActiveSetting }
-        if (result==null)
-            return defaultConfig
-        else
-            return result
+        val result = additionalConfigs.find{ it.configId == lastActiveSetting }
+        return result ?: defaultConfig
     }
 
     fun validate(): ValidationResult {

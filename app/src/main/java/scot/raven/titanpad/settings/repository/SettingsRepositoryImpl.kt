@@ -1,6 +1,5 @@
 package scot.raven.titanpad.settings.repository
 
-import androidx.compose.ui.platform.isDebugInspectorInfoEnabled
 import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.MutablePreferences
 import androidx.datastore.preferences.core.Preferences
@@ -16,10 +15,9 @@ import scot.raven.titanpad.settings.domain.UsageConfig
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.map
-import scot.raven.titanpad.cursor.domain.FuncButtonMap
-import scot.raven.titanpad.cursor.domain.InputType
+import kotlinx.serialization.json.Json
+import scot.raven.titanpad.BuildConfig
 import scot.raven.titanpad.settings.domain.ApplicationSettings
-import scot.raven.titanpad.settings.domain.Defaults
 import scot.raven.titanpad.settings.domain.ScrollConfig
 import scot.raven.titanpad.settings.domain.UsageConfig.Companion.SCROLL_SETTING_COUNT
 import kotlin.collections.map
@@ -36,7 +34,10 @@ class SettingsRepositoryImpl(
         private val ALWAYS_REMAP_FUNC_KEYS_COMPAT = booleanPreferencesKey("always_remap_func_keys_compat")
         private val LAST_ACTIVE_SETTING = stringPreferencesKey("last_active_setting")
         private val ADDITIONAL_CONFIG_KEYS = stringSetPreferencesKey("additional_config_keys")
+        private val VERSION_CODE = intPreferencesKey("version_code")
     }
+
+    private val json = Json { encodeDefaults = true }
 
     private inline fun <reified T : Enum<T>> getEnumPreference(
         preferences: Preferences,
@@ -67,6 +68,7 @@ class SettingsRepositoryImpl(
                 val additionalConfigKeys = preferences[ADDITIONAL_CONFIG_KEYS] ?: HashSet()
 
                 val settings = ApplicationSettings(
+                    versionCode = preferences[VERSION_CODE] ?: BuildConfig.VERSION_CODE,
                     defaultConfig = usageConfigPreferenceLoader("default", preferences),
                     lastActiveSetting = preferences[LAST_ACTIVE_SETTING] ?: "default",
                     alwaysRemapFuncKeys = preferences[ALWAYS_REMAP_FUNC_KEYS] ?: ApplicationSettings.DEFAULT.alwaysRemapFuncKeys,
@@ -90,6 +92,7 @@ class SettingsRepositoryImpl(
     override suspend fun updateSettings(settings: ApplicationSettings) {
         try {
             dataStore.edit { preferences ->
+                preferences[VERSION_CODE] = BuildConfig.VERSION_CODE
                 preferences[ALWAYS_REMAP_FUNC_KEYS] = settings.alwaysRemapFuncKeys
                 preferences[ALWAYS_REMAP_FUNC_KEYS_COMPAT] = settings.alwaysRemapFuncKeysCompat
                 preferences[ADDITIONAL_CONFIG_KEYS] = settings.additionalConfigs.map{it.configId}.toSet()
@@ -158,6 +161,56 @@ class SettingsRepositoryImpl(
                 errors = listOf("Error updating settings: ${e.message}"),
             )
         }
+    }
+
+    override suspend fun exportSettings(settings: ApplicationSettings) : String{
+        return json.encodeToString(settings)
+    }
+
+    override suspend fun exportSettings(
+        configId: String,
+        usageConfig: UsageConfig
+    ) : String {
+        return json.encodeToString(usageConfig)
+    }
+
+    override suspend fun exportSettingsWithoutAppData(
+        configId: String,
+        usageConfig: UsageConfig
+    ) : String {
+        return json.encodeToString(usageConfig.withoutAppConfig())
+    }
+
+    override suspend fun importSettings(jsonData: String) : Boolean {
+        try {
+            val settings: ApplicationSettings = json.decodeFromString<ApplicationSettings>(jsonData)
+            validateAndUpdateSettings(settings = settings)
+        } catch (_: Exception) {
+            return false
+        }
+        return true
+    }
+
+    override suspend fun importSettings(configId: String, jsonData: String) : Boolean {
+        try {
+            val settings: UsageConfig = json.decodeFromString<UsageConfig>(jsonData).copy(configId = configId)
+            validateAndUpdateSettings(configId, settings)
+        } catch (_: Exception) {
+            return false
+        }
+        return true
+    }
+
+    override suspend fun importSettingsWithoutAppData(configId: String, jsonData: String) : Boolean {
+        try {
+            val settings: UsageConfig = json.decodeFromString<UsageConfig>(jsonData).withoutAppConfig().copy(
+                configId = configId,
+            )
+            validateAndUpdateSettings(configId, settings)
+        } catch (_: Exception) {
+            return false
+        }
+        return true
     }
 
     fun usageConfigPreferenceLoader(configId: String, preferences: Preferences) : UsageConfig {
@@ -332,6 +385,7 @@ class SettingsRepositoryImpl(
         }
 
         return UsageConfig(
+            versionCode = preferences[VERSION_CODE] ?: BuildConfig.VERSION_CODE,
             configId = configId,
             configName = preferences[CONFIG_NAME] ?: UsageConfig.DEFAULT.configName,
             activationDuration = preferences[ACTIVATION_DURATION]
@@ -409,6 +463,7 @@ class SettingsRepositoryImpl(
     }
 
     fun usageConfigPreferenceWriter(configId: String, preferences: MutablePreferences, settings: UsageConfig) {
+        val VERSION_CODE = intPreferencesKey("version_code__$configId")
         val CONFIG_NAME = stringPreferencesKey("config_name__$configId")
         val ACTIVATION_DURATION = longPreferencesKey("activation_duration__$configId")
         val SHOW_GESTURE_VISUAL = booleanPreferencesKey("show_gesture_visual__$configId")
@@ -426,16 +481,10 @@ class SettingsRepositoryImpl(
         val TOUCHPAD_SPLIT_POSITION = intPreferencesKey("touchpad_split_position__$configId")
         val TOUCHPAD_SPLIT_RIGHT_INPUT = booleanPreferencesKey("touchpad_split_right_input__$configId")
         val TOUCHPAD_SPLIT_RIGHT_POSITION = intPreferencesKey("touchpad_split_right_position__$configId")
-        val SCROLL_TOP_CROP_REGION = intPreferencesKey("scroll_top_crop_region__$configId")
-        val SCROLL_BOTTOM_CROP_REGION = intPreferencesKey("scroll_bottom_crop_region__$configId")
-        val SCROLL_LEFT_CROP_REGION = intPreferencesKey("scroll_left_crop_region__$configId")
-        val SCROLL_RIGHT_CROP_REGION = intPreferencesKey("scroll_right_crop_region__$configId")
-        val SCROLL_TOUCH_SENSITIVITY = intPreferencesKey("scroll_touch_sensitivity__$configId")
         val MOUSE_TAP_TO_CLICK = booleanPreferencesKey("mouse_tap_to_click__$configId")
         val MOUSE_DOUBLE_TAP_HOLD = booleanPreferencesKey("mouse_double_tap_hold__$configId")
         val MOUSE_TWO_FINGER_HOLD = booleanPreferencesKey("mouse_two_finger_hold__$configId")
         val MOUSE_TAP_MAX_DURATION = intPreferencesKey("mouse_tap_max_duration__$configId")
-        val SCROLL_VERTICAL_ONLY = booleanPreferencesKey("scroll_vertical_only__$configId")
         val SOFTWARE_MOUSE_SENSITIVITY = intPreferencesKey("software_mouse_sensitivity__$configId")
         val SOFTWARE_MOUSE_EXPONENTIAL = booleanPreferencesKey("software_mouse_exponential__$configId")
         val TWO_FINGER_SENSITIVITY = intPreferencesKey("two_finger_sensitivity__$configId")
@@ -483,6 +532,7 @@ class SettingsRepositoryImpl(
             preferences[SCROLL_VERTICAL_ONLY] = scroll.scrollOnlyVertically
         }
 
+        preferences[VERSION_CODE] = BuildConfig.VERSION_CODE
         preferences[CONFIG_NAME] = settings.configName
         preferences[ACTIVATION_DURATION] = settings.activationDuration
         preferences[SHOW_GESTURE_VISUAL] = settings.showGestureVisualization

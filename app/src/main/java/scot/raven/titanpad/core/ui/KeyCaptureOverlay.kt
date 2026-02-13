@@ -33,7 +33,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import kotlinx.coroutines.delay
-import scot.raven.titanpad.core.util.KeyCodeUtil
 
 /**
  * Renders UI for capturing activation key.

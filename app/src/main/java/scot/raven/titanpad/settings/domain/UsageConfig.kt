@@ -1,6 +1,7 @@
 package scot.raven.titanpad.settings.domain
 
-import scot.raven.titanpad.core.constants.ApplicationConstants
+import kotlinx.serialization.Serializable
+import scot.raven.titanpad.BuildConfig
 import scot.raven.titanpad.core.constants.CursorConstants
 import scot.raven.titanpad.cursor.domain.FuncButtonMap
 import scot.raven.titanpad.cursor.domain.IconAlignment
@@ -9,7 +10,9 @@ import scot.raven.titanpad.cursor.domain.InputType
 /**
  * Represents default user preferences.
  */
+@Serializable
 data class UsageConfig(
+    val versionCode: Int = BuildConfig.VERSION_CODE,
     val configId: String = Defaults.Settings.DEFAULT_CONFIG_ID,
     val configName: String = Defaults.Settings.DEFAULT_CONFIG_NAME,
     val activationDuration: Long = Defaults.Settings.ACTIVATION_DURATION,
@@ -87,8 +90,23 @@ data class UsageConfig(
             cursorActivationKey = cursorActivationKey,
         )
     }
+
+    fun withoutAppConfig(): UsageConfig {
+        return copy(
+            applicationListType = Defaults.Settings.APPLICATION_LIST_TYPE,
+            autoEnableListType = Defaults.Settings.AUTO_ENABLE_LIST_TYPE,
+            clickableListType = Defaults.Settings.CLICKABLE_LIST_TYPE,
+            autoEnableApps = Defaults.Settings.AUTO_ENABLE_APPS,
+            autoHideApps = Defaults.Settings.AUTO_HIDE_APPS,
+            clickableApps = Defaults.Settings.CLICKABLE_APPS,
+            autoDisableOnSwitch = Defaults.Settings.AUTO_DISABLE_ON_SWITCH,
+            cursorActivationKey = Defaults.Settings.CURSOR_ACTIVATION_KEY,
+            activationDuration = Defaults.Settings.ACTIVATION_DURATION
+        )
+    }
 }
 
+@Serializable
 data class ScrollConfig(
     val topCropRegion: Int = 25,
     val bottomCropRegion: Int = 25,

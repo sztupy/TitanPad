@@ -7,7 +7,6 @@ import scot.raven.titanpad.cursor.domain.FuncButtonMap
 import scot.raven.titanpad.cursor.domain.IconAlignment
 import scot.raven.titanpad.cursor.domain.InputType
 import scot.raven.titanpad.settings.domain.UsageConfig.Companion.KEY_NONE
-import scot.raven.titanpad.settings.domain.UsageConfig.Companion.SCROLL_SETTING_COUNT
 
 /**
  * Contains default values that can be modified by the user.

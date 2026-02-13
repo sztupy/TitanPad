@@ -2,7 +2,6 @@ package scot.raven.titanpad.settings.ui.setup
 
 import android.content.Intent
 import android.provider.Settings
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -28,17 +27,10 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.dimensionResource
-import scot.raven.titanpad.BuildConfig
 import scot.raven.titanpad.R
-import scot.raven.titanpad.core.logs.Logger
-import scot.raven.titanpad.settings.domain.UsageConfig
-import scot.raven.titanpad.settings.ui.AppListScreen
 import scot.raven.titanpad.settings.ui.PermissionStatusBanner
 import scot.raven.titanpad.settings.ui.PreferenceCategory
 import scot.raven.titanpad.settings.ui.SettingsState
-import scot.raven.titanpad.settings.ui.SettingsUiState
-import scot.raven.titanpad.settings.ui.SimplePreferenceItem
-import scot.raven.titanpad.settings.ui.openNewTabWindow
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable

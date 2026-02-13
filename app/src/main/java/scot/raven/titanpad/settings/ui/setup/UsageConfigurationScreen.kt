@@ -1,6 +1,5 @@
 package scot.raven.titanpad.settings.ui.setup
 
-import scot.raven.titanpad.core.ui.KeyCaptureOverlay
 import android.app.Activity
 import android.content.ClipData
 import android.content.ClipboardManager
@@ -39,10 +38,8 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.datastore.core.IOException
 import scot.raven.titanpad.core.logs.Logger
-import scot.raven.titanpad.settings.domain.UsageConfig
 import scot.raven.titanpad.settings.ui.NoteItem
 import scot.raven.titanpad.settings.ui.PreferenceCategory
-import scot.raven.titanpad.settings.ui.SetKeyPreferenceItem
 import scot.raven.titanpad.settings.ui.SettingsState
 import scot.raven.titanpad.settings.ui.SimplePreferenceItem
 import scot.raven.titanpad.settings.ui.SliderPreferenceItem
@@ -51,10 +48,8 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import scot.raven.titanpad.core.constants.ApplicationConstants
 import scot.raven.titanpad.cursor.domain.FuncButtonMap
 import scot.raven.titanpad.cursor.domain.InputType
-import scot.raven.titanpad.settings.domain.AppListType
 import scot.raven.titanpad.settings.ui.DropdownPreferenceItem
 import scot.raven.titanpad.settings.ui.InputSelectorItem
 import scot.raven.titanpad.settings.ui.TextFieldDialog
@@ -74,12 +69,11 @@ fun UsageConfigurationScreen(
     onNavigateToDebugOptions: () -> Unit,
     onNavigateToAutoHideSettings: () -> Unit,
     onNavigateToSoftwareEmulationSettings: () -> Unit,
-    onNavigateToClickableAppsScreen: () -> Unit,
-    onNavigateBack: () -> Unit,
     onNavigateToScrollSettings: (Int) -> () -> Unit,
+    onNavigateToActivationSettings: () -> Unit,
+    onNavigateBack: () -> Unit,
 ) {
     val uiState by settingsState.uiState.collectAsState()
-    var showCursorKeyCaptureOverlay by remember { mutableStateOf(false) }
     var showNameChangeDialog by remember { mutableStateOf(false) }
     val context = LocalContext.current
 
@@ -141,79 +135,10 @@ fun UsageConfigurationScreen(
             }
 
             PreferenceCategory(title = "Activation") {
-                SetKeyPreferenceItem(
-                    title = "Set Activation Key",
-                    currentKeyCode = uiState.cursorActivationKey,
-                    onCaptureKey = {
-                        settingsState.requestHideAllOverlays()
-                        showCursorKeyCaptureOverlay = true
-                    },
-                )
-
                 SimplePreferenceItem(
-                    title = "Clear Activation Key",
-                    subtitle = "Removes activation key",
-                    onClick = {
-                        settingsState.updateCursorActivationKey(UsageConfig.KEY_NONE)
-                    },
-                )
-
-                if (showCursorKeyCaptureOverlay) {
-                    KeyCaptureOverlay(
-                        onKeySelected = { settingsState.updateCursorActivationKey(it) },
-                        onDismiss = { showCursorKeyCaptureOverlay = false },
-                        showToast = { message -> settingsState.showToast(message) },
-                    )
-                }
-
-                SliderPreferenceItem(
-                    title = "Activation Keypress Minimum Duration",
-                    value = uiState.activationDuration.toFloat(),
-                    valueRange = ApplicationConstants.MIN_ACTIVATION_HOLD_DURATION.toFloat()..ApplicationConstants.MAX_ACTIVATION_HOLD_DURATION.toFloat(),
-                    valueText = "${uiState.activationDuration} ms",
-                    onValueChange = { value ->
-                        settingsState.updatePreference(value) { settings, v ->
-                            settings.copy(activationDuration = v.toLong())
-                        }
-                    },
-                    steps = 4,
-                )
-
-                DropdownPreferenceItem(
-                    title = "Activation AppList Behaviour",
-                    subtitle =
-                        when (uiState.autoEnableListType) {
-                            AppListType.ALLOW_LIST -> "Auto enable config for applications on this list"
-                            AppListType.DENY_LIST -> "Auto enable config for every other application not on this list"
-                        },
-                    selectedOption = uiState.autoEnableListType,
-                    options =
-                        listOf(
-                            AppListType.ALLOW_LIST to "Allow list",
-                            AppListType.DENY_LIST to "Ignore list"
-                        ),
-                    onOptionSelected = { value ->
-                        settingsState.updatePreference(value) { settings, v ->
-                            settings.copy(autoEnableListType = v)
-                        }
-                    }
-                )
-
-                SimplePreferenceItem(
-                    title = "Select Applications for Activation",
-                    subtitle = "${if (uiState.autoEnableListType == AppListType.ALLOW_LIST) "Auto Enable" else "Ignore"} in specific apps",
-                    onClick = onNavigateToClickableAppsScreen,
-                )
-
-                SwitchPreferenceItem(
-                    title = "Auto Disable on Switching Apps",
-                    subtitle = if (!uiState.autoDisableOnSwitch) "Don't automatically disable on app switch" else if (uiState.autoEnableListType == AppListType.ALLOW_LIST) "Auto disable in apps not selected above" else "Auto disable in selected apps",
-                    checked = uiState.autoDisableOnSwitch,
-                    onCheckedChange = { value ->
-                        settingsState.updatePreference(value) { settings, v ->
-                            settings.copy(autoDisableOnSwitch = v)
-                        }
-                    },
+                    title = "Automated Activation Setup",
+                    subtitle = "Set up ways to enable and disable this config automatically",
+                    onClick = onNavigateToActivationSettings
                 )
             }
 
@@ -276,6 +201,7 @@ fun UsageConfigurationScreen(
                         steps = 19,
                     )
                 }
+
                 SwitchPreferenceItem(
                     title = "Separate right side",
                     subtitle = if (uiState.touchpadSplitRightInput) "Use different configuration for the right side" else "Use same configuration as the centre",
@@ -310,6 +236,7 @@ fun UsageConfigurationScreen(
                         steps = 19,
                     )
                 }
+
                 InputSelectorItem(
                     title = "Back screen behavior",
                     selectedInputType = uiState.backScreenInputType,

@@ -1,19 +1,20 @@
-package scot.raven.titanpad.settings.ui.scroll
+package scot.raven.titanpad.settings.ui.activation
 
+import android.content.Intent
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.core.app.ActivityOptionsCompat
 import androidx.lifecycle.ViewModelProvider
 import scot.raven.titanpad.TitanPad
 import scot.raven.titanpad.core.ui.AppTheme
 import scot.raven.titanpad.settings.ui.SettingsActivity.Companion.CONFIG_ID_EXTRA
-import scot.raven.titanpad.settings.ui.SettingsActivity.Companion.SCROLL_ID_EXTRA
 import scot.raven.titanpad.settings.ui.SettingsState
 
 /**
  * Auto-hide cursor settings screen.
  */
-class ScrollSettingsActivity : ComponentActivity() {
+class AutoHideSettingsActivity : ComponentActivity() {
     private lateinit var settingsState: SettingsState
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -22,8 +23,6 @@ class ScrollSettingsActivity : ComponentActivity() {
         var configId = intent.getStringExtra(CONFIG_ID_EXTRA)
         if (configId == null)
             configId = "default"
-
-        val scrollId = intent.getIntExtra(SCROLL_ID_EXTRA, 0)
 
         val factory =
             SettingsState.Factory(
@@ -34,11 +33,15 @@ class ScrollSettingsActivity : ComponentActivity() {
 
         setContent {
             AppTheme {
-                ScrollSettingsScreen(
+                AutoHideSettingsScreen(
                     settingsState = settingsState,
-                    scrollId = scrollId,
                     onNavigateBack = {
                         finish()
+                    },
+                    onNavigateToAutoHideAppsScreen = {
+                        val intent = Intent(this, AutoHideAppsActivity::class.java)
+                        val options = ActivityOptionsCompat.makeBasic()
+                        startActivity(intent, options.toBundle())
                     }
                 )
             }

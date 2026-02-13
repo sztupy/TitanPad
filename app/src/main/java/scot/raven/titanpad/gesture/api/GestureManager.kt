@@ -82,7 +82,7 @@ class GestureManager(
                 if (shouldShowGestures) {
                     endVisualizeTap()
                 }
-                tapState = false;
+                tapState = false
             }
         }
     }

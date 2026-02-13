@@ -1,10 +1,8 @@
-package scot.raven.titanpad.settings.ui.autohide
+package scot.raven.titanpad.settings.ui.activation
 
-import android.content.Intent
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import androidx.core.app.ActivityOptionsCompat
 import androidx.lifecycle.ViewModelProvider
 import scot.raven.titanpad.TitanPad
 import scot.raven.titanpad.core.ui.AppTheme
@@ -12,9 +10,9 @@ import scot.raven.titanpad.settings.ui.SettingsActivity.Companion.CONFIG_ID_EXTR
 import scot.raven.titanpad.settings.ui.SettingsState
 
 /**
- * Auto-hide cursor settings screen.
+ * Auto-hide apps screen.
  */
-class AutoHideSettingsActivity : ComponentActivity() {
+class AutoEnableAppsActivity : ComponentActivity() {
     private lateinit var settingsState: SettingsState
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -33,15 +31,10 @@ class AutoHideSettingsActivity : ComponentActivity() {
 
         setContent {
             AppTheme {
-                AutoHideSettingsScreen(
+                AutoEnableAppsScreen(
                     settingsState = settingsState,
                     onNavigateBack = {
                         finish()
-                    },
-                    onNavigateToAutoHideAppsScreen = {
-                        val intent = Intent(this, AutoHideAppsActivity::class.java)
-                        val options = ActivityOptionsCompat.makeBasic()
-                        startActivity(intent, options.toBundle())
                     }
                 )
             }

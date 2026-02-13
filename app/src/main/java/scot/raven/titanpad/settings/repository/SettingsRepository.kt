@@ -11,6 +11,13 @@ interface SettingsRepository {
     suspend fun updateSettings(settings: ApplicationSettings)
     suspend fun validateAndUpdateSettings(settings: ApplicationSettings): ApplicationSettings.ValidationResult
 
+    suspend fun exportSettings(settings: ApplicationSettings) : String
+    suspend fun exportSettings(configId: String, usageConfig: UsageConfig) : String
+    suspend fun exportSettingsWithoutAppData(configId: String, usageConfig: UsageConfig): String
+    suspend fun importSettings(jsonData: String) : Boolean
+    suspend fun importSettings(configId: String, jsonData: String) : Boolean
+    suspend fun importSettingsWithoutAppData(configId: String, jsonData: String): Boolean
+
     suspend fun updateSettings(configId: String, usageConfig: UsageConfig)
     suspend fun validateAndUpdateSettings(configId: String, usageConfig: UsageConfig): ApplicationSettings.ValidationResult
 }

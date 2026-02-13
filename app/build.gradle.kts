@@ -5,6 +5,7 @@ plugins {
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
     id("org.jlleitschuh.gradle.ktlint") version "14.0.1"
+    kotlin("plugin.serialization") version "1.9.0"
 }
 
 android {
@@ -80,5 +81,5 @@ dependencies {
     implementation("dev.rikka.shizuku:provider:13.1.5")
     implementation(libs.coil.compose)
     implementation(libs.coil.gif)
-
+    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.9.0")
 }

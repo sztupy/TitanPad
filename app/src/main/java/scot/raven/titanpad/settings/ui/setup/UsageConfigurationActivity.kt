@@ -13,7 +13,8 @@ import scot.raven.titanpad.core.ui.AppTheme
 import scot.raven.titanpad.settings.ui.SettingsActivity.Companion.CONFIG_ID_EXTRA
 import scot.raven.titanpad.settings.ui.SettingsActivity.Companion.SCROLL_ID_EXTRA
 import scot.raven.titanpad.settings.ui.SettingsState
-import scot.raven.titanpad.settings.ui.autohide.AutoHideSettingsActivity
+import scot.raven.titanpad.settings.ui.activation.ActivationActivity
+import scot.raven.titanpad.settings.ui.activation.AutoHideSettingsActivity
 import scot.raven.titanpad.settings.ui.cursor.SoftwareEmulationSettingsActivity
 import scot.raven.titanpad.settings.ui.scroll.ScrollSettingsActivity
 
@@ -55,9 +56,9 @@ class UsageConfigurationActivity : ComponentActivity() {
                 UsageConfigurationScreen(
                     settingsState = settingsState,
                     onNavigateToDebugOptions = { startCustomActivity(this, DebugOptionsActivity::class.java, configId) },
+                    onNavigateToActivationSettings = { startCustomActivity(this, ActivationActivity::class.java, configId) },
                     onNavigateToAutoHideSettings = { startCustomActivity(this, AutoHideSettingsActivity::class.java, configId) },
                     onNavigateToSoftwareEmulationSettings = { startCustomActivity(this, SoftwareEmulationSettingsActivity::class.java, configId) },
-                    onNavigateToClickableAppsScreen = { startCustomActivity(this, AutoEnableAppsActivity::class.java, configId) },
                     onNavigateToScrollSettings = { scrollId: Int -> { startCustomActivity(this, ScrollSettingsActivity::class.java, configId, scrollId) } },
                     onNavigateBack = {
                         finish()

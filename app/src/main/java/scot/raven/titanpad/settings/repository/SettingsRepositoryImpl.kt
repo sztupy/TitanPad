@@ -15,6 +15,7 @@ import scot.raven.titanpad.settings.domain.UsageConfig
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.map
+import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
 import scot.raven.titanpad.BuildConfig
 import scot.raven.titanpad.settings.domain.ApplicationSettings
@@ -37,7 +38,7 @@ class SettingsRepositoryImpl(
         private val VERSION_CODE = intPreferencesKey("version_code")
     }
 
-    private val json = Json { encodeDefaults = true }
+    private val json = Json { encodeDefaults = true; ignoreUnknownKeys = true }
 
     private inline fun <reified T : Enum<T>> getEnumPreference(
         preferences: Preferences,
@@ -183,9 +184,14 @@ class SettingsRepositoryImpl(
 
     override suspend fun importSettings(jsonData: String) : Boolean {
         try {
+            val check: ImportChecker = json.decodeFromString<ImportChecker>(jsonData)
+            if (check.className != "ApplicationSettings")
+                return false
+
             val settings: ApplicationSettings = json.decodeFromString<ApplicationSettings>(jsonData)
             validateAndUpdateSettings(settings = settings)
-        } catch (_: Exception) {
+        } catch (e: Exception) {
+            e.printStackTrace()
             return false
         }
         return true
@@ -193,7 +199,29 @@ class SettingsRepositoryImpl(
 
     override suspend fun importSettings(configId: String, jsonData: String) : Boolean {
         try {
+            val check: ImportChecker = json.decodeFromString<ImportChecker>(jsonData)
+            if (check.className != "UsageConfig")
+                return false
+
             val settings: UsageConfig = json.decodeFromString<UsageConfig>(jsonData).copy(configId = configId)
+            validateAndUpdateSettings(configId, settings)
+        } catch (e: Exception) {
+            e.printStackTrace()
+            return false
+        }
+        return true
+    }
+
+    override suspend fun importSettingsWithoutAppData(configId: String, jsonData: String, existingConfig: UsageConfig?) : Boolean {
+        try {
+            val check: ImportChecker = json.decodeFromString<ImportChecker>(jsonData)
+            if (check.className != "UsageConfig")
+                return false
+
+            val settings: UsageConfig = json.decodeFromString<UsageConfig>(jsonData).withoutAppConfig(existingConfig).copy(
+                configId = configId,
+            )
+
             validateAndUpdateSettings(configId, settings)
         } catch (_: Exception) {
             return false
@@ -201,17 +229,10 @@ class SettingsRepositoryImpl(
         return true
     }
 
-    override suspend fun importSettingsWithoutAppData(configId: String, jsonData: String) : Boolean {
-        try {
-            val settings: UsageConfig = json.decodeFromString<UsageConfig>(jsonData).withoutAppConfig().copy(
-                configId = configId,
-            )
-            validateAndUpdateSettings(configId, settings)
-        } catch (_: Exception) {
-            return false
-        }
-        return true
-    }
+    @Serializable
+    data class ImportChecker(
+        val className: String = "ImportChecker"
+    )
 
     fun usageConfigPreferenceLoader(configId: String, preferences: Preferences) : UsageConfig {
         val CONFIG_NAME = stringPreferencesKey("config_name__$configId")

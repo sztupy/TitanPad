@@ -5,6 +5,7 @@ import scot.raven.titanpad.BuildConfig
 
 @Serializable
 data class ApplicationSettings(
+    val className: String = "ApplicationSettings",
     val versionCode: Int = BuildConfig.VERSION_CODE,
     val alwaysRemapFuncKeys: Boolean = Defaults.Settings.ALWAYS_REMAP_FUNC_KEYS,
     val alwaysRemapFuncKeysCompat: Boolean = Defaults.Settings.ALWAYS_REMAP_FUNC_KEYS_COMPAT,

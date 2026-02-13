@@ -1,6 +1,5 @@
 package scot.raven.titanpad.settings.ui
 
-import android.content.Intent
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -34,6 +33,8 @@ import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.res.stringResource
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import scot.raven.titanpad.BuildConfig
 import scot.raven.titanpad.R
@@ -258,28 +259,49 @@ fun SettingsScreen(
 
             val backupLauncher = rememberDocumentCreateLauncher(
                 settingsState = settingsState,
-                settingsRepository = TitanPad.getInstance().settingsRepository,
                 coroutineScope = coroutineScope,
-                context = LocalContext.current
+                context = LocalContext.current,
+                fileName = "titanpad-full-backup",
+                inputCallback = { callback ->
+                    coroutineScope.launch {
+                        val currentSettings =
+                            TitanPad.getInstance().settingsRepository.getSettings().first()
+                        val result = TitanPad.getInstance().settingsRepository.exportSettings(currentSettings)
+
+                        callback(result)
+                    }
+                }
             )
 
             val restoreLauncher = rememberDocumentLoaderLauncher(
                 settingsState = settingsState,
-                settingsRepository = TitanPad.getInstance().settingsRepository,
                 coroutineScope = coroutineScope,
-                context = LocalContext.current
+                context = LocalContext.current,
+                outputCallback = { jsonData ->
+                    coroutineScope.launch {
+                        try {
+                            if (TitanPad.getInstance().settingsRepository.importSettings(jsonData)) {
+                                settingsState.showToast("Backup restored!")
+                            } else {
+                                settingsState.showToast("Could not restore backup!")
+                            }
+                        } catch (_: Exception) {
+                            settingsState.showToast("Could not restore backup!")
+                        }
+                    }
+                }
             )
 
-            PreferenceCategory(title = "Backup") {
+            PreferenceCategory(title = "Backup and Restore") {
                 SimplePreferenceItem(
                     title = "Backup Configuration",
-                    subtitle = "Save your configs to a file",
+                    subtitle = "Save your entire config to a file",
                     onClick = { backupLauncher() }
                 )
 
                 SimplePreferenceItem(
                     title = "Restore Configuration",
-                    subtitle = "Load an existing backup, replacing the current config",
+                    subtitle = "Load an existing full backup, replacing your entire config",
                     onClick = { restoreLauncher() }
                 )
             }

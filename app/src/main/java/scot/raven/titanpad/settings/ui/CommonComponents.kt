@@ -1115,8 +1115,9 @@ class UnifiedImagePickerLauncher(
 @Composable
 fun rememberDocumentCreateLauncher(
     settingsState: SettingsState,
-    settingsRepository: SettingsRepository,
     coroutineScope: CoroutineScope,
+    inputCallback: ((String) -> Unit) -> Unit,
+    fileName: String,
     context: Context
 ): () -> Unit {
     val intentLauncher = rememberLauncherForActivityResult(
@@ -1126,14 +1127,17 @@ fun rememberDocumentCreateLauncher(
         coroutineScope.launch {
             if (uri?.path != null) {
                 try {
-                    val currentSettings = settingsRepository.getSettings().first()
-                    val backupData = settingsRepository.exportSettings(currentSettings)
-
-                    context.contentResolver.openOutputStream(uri)?.use { output ->
-                        output.write(backupData.encodeUtf8().toByteArray())
+                    inputCallback { backupData ->
+                        try {
+                            context.contentResolver.openOutputStream(uri)?.use { output ->
+                                output.write(backupData.encodeUtf8().toByteArray())
+                            }
+                            settingsState.showToast("Backup created!")
+                        } catch (e: Exception) {
+                            settingsState.showToast("Could not create backup!")
+                            e.printStackTrace()
+                        }
                     }
-
-                    settingsState.showToast("Backup created!")
                 } catch (e: Exception) {
                     settingsState.showToast("Could not create backup!")
                     e.printStackTrace()
@@ -1145,15 +1149,15 @@ fun rememberDocumentCreateLauncher(
     }
 
     return {
-        intentLauncher.launch("titanpad-backup-${LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMdd-HHmmss"))}.json")
+        intentLauncher.launch("$fileName-${LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMdd-HHmmss"))}.json")
     }
 }
 
 @Composable
 fun rememberDocumentLoaderLauncher(
     settingsState: SettingsState,
-    settingsRepository: SettingsRepository,
     coroutineScope: CoroutineScope,
+    outputCallback: (String) -> Unit,
     context: Context
 ): () -> Unit {
     val intentLauncher = rememberLauncherForActivityResult(
@@ -1165,11 +1169,9 @@ fun rememberDocumentLoaderLauncher(
                 try {
                     context.contentResolver.openInputStream(uri)?.use { input ->
                         val data = input.readAllBytes()
-                        val inputJson = data.toString(Charset.forName("UTF-8"))
-                        settingsRepository.importSettings(inputJson)
+                        val inputData = data.toString(Charset.forName("UTF-8"))
+                        outputCallback(inputData)
                     }
-
-                    settingsState.showToast("Backup restored!")
                 } catch (e: Exception) {
                     settingsState.showToast("Could not restore backup!")
                     e.printStackTrace()

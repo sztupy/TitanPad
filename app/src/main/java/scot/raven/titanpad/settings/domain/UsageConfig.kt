@@ -12,6 +12,7 @@ import scot.raven.titanpad.cursor.domain.InputType
  */
 @Serializable
 data class UsageConfig(
+    val className: String = "UsageConfig",
     val versionCode: Int = BuildConfig.VERSION_CODE,
     val configId: String = Defaults.Settings.DEFAULT_CONFIG_ID,
     val configName: String = Defaults.Settings.DEFAULT_CONFIG_NAME,
@@ -92,19 +93,34 @@ data class UsageConfig(
         )
     }
 
-    fun withoutAppConfig(): UsageConfig {
-        return copy(
-            applicationListType = Defaults.Settings.APPLICATION_LIST_TYPE,
-            autoEnableListType = Defaults.Settings.AUTO_ENABLE_LIST_TYPE,
-            clickableListType = Defaults.Settings.CLICKABLE_LIST_TYPE,
-            autoEnableApps = Defaults.Settings.AUTO_ENABLE_APPS,
-            autoHideApps = Defaults.Settings.AUTO_HIDE_APPS,
-            clickableApps = Defaults.Settings.CLICKABLE_APPS,
-            autoEnableIfOnOnly = Defaults.Settings.AUTO_ENABLE_IF_ON_ONLY,
-            autoDisableActivity = Defaults.Settings.AUTO_DISABLE_ACTIVITY,
-            cursorActivationKey = Defaults.Settings.CURSOR_ACTIVATION_KEY,
-            activationDuration = Defaults.Settings.ACTIVATION_DURATION
-        )
+    fun withoutAppConfig(existingConfig: UsageConfig? = null): UsageConfig {
+        if (existingConfig == null) {
+            return copy(
+                applicationListType = Defaults.Settings.APPLICATION_LIST_TYPE,
+                autoEnableListType = Defaults.Settings.AUTO_ENABLE_LIST_TYPE,
+                clickableListType = Defaults.Settings.CLICKABLE_LIST_TYPE,
+                autoEnableApps = Defaults.Settings.AUTO_ENABLE_APPS,
+                autoHideApps = Defaults.Settings.AUTO_HIDE_APPS,
+                clickableApps = Defaults.Settings.CLICKABLE_APPS,
+                autoEnableIfOnOnly = Defaults.Settings.AUTO_ENABLE_IF_ON_ONLY,
+                autoDisableActivity = Defaults.Settings.AUTO_DISABLE_ACTIVITY,
+                cursorActivationKey = Defaults.Settings.CURSOR_ACTIVATION_KEY,
+                activationDuration = Defaults.Settings.ACTIVATION_DURATION
+            )
+        } else {
+            return copy(
+                applicationListType = existingConfig.applicationListType,
+                autoEnableListType = existingConfig.autoEnableListType,
+                clickableListType = existingConfig.clickableListType,
+                autoEnableApps = existingConfig.autoEnableApps,
+                autoHideApps = existingConfig.autoHideApps,
+                clickableApps = existingConfig.clickableApps,
+                autoEnableIfOnOnly = existingConfig.autoEnableIfOnOnly,
+                autoDisableActivity = existingConfig.autoDisableActivity,
+                cursorActivationKey = existingConfig.cursorActivationKey,
+                activationDuration = existingConfig.activationDuration
+            )
+        }
     }
 }
 

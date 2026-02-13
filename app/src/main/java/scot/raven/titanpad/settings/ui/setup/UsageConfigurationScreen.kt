@@ -1,18 +1,10 @@
 package scot.raven.titanpad.settings.ui.setup
 
-import android.app.Activity
 import android.content.ClipData
 import android.content.ClipboardManager
 import android.content.Context
 import android.content.Intent
-import android.net.Uri
-import android.provider.MediaStore
 import android.provider.Settings
-import android.webkit.MimeTypeMap
-import androidx.activity.compose.rememberLauncherForActivityResult
-import androidx.activity.result.ActivityResultLauncher
-import androidx.activity.result.PickVisualMediaRequest
-import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
@@ -32,32 +24,28 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
-import androidx.datastore.core.IOException
-import scot.raven.titanpad.core.logs.Logger
 import scot.raven.titanpad.settings.ui.NoteItem
 import scot.raven.titanpad.settings.ui.PreferenceCategory
 import scot.raven.titanpad.settings.ui.SettingsState
 import scot.raven.titanpad.settings.ui.SimplePreferenceItem
 import scot.raven.titanpad.settings.ui.SliderPreferenceItem
 import scot.raven.titanpad.settings.ui.SwitchPreferenceItem
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
+import scot.raven.titanpad.TitanPad
 import scot.raven.titanpad.cursor.domain.FuncButtonMap
 import scot.raven.titanpad.cursor.domain.InputType
 import scot.raven.titanpad.settings.ui.DropdownPreferenceItem
 import scot.raven.titanpad.settings.ui.InputSelectorItem
 import scot.raven.titanpad.settings.ui.TextFieldDialog
+import scot.raven.titanpad.settings.ui.rememberDocumentCreateLauncher
+import scot.raven.titanpad.settings.ui.rememberDocumentLoaderLauncher
 import scot.raven.titanpad.settings.ui.startActivity
-import java.io.File
-import java.io.FileOutputStream
-import java.util.Locale
-import java.util.UUID
 
 /**
  * Standard cursor settings screen.
@@ -76,6 +64,7 @@ fun UsageConfigurationScreen(
     val uiState by settingsState.uiState.collectAsState()
     var showNameChangeDialog by remember { mutableStateOf(false) }
     val context = LocalContext.current
+    val coroutineScope = rememberCoroutineScope()
 
     Scaffold(
         topBar = {
@@ -476,6 +465,117 @@ fun UsageConfigurationScreen(
                     title = "Developer Options",
                     subtitle = "Additional configurable features",
                     onClick = onNavigateToDebugOptions
+                )
+            }
+
+            PreferenceCategory(title = "Backup and Restore") {
+                val backupLauncher = rememberDocumentCreateLauncher(
+                    settingsState = settingsState,
+                    coroutineScope = coroutineScope,
+                    context = LocalContext.current,
+                    fileName = "titanpad-config",
+                    inputCallback = { callback ->
+                        coroutineScope.launch {
+                            val currentSettings =
+                                TitanPad.getInstance().settingsRepository.getSettings().first()
+
+                            val currentId = uiState.configId
+                            val selectedConfig = currentSettings.additionalConfigs.find{it.configId == currentId}?:currentSettings.defaultConfig
+
+                            val result = TitanPad.getInstance().settingsRepository.exportSettings(currentId,selectedConfig)
+
+                            callback(result)
+                        }
+                    }
+                )
+
+                val restoreLauncher = rememberDocumentLoaderLauncher(
+                    settingsState = settingsState,
+                    coroutineScope = coroutineScope,
+                    context = LocalContext.current,
+                    outputCallback = { jsonData ->
+                        coroutineScope.launch {
+                            try {
+                                if (TitanPad.getInstance().settingsRepository.importSettings(uiState.configId, jsonData)) {
+                                    settingsState.showToast("Backup restored!")
+                                } else {
+                                    settingsState.showToast("Could not restore backup!")
+                                }
+                            } catch (_: Exception) {
+                                settingsState.showToast("Could not restore backup!")
+                            }
+                        }
+                    }
+                )
+
+                val backupLauncherNoApp = rememberDocumentCreateLauncher(
+                    settingsState = settingsState,
+                    coroutineScope = coroutineScope,
+                    context = LocalContext.current,
+                    fileName = "titanpad-config-no-app",
+                    inputCallback = { callback ->
+                        coroutineScope.launch {
+                            val currentSettings =
+                                TitanPad.getInstance().settingsRepository.getSettings().first()
+
+                            val currentId = uiState.configId
+                            val selectedConfig = currentSettings.additionalConfigs.find{it.configId == currentId}?:currentSettings.defaultConfig
+
+                            val result = TitanPad.getInstance().settingsRepository.exportSettingsWithoutAppData(currentId,selectedConfig)
+
+                            callback(result)
+                        }
+                    }
+                )
+
+                val restoreLauncherNoApp = rememberDocumentLoaderLauncher(
+                    settingsState = settingsState,
+                    coroutineScope = coroutineScope,
+                    context = LocalContext.current,
+                    outputCallback = { jsonData ->
+                        coroutineScope.launch {
+                            try {
+                                val currentSettings =
+                                    TitanPad.getInstance().settingsRepository.getSettings().first()
+
+                                val currentId = uiState.configId
+                                val selectedConfig = currentSettings.additionalConfigs.find{it.configId == currentId}?:currentSettings.defaultConfig
+
+                                if (TitanPad.getInstance().settingsRepository.importSettingsWithoutAppData(uiState.configId, jsonData, selectedConfig)) {
+                                    settingsState.showToast("Backup restored!")
+                                } else {
+                                    settingsState.showToast("Could not restore backup!")
+                                }
+
+                            } catch (_: Exception) {
+                                settingsState.showToast("Could not restore backup!")
+                            }
+                        }
+                    }
+                )
+
+                SimplePreferenceItem(
+                    title = "Backup Configuration",
+                    subtitle = "Save your config to a file",
+                    onClick = { backupLauncher() }
+                )
+
+                SimplePreferenceItem(
+                    title = "Restore Configuration",
+                    subtitle = "Load an existing backup, replacing the current config",
+                    onClick = { restoreLauncher() }
+                )
+
+                SimplePreferenceItem(
+                    title = "Backup Configuration without App and Activation data",
+                    subtitle = "Save your config to a file except any AppList and Activation settings",
+                    onClick = { backupLauncherNoApp() }
+                )
+
+                SimplePreferenceItem(
+                    title = "Restore Configuration without App and Activation data",
+                    subtitle = "Load an existing backup, replacing the current config except the Activation setup and any AppLists",
+                    onClick = { restoreLauncherNoApp() }
                 )
             }
         }

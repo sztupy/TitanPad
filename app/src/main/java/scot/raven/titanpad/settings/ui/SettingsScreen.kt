@@ -1,5 +1,6 @@
 package scot.raven.titanpad.settings.ui
 
+import android.content.Intent
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -24,22 +25,25 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.res.stringResource
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.withContext
 import scot.raven.titanpad.BuildConfig
 import scot.raven.titanpad.R
+import scot.raven.titanpad.TitanPad
+import scot.raven.titanpad.accessibility.AppAccessibilityService
+import scot.raven.titanpad.core.logs.Logger
 import scot.raven.titanpad.core.shizuku.ShizukuConnection
 import scot.raven.titanpad.core.shizuku.ShizukuStatus
 import scot.raven.titanpad.settings.domain.UsageConfig
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.withContext
-import kotlinx.coroutines.flow.StateFlow
-import scot.raven.titanpad.accessibility.AppAccessibilityService
-import scot.raven.titanpad.core.logs.Logger
+
 
 /**
  * Main settings screen.
@@ -57,6 +61,7 @@ fun SettingsScreen(
     val validationErrors by settingsState.validationErrors.collectAsState()
     val context = LocalContext.current
     var shizukuVersionValid by remember { mutableStateOf(false) }
+    val coroutineScope = rememberCoroutineScope()
 
     LaunchedEffect(shizukuVersionValid) {
         shizukuVersionValid = withContext(Dispatchers.IO) {
@@ -248,6 +253,34 @@ fun SettingsScreen(
                         }
                     },
                     enabled = uiState.alwaysRemapFuncKeys
+                )
+            }
+
+            val backupLauncher = rememberDocumentCreateLauncher(
+                settingsState = settingsState,
+                settingsRepository = TitanPad.getInstance().settingsRepository,
+                coroutineScope = coroutineScope,
+                context = LocalContext.current
+            )
+
+            val restoreLauncher = rememberDocumentLoaderLauncher(
+                settingsState = settingsState,
+                settingsRepository = TitanPad.getInstance().settingsRepository,
+                coroutineScope = coroutineScope,
+                context = LocalContext.current
+            )
+
+            PreferenceCategory(title = "Backup") {
+                SimplePreferenceItem(
+                    title = "Backup Configuration",
+                    subtitle = "Save your configs to a file",
+                    onClick = { backupLauncher() }
+                )
+
+                SimplePreferenceItem(
+                    title = "Restore Configuration",
+                    subtitle = "Load an existing backup, replacing the current config",
+                    onClick = { restoreLauncher() }
                 )
             }
 

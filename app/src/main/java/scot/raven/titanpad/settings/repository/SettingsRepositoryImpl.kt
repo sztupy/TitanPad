@@ -163,18 +163,18 @@ class SettingsRepositoryImpl(
         }
     }
 
-    override suspend fun exportSettings(settings: ApplicationSettings) : String{
+    override fun exportSettings(settings: ApplicationSettings) : String{
         return json.encodeToString(settings)
     }
 
-    override suspend fun exportSettings(
+    override fun exportSettings(
         configId: String,
         usageConfig: UsageConfig
     ) : String {
         return json.encodeToString(usageConfig)
     }
 
-    override suspend fun exportSettingsWithoutAppData(
+    override fun exportSettingsWithoutAppData(
         configId: String,
         usageConfig: UsageConfig
     ) : String {

@@ -5,10 +5,12 @@ import android.content.Context
 import android.content.Intent
 import android.content.pm.ApplicationInfo
 import android.content.pm.PackageManager
+import android.graphics.Bitmap
 import android.net.Uri
 import android.os.Bundle
 import android.provider.MediaStore
 import android.webkit.MimeTypeMap
+import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.PickVisualMediaRequest
@@ -84,16 +86,23 @@ import androidx.core.net.toUri
 import androidx.datastore.core.IOException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import okio.ByteString.Companion.encodeUtf8
+import okio.internal.commonToUtf8String
 import rikka.shizuku.Shizuku
 import scot.raven.titanpad.R
 import scot.raven.titanpad.core.logs.Logger
 import scot.raven.titanpad.core.util.KeyCodeUtil
 import scot.raven.titanpad.cursor.domain.InputType
 import scot.raven.titanpad.settings.domain.UsageConfig
+import scot.raven.titanpad.settings.repository.SettingsRepository
 import java.io.File
 import java.io.FileOutputStream
+import java.nio.charset.Charset
+import java.time.LocalDateTime
+import java.time.format.DateTimeFormatter
 import java.util.Locale
 import java.util.UUID
 
@@ -1100,5 +1109,78 @@ class UnifiedImagePickerLauncher(
         }
 
         Logger.e("No available image pickers found")
+    }
+}
+
+@Composable
+fun rememberDocumentCreateLauncher(
+    settingsState: SettingsState,
+    settingsRepository: SettingsRepository,
+    coroutineScope: CoroutineScope,
+    context: Context
+): () -> Unit {
+    val intentLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.CreateDocument("application/json")
+    ) { uri ->
+        Logger.d(uri.toString())
+        coroutineScope.launch {
+            if (uri?.path != null) {
+                try {
+                    val currentSettings = settingsRepository.getSettings().first()
+                    val backupData = settingsRepository.exportSettings(currentSettings)
+
+                    context.contentResolver.openOutputStream(uri)?.use { output ->
+                        output.write(backupData.encodeUtf8().toByteArray())
+                    }
+
+                    settingsState.showToast("Backup created!")
+                } catch (e: Exception) {
+                    settingsState.showToast("Could not create backup!")
+                    e.printStackTrace()
+                }
+            } else {
+                settingsState.showToast("Could not create backup!")
+            }
+        }
+    }
+
+    return {
+        intentLauncher.launch("titanpad-backup-${LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMdd-HHmmss"))}.json")
+    }
+}
+
+@Composable
+fun rememberDocumentLoaderLauncher(
+    settingsState: SettingsState,
+    settingsRepository: SettingsRepository,
+    coroutineScope: CoroutineScope,
+    context: Context
+): () -> Unit {
+    val intentLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.OpenDocument()
+    ) { uri ->
+        Logger.d(uri.toString())
+        coroutineScope.launch {
+            if (uri?.path != null) {
+                try {
+                    context.contentResolver.openInputStream(uri)?.use { input ->
+                        val data = input.readAllBytes()
+                        val inputJson = data.toString(Charset.forName("UTF-8"))
+                        settingsRepository.importSettings(inputJson)
+                    }
+
+                    settingsState.showToast("Backup restored!")
+                } catch (e: Exception) {
+                    settingsState.showToast("Could not restore backup!")
+                    e.printStackTrace()
+                }
+            } else {
+                settingsState.showToast("Could not restore backup!")
+            }
+        }
+    }
+
+    return {
+        intentLauncher.launch(arrayOf("application/json"))
     }
 }

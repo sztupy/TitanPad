@@ -12,6 +12,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Support for right side trackpad split
 - Support for setting up screen areas for the scroll events for all 4 different input areas (left trackpad, main trackpad, right trackpad and back screen)
 - Add support to only auto-enable a config if TitanPad is already enabled. Can be used if you want to add an app-specific config but you only want to run it if you have TitanPad (like the default config) already enabled
+- Add support for backing up and restoring the application config to a json file
 
 ### Changed
 

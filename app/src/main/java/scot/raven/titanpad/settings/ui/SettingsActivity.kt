@@ -21,8 +21,8 @@ import scot.raven.titanpad.TitanPad
 import scot.raven.titanpad.accessibility.AppAccessibilityService.Companion.BROADCAST_CURSOR_ACTIVATED
 import scot.raven.titanpad.core.logs.Logger
 import scot.raven.titanpad.core.ui.AppTheme
-import scot.raven.titanpad.settings.ui.setup.DisclosureActivity
 import scot.raven.titanpad.settings.ui.setup.SetupOptionsActivity
+import scot.raven.titanpad.settings.ui.setup.TutorialActivity
 import scot.raven.titanpad.settings.ui.setup.UsageConfigurationActivity
 
 
@@ -78,6 +78,7 @@ class SettingsActivity : ComponentActivity() {
                     activeConfiguration = activeConfiguration,
                     onNavigateToCursorSettings = { configId -> startCustomActivity(this, UsageConfigurationActivity::class.java, configId) },
                     onNavigateToSetupOptions = { startCustomActivity(this, SetupOptionsActivity::class.java, "default") },
+                    onNavigateToTutorials = { startCustomActivity(this, TutorialActivity::class.java, "default") },
                 )
             }
         }

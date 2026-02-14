@@ -58,6 +58,7 @@ fun SettingsScreen(
     activeConfiguration: StateFlow<String>,
     onNavigateToCursorSettings: (String) -> Unit,
     onNavigateToSetupOptions: () -> Unit,
+    onNavigateToTutorials: () -> Unit,
 ) {
     val uiState by settingsState.uiState.collectAsState()
     val validationErrors by settingsState.validationErrors.collectAsState()
@@ -122,6 +123,17 @@ fun SettingsScreen(
                 validationErrors.forEach {
                     NoteItem(it, Icons.Default.Warning, "Error")
                 }
+            }
+
+            PreferenceCategory(title = "Tutorials") {
+                PermissionStatusBanner(
+                    title = "Tutorials",
+                    status = null,
+                    onClickAction = {
+                        onNavigateToTutorials()
+                    },
+                    passText = "Unsure what to do? Check some of the tutorial videos!",
+                )
             }
 
             PreferenceCategory(title = "Setup") {

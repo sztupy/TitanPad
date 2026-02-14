@@ -58,6 +58,7 @@ fun UsageConfigurationScreen(
     onNavigateToAutoHideSettings: () -> Unit,
     onNavigateToSoftwareEmulationSettings: () -> Unit,
     onNavigateToScrollSettings: (Int) -> () -> Unit,
+    onNavigateToWheelSettings: (Int) -> () -> Unit,
     onNavigateToActivationSettings: () -> Unit,
     onNavigateBack: () -> Unit,
 ) {
@@ -341,6 +342,42 @@ fun UsageConfigurationScreen(
                             title = "Back screen scroll",
                             subtitle = "Change scroll options for back screen",
                             onClick = onNavigateToScrollSettings(3)
+                        )
+                    }
+                }
+            }
+
+            if (combinedInputTypes.contains(InputType.HARDWARE_WHEEL)) {
+                PreferenceCategory(title = "Wheel settings") {
+                    if (listOf(InputType.HARDWARE_WHEEL).contains(uiState.touchPadMainInputType)) {
+                        SimplePreferenceItem(
+                            title = "Main TouchPad wheel",
+                            subtitle = "Change wheel options for main touchpad",
+                            onClick = onNavigateToWheelSettings(0)
+                        )
+                    }
+
+                    if (uiState.touchpadSplitInput && listOf(InputType.HARDWARE_WHEEL).contains(uiState.touchPadLeftInputType)) {
+                        SimplePreferenceItem(
+                            title = "Left TouchPad wheel",
+                            subtitle = "Change wheel options for left side of touchpad",
+                            onClick = onNavigateToWheelSettings(1)
+                        )
+                    }
+
+                    if (uiState.touchpadSplitRightInput && listOf(InputType.HARDWARE_WHEEL).contains(uiState.touchPadRightInputType)) {
+                        SimplePreferenceItem(
+                            title = "Right TouchPad wheel",
+                            subtitle = "Change wheel options for right side of touchpad",
+                            onClick = onNavigateToWheelSettings(2)
+                        )
+                    }
+
+                    if (listOf(InputType.HARDWARE_WHEEL).contains(uiState.backScreenInputType)) {
+                        SimplePreferenceItem(
+                            title = "Back screen wheel",
+                            subtitle = "Change wheel options for back screen",
+                            onClick = onNavigateToWheelSettings(3)
                         )
                     }
                 }

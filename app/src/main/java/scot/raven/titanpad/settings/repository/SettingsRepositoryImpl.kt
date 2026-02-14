@@ -21,6 +21,7 @@ import scot.raven.titanpad.BuildConfig
 import scot.raven.titanpad.settings.domain.ApplicationSettings
 import scot.raven.titanpad.settings.domain.ScrollConfig
 import scot.raven.titanpad.settings.domain.UsageConfig.Companion.SCROLL_SETTING_COUNT
+import scot.raven.titanpad.settings.domain.WheelConfig
 import kotlin.collections.map
 import kotlin.collections.toSet
 
@@ -412,6 +413,20 @@ class SettingsRepositoryImpl(
             )
         }
 
+        val wheelSettings = List(SCROLL_SETTING_COUNT) { id ->
+            val WHEEL_TOUCH_SENSITIVITY = intPreferencesKey("wheel_touch_sensitivity__${id}__$configId")
+            val WHEEL_VERTICAL_ONLY = booleanPreferencesKey("wheel_vertical_only__${id}__$configId")
+            val WHEEL_SPEED = intPreferencesKey("wheel_speed__${id}__$configId")
+            val WHEEL_SPEED_MOMENTUM = booleanPreferencesKey("wheel_speed_momentum__${id}__$configId")
+
+            WheelConfig (
+                touchSensitivity = preferences[WHEEL_TOUCH_SENSITIVITY] ?: UsageConfig.DEFAULT.wheelSettings[id].touchSensitivity,
+                scrollOnlyVertically = preferences[WHEEL_VERTICAL_ONLY] ?: UsageConfig.DEFAULT.wheelSettings[id].scrollOnlyVertically,
+                speed = preferences[WHEEL_SPEED] ?: UsageConfig.DEFAULT.wheelSettings[id].speed,
+                momentum = preferences[WHEEL_SPEED_MOMENTUM] ?: UsageConfig.DEFAULT.wheelSettings[id].momentum
+            )
+        }
+
         return UsageConfig(
             versionCode = preferences[VERSION_CODE] ?: BuildConfig.VERSION_CODE,
             configId = configId,
@@ -488,6 +503,7 @@ class SettingsRepositoryImpl(
             disableTouchscreen = preferences[DISABLE_TOUCHSCREEN] ?: UsageConfig.DEFAULT.disableTouchscreen,
 
             scrollSettings = scrollSettings,
+            wheelSettings = wheelSettings
         )
     }
 
@@ -560,6 +576,18 @@ class SettingsRepositoryImpl(
             preferences[SCROLL_RIGHT_CROP_REGION] = scroll.rightCropRegion
             preferences[SCROLL_TOUCH_SENSITIVITY] = scroll.touchSensitivity
             preferences[SCROLL_VERTICAL_ONLY] = scroll.scrollOnlyVertically
+        }
+
+        settings.wheelSettings.forEachIndexed { id, scroll ->
+            val WHEEL_TOUCH_SENSITIVITY = intPreferencesKey("wheel_touch_sensitivity__${id}__$configId")
+            val WHEEL_VERTICAL_ONLY = booleanPreferencesKey("wheel_vertical_only__${id}__$configId")
+            val WHEEL_SPEED = intPreferencesKey("wheel_speed__${id}__$configId")
+            val WHEEL_SPEED_MOMENTUM = booleanPreferencesKey("wheel_speed_momentum__${id}__$configId")
+
+            preferences[WHEEL_TOUCH_SENSITIVITY] = scroll.touchSensitivity
+            preferences[WHEEL_VERTICAL_ONLY] = scroll.scrollOnlyVertically
+            preferences[WHEEL_SPEED] = scroll.speed
+            preferences[WHEEL_SPEED_MOMENTUM] = scroll.momentum
         }
 
         preferences[VERSION_CODE] = BuildConfig.VERSION_CODE

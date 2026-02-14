@@ -70,6 +70,12 @@
             android:parentActivityName=".settings.ui.setup.UsageConfigurationActivity" />
 
         <activity
+            android:name=".settings.ui.scroll.WheelSettingsActivity"
+            android:exported="false"
+            android:theme="@style/Theme.TitanPad"
+            android:parentActivityName=".settings.ui.setup.UsageConfigurationActivity" />
+
+        <activity
             android:name=".settings.ui.activation.ActivationActivity"
             android:exported="false"
             android:theme="@style/Theme.TitanPad"

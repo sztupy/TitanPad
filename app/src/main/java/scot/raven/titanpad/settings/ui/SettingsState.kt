@@ -20,6 +20,7 @@ import scot.raven.titanpad.cursor.domain.FuncButtonMap
 import scot.raven.titanpad.cursor.domain.InputType
 import scot.raven.titanpad.settings.domain.ApplicationSettings
 import scot.raven.titanpad.settings.domain.ScrollConfig
+import scot.raven.titanpad.settings.domain.WheelConfig
 
 /**
  * Bridges settings with UI.
@@ -113,6 +114,7 @@ class SettingsState(
                             disableTouchscreen = settings.disableTouchscreen,
 
                             scrollSettings = settings.scrollSettings,
+                            wheelSettings = settings.wheelSettings,
 
                             disclosureAccepted = applicationSettings.disclosureAccepted,
                             defaultConfigName = applicationSettings.defaultConfig.configName,
@@ -226,6 +228,7 @@ class SettingsState(
             disableTouchscreen = _uiState.value.disableTouchscreen,
 
             scrollSettings = _uiState.value.scrollSettings,
+            wheelSettings = _uiState.value.wheelSettings
         )
     }
 
@@ -362,4 +365,5 @@ data class SettingsUiState(
     val runAfterBoot: String = Defaults.Settings.RUN_AFTER_BOOT,
 
     val scrollSettings: List<ScrollConfig> = Defaults.Settings.SCROLL_SETTINGS,
+    val wheelSettings: List<WheelConfig> = Defaults.Settings.WHEEL_SETTINGS,
 )

@@ -17,6 +17,7 @@ import scot.raven.titanpad.settings.ui.activation.ActivationActivity
 import scot.raven.titanpad.settings.ui.activation.AutoHideSettingsActivity
 import scot.raven.titanpad.settings.ui.cursor.SoftwareEmulationSettingsActivity
 import scot.raven.titanpad.settings.ui.scroll.ScrollSettingsActivity
+import scot.raven.titanpad.settings.ui.scroll.WheelSettingsActivity
 
 /**
  * Standard cursor settings screen.
@@ -59,6 +60,7 @@ class UsageConfigurationActivity : ComponentActivity() {
                     onNavigateToActivationSettings = { startCustomActivity(this, ActivationActivity::class.java, configId) },
                     onNavigateToAutoHideSettings = { startCustomActivity(this, AutoHideSettingsActivity::class.java, configId) },
                     onNavigateToSoftwareEmulationSettings = { startCustomActivity(this, SoftwareEmulationSettingsActivity::class.java, configId) },
+                    onNavigateToWheelSettings = { scrollId: Int -> { startCustomActivity(this, WheelSettingsActivity::class.java, configId, scrollId) } },
                     onNavigateToScrollSettings = { scrollId: Int -> { startCustomActivity(this, ScrollSettingsActivity::class.java, configId, scrollId) } },
                     onNavigateBack = {
                         finish()

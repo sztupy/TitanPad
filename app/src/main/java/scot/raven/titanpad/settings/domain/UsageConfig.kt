@@ -69,6 +69,7 @@ data class UsageConfig(
     val disableTouchscreen: Boolean = Defaults.Settings.DISABLE_TOUCHSCREEN,
 
     val scrollSettings: List<ScrollConfig> = Defaults.Settings.SCROLL_SETTINGS,
+    val wheelSettings: List<WheelConfig> = Defaults.Settings.WHEEL_SETTINGS,
 ) {
     companion object {
         val DEFAULT = UsageConfig()
@@ -132,4 +133,12 @@ data class ScrollConfig(
     val rightCropRegion: Int = 25,
     val touchSensitivity: Int = 5,
     val scrollOnlyVertically: Boolean = false,
+)
+
+@Serializable
+data class WheelConfig(
+    val speed: Int = 5,
+    val touchSensitivity: Int = 5,
+    val scrollOnlyVertically: Boolean = false,
+    val momentum: Boolean = false
 )

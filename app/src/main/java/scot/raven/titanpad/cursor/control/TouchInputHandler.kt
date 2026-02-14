@@ -13,7 +13,6 @@ import scot.raven.titanpad.core.util.BoundingBoxUtil
 import scot.raven.titanpad.cursor.domain.InputType
 import scot.raven.titanpad.gesture.api.GestureManager
 import scot.raven.titanpad.settings.domain.ApplicationSettings
-import scot.raven.titanpad.settings.domain.ScrollConfig
 import scot.raven.titanpad.settings.domain.UsageConfig
 import kotlin.math.absoluteValue
 import kotlin.math.pow
@@ -43,7 +42,10 @@ class TouchInputHandler(
     private var endTime: Long = 0
     private var numFingers = 0
     private var scrollHasStarted = false
+    private var wheelHasStarted = false
     private var scrollTouchLocation = 0
+    private var momentumX = 0f
+    private var momentumY = 0f
 
     fun setHidService(service: IHidService?) {
         hidService = service
@@ -134,13 +136,13 @@ class TouchInputHandler(
                 }
 
                 var inputType : InputType = if (backScreenMode) settings.backScreenInputType else settings.touchPadMainInputType
-                var scrollConfig = if (backScreenMode) settings.scrollSettings[3] else settings.scrollSettings[0]
+                var scrollId = if (backScreenMode) 3 else 0
                 scrollTouchLocation = 0
 
                 if (settings.touchpadSplitInput && !backScreenMode) {
                     if (startPositionX < TRACKPAD_WIDTH.toFloat() * settings.touchpadSplitPosition.toFloat() / 100f) {
                         inputType = settings.touchPadLeftInputType
-                        scrollConfig = settings.scrollSettings[1]
+                        scrollId = 1
                         scrollTouchLocation = 1
                     }
                 }
@@ -148,7 +150,7 @@ class TouchInputHandler(
                 if (settings.touchpadSplitRightInput && !backScreenMode) {
                     if (startPositionX > TRACKPAD_WIDTH.toFloat() * settings.touchpadSplitRightPosition.toFloat() / 100f) {
                         inputType = settings.touchPadRightInputType
-                        scrollConfig = settings.scrollSettings[2]
+                        scrollId = 2
                         scrollTouchLocation = 2
                     }
                 }
@@ -156,17 +158,20 @@ class TouchInputHandler(
                 if (settings.touchpadDisableTopRow && !backScreenMode && startPositionY <= TRACKPAD_HEIGHT/4) {
                     // Do nothing
                 } else {
-                    detectGesture(settings, scrollConfig, inputType)
+                    detectGesture(settings, scrollId,inputType)
                 }
             }
         }
     }
 
 
-    private fun detectGesture(settings: UsageConfig, scrollConfig: ScrollConfig, inputType: InputType) {
+    private fun detectGesture(settings: UsageConfig, scrollId: Int, inputType: InputType) {
         val dragEnabled = touchDown &&
                 (settings.mouseTwoFingerToHold && numFingers > 1) ||
                 (settings.mouseDoubleTapToHold && clickCount >= 1)
+
+        val scrollConfig = settings.scrollSettings[scrollId]
+        val wheelConfig = settings.wheelSettings[scrollId]
 
         if (touchDown && startPosSet) {
             val deltaX = (currentX - lastPositionX + 0.0f) * if (backScreenMode) -1 else 1 // invert input on back screen
@@ -175,10 +180,18 @@ class TouchInputHandler(
             if ((startPositionX-currentX).absoluteValue + (startPositionY-currentY).absoluteValue >= (10-scrollConfig.touchSensitivity) * (10-scrollConfig.touchSensitivity))
                 scrollHasStarted = true
 
+            if ((startPositionX-currentX).absoluteValue + (startPositionY-currentY).absoluteValue >= (10-wheelConfig.touchSensitivity) * (10-wheelConfig.touchSensitivity)) {
+                if (!wheelHasStarted) {
+                    momentumX = 0f
+                    momentumY = 0f
+                }
+                wheelHasStarted = true
+            }
+
             if (inputType == InputType.SOFTWARE_MOUSE) {
                 val multiplier = settings.softwareMouseSensitivity.toFloat() / if (settings.softwareMouseExponential) 4f else 6f
-                val deltaWithSensitivityX = if (settings.softwareMouseExponential) (deltaX.absoluteValue / 4f).pow(multiplier + 1) * deltaX.sign else deltaX * multiplier
-                val deltaWithSensitivityY = if (settings.softwareMouseExponential) (deltaY.absoluteValue / 4f).pow(multiplier + 1) * deltaY.sign else deltaY * multiplier
+                val deltaWithSensitivityX = if (settings.softwareMouseExponential) (deltaX.absoluteValue / 4f).pow(multiplier + 1) * deltaX.sign else deltaX * (multiplier + 1)
+                val deltaWithSensitivityY = if (settings.softwareMouseExponential) (deltaY.absoluteValue / 4f).pow(multiplier + 1) * deltaY.sign else deltaY * (multiplier + 1)
 
                 val newPosition = cursorStateManager.applyMovement(Offset(deltaWithSensitivityX, deltaWithSensitivityY))
                 cursorStateManager.updatePosition(newPosition)
@@ -210,14 +223,23 @@ class TouchInputHandler(
                     0
                 )
             } else if (inputType == InputType.HARDWARE_WHEEL) {
-                hidService?.setMousePosition(
-                    0,
-                    0,
-                    if (dragEnabled) 1 else 0,
-                    0,
-                    deltaY.toInt(),
-                    deltaX.toInt(),
-                )
+                if (wheelHasStarted) {
+                    val multiplier = wheelConfig.speed.toFloat() / 4f
+                    val deltaWithSensitivityHorizontal = if (wheelConfig.scrollOnlyVertically) 0f else deltaX * (multiplier + 1)
+                    val deltaWithSensitivityVertical = deltaY * (multiplier + 1)
+
+                    momentumX = deltaWithSensitivityHorizontal
+                    momentumY = deltaWithSensitivityVertical
+
+                    hidService?.setMousePosition(
+                        0,
+                        0,
+                        0,
+                        0,
+                        deltaWithSensitivityVertical.toInt(),
+                        deltaWithSensitivityHorizontal.toInt(),
+                    )
+                }
             } else if (inputType == InputType.HARDWARE_SCROLL || inputType == InputType.SOFTWARE_SCROLL) {
                 var touchX : Float
                 var touchY : Float
@@ -324,7 +346,16 @@ class TouchInputHandler(
                     hidService?.setMousePosition(0, 0, 0, 1, 0, 0)
                 }
             } else if (inputType == InputType.HARDWARE_WHEEL) {
-                // do nothing
+                if (wheelConfig.momentum) {
+                    scope.launch {
+                        while(!touchDown && (momentumX.absoluteValue + momentumY.absoluteValue > 4)) {
+                            momentumX *= 0.98f
+                            momentumY *= 0.98f
+                            hidService?.setMousePosition(0, 0, 0, 1, momentumY.toInt(), momentumX.toInt())
+                            delay(5)
+                        }
+                    }
+                }
             } else if (inputType == InputType.HARDWARE_SCROLL) {
                 if (scrollHasStarted) {
                     hidService?.tapRelease()

@@ -72,6 +72,38 @@ object Defaults {
                 scrollOnlyVertically = false
             )
         )
+
+        val WHEEL_SETTINGS = listOf(
+            // central trackpad
+            WheelConfig(
+                touchSensitivity = 9,
+                speed = 5,
+                scrollOnlyVertically = false,
+                momentum = false
+            ),
+            // left trackpad
+            WheelConfig(
+                touchSensitivity = 9,
+                speed = 5,
+                scrollOnlyVertically = true,
+                momentum = false
+            ),
+            // right trackpad
+            WheelConfig(
+                touchSensitivity = 9,
+                speed = 5,
+                scrollOnlyVertically = true,
+                momentum = false
+            ),
+            // back screen
+            WheelConfig(
+                touchSensitivity = 9,
+                speed = 5,
+                scrollOnlyVertically = false,
+                momentum = false
+            )
+        )
+
         const val MOUSE_TAP_TO_CLICK = true
         const val MOUSE_DOUBLE_TAP_HOLD = true
         const val MOUSE_TWO_FINGER_HOLD = false

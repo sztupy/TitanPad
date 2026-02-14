@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.2.0] - 2026-02-14
+
 ### Added
 
 - Support for right side trackpad split
@@ -33,5 +35,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Initial public version
 - Watch the intro video at https://www.youtube.com/watch?v=n3HS-zF6z5E
 
-[unreleased]: https://github.com/sztupy/TitanPad/compare/v0.1.0...HEAD
+[unreleased]: https://github.com/sztupy/TitanPad/compare/v0.2.0...HEAD
+[0.2.0]: https://github.com/sztupy/TitanPad/compare/v0.1.0...v0.2.0
 [0.1.0]: https://github.com/sztupy/TitanPad/releases/tag/v0.1.0

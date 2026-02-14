@@ -43,6 +43,7 @@ import scot.raven.titanpad.cursor.domain.InputType
 import scot.raven.titanpad.settings.ui.DropdownPreferenceItem
 import scot.raven.titanpad.settings.ui.InputSelectorItem
 import scot.raven.titanpad.settings.ui.TextFieldDialog
+import scot.raven.titanpad.settings.ui.openNewTabWindow
 import scot.raven.titanpad.settings.ui.rememberDocumentCreateLauncher
 import scot.raven.titanpad.settings.ui.rememberDocumentLoaderLauncher
 import scot.raven.titanpad.settings.ui.startActivity
@@ -613,6 +614,14 @@ fun UsageConfigurationScreen(
                     title = "Restore Configuration without App and Activation data",
                     subtitle = "Load an existing backup, replacing the current config except the Activation setup and any AppLists",
                     onClick = { restoreLauncherNoApp() }
+                )
+
+                SimplePreferenceItem(
+                    title = "Example configurations repository",
+                    subtitle = "Want some ideas? Check out the example configuration repository! Made something great? Feel free to share it with others!",
+                    onClick = {
+                        openNewTabWindow("https://github.com/sztupy/TitanPad/tree/main/configurations", context)
+                    }
                 )
             }
         }

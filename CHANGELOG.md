@@ -17,6 +17,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Add support for auto-enable config on boot. Useful to counter the effects when killing the app in the app switcher. Also useful during boot if Shizuku can auto-start
 - Add support for hardware mouse wheel as an input. This will emulate a mouse with two scroll wheels, both capable of high resolution movements. Options in the menu also include emulating momentum based wheel as well. Wheel would create the scroll effect at the position the hardware mouse is at.
 - Add tutorial screen linking to a couple tutorial videos on YouTube
+- Add link to the example configuration repository
 
 ### Changed
 

@@ -70,8 +70,8 @@ class HidService : IHidService.Stub() {
         0x09, 0x48,          //         USAGE (Resolution Multiplier)
         0x15, 0x00,          //         LOGICAL_MINIMUM (0)
         0x25, 0x01,          //         LOGICAL_MAXIMUM (1)
-        0x35, 0x78,          //         PHYSICAL_MINIMUM (120)
-        0x45, 0x78,          //         PHYSICAL_MAXIMUM (120) - hardcode resolution to the minimum available
+        0x35, 0x78,          //         PHYSICAL_MINIMUM (120) - Hardcode scroll resolution to the minimum available.
+        0x45, 0x78,          //         PHYSICAL_MAXIMUM (120) - Smooth scroll enabling should come from the features but for some reason it doesn't work for me.
         0x75, 0x02,          //         REPORT_SIZE (2)
         0x95.toByte(), 0x01, //         REPORT_COUNT (1)
         0xa4.toByte(),       //         PUSH
@@ -209,9 +209,11 @@ class HidService : IHidService.Stub() {
 
         val mouseFeatureReport = SparseArray<ByteArray>()
         mouseFeatureReport.append(0, mouseFeatureReportData)
+        // This should enable smooth scrolling, but dor some reason it doesn't work so we'll just hardcode the resolution to 120 in the HID descriptor
 
         val touchFeatureReport = SparseArray<ByteArray>()
         touchFeatureReport.append(0, touchScreenReportData)
+        // This will disable multi touch features on the emulated touchpad. This can be updated to allow MT gestures if needed
 
         mouse = Device(
             1,
@@ -345,12 +347,14 @@ class HidService : IHidService.Stub() {
     override fun setJoystick(x: Int, y: Int) {
         val xClamp = x.coerceIn(-127, 127)
         val yClamp = y.coerceIn(-127, 127)
+        // we don't do gamepad buttons for now, these would go into [0] and [1]
         gamePadCode[2] = xClamp.toByte()
         gamePadCode[3] = yClamp.toByte()
+        // we don't do the second joystick / flight controls, those values would go into [4] and [5]
         gamePad.sendReport(gamePadCode)
     }
 
     companion object {
-        const val LOG_TAG = "HidService"
+        const val LOG_TAG = "TitanPadHidService"
     }
 }

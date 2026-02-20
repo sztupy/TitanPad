@@ -123,12 +123,12 @@ namespace android {
                                              std::unique_ptr<DeviceCallback> callback) {
             size_t size = descriptor.size();
             if (size > HID_MAX_DESCRIPTOR_SIZE) {
-                ALOGE("Received invalid hid report with descriptor size %zu, skipping", size);
+                ALOGE("%d: Received invalid hid report with descriptor size %zu, skipping", id, size);
                 return nullptr;
             }
             android::base::unique_fd fd(::open(UHID_PATH, O_RDWR | O_CLOEXEC));
             if (!fd.ok()) {
-                ALOGE("Failed to open uhid: %s", strerror(errno));
+                ALOGE("%d: Failed to open uhid: %s", id, strerror(errno));
                 return nullptr;
             }
             struct uhid_event ev = {};
@@ -145,13 +145,13 @@ namespace android {
             errno = 0;
             ssize_t ret = TEMP_FAILURE_RETRY(::write(fd, &ev, sizeof(ev)));
             if (ret < 0 || ret != sizeof(ev)) {
-                ALOGE("Failed to create uhid node: %s", strerror(errno));
+                ALOGE("%d: Failed to create uhid node: %s", id, strerror(errno));
                 return nullptr;
             }
             // Wait for the device to actually be created.
             ret = TEMP_FAILURE_RETRY(::read(fd, &ev, sizeof(ev)));
             if (ret < 0 || ev.type != UHID_START) {
-                ALOGE("uhid node failed to start: %s", strerror(errno));
+                ALOGE("%d: uhid node failed to start: %s", id, strerror(errno));
                 return nullptr;
             }
             // using 'new' to access non-public constructor
@@ -160,8 +160,8 @@ namespace android {
         Device::Device(int32_t id, android::base::unique_fd fd, std::unique_ptr<DeviceCallback> callback)
                 : mId(id), mFd(std::move(fd)), mDeviceCallback(std::move(callback)) {
             ALooper* aLooper = ALooper_forThread();
-            if (aLooper == NULL) {
-                ALOGE("Could not get ALooper, ALooper_forThread returned NULL");
+            if (aLooper == nullptr) {
+                ALOGE("%d: Could not get ALooper, ALooper_forThread returned NULL", id);
                 aLooper = ALooper_prepare(ALOOPER_PREPARE_ALLOW_NON_CALLBACKS);
             }
             ALooper_addFd(aLooper, mFd, 0, ALOOPER_EVENT_INPUT, handleLooperEvents,
@@ -169,10 +169,10 @@ namespace android {
         }
         Device::~Device() {
             ALooper* looper = ALooper_forThread();
-            if (looper != NULL) {
+            if (looper != nullptr) {
                 ALooper_removeFd(looper, mFd);
             } else {
-                ALOGE("Could not remove fd, ALooper_forThread() returned NULL!");
+                ALOGE("%d: Could not remove fd, ALooper_forThread() returned NULL!", mId);
             }
             struct uhid_event ev = {};
             ev.type = UHID_DESTROY;
@@ -182,12 +182,12 @@ namespace android {
         static void writeEvent(int fd, struct uhid_event& ev, const char* messageType) {
             ssize_t ret = TEMP_FAILURE_RETRY(::write(fd, &ev, sizeof(ev)));
             if (ret < 0 || ret != sizeof(ev)) {
-                ALOGE("Failed to send uhid_event %s: %s", messageType, strerror(errno));
+                ALOGE("%d: Failed to send uhid_event %s: %s", fd, messageType, strerror(errno));
             }
         }
         void Device::sendReport(const std::vector<uint8_t>& report) const {
             if (report.size() > UHID_DATA_MAX) {
-                ALOGE("Received invalid report of size %zu, skipping", report.size());
+                ALOGE("%d: Received invalid report of size %zu, skipping", mId, report.size());
                 return;
             }
             struct uhid_event ev = {};
@@ -215,20 +215,20 @@ namespace android {
         }
         int Device::handleEvents(int events) {
             if (events & (ALOOPER_EVENT_ERROR | ALOOPER_EVENT_HANGUP)) {
-                ALOGE("uhid node was closed or an error occurred. events=0x%x", events);
+                ALOGE("%d: uhid node was closed or an error occurred. events=0x%x", mId, events);
                 mDeviceCallback->onDeviceError();
                 return 0;
             }
             struct uhid_event ev;
             ssize_t ret = TEMP_FAILURE_RETRY(::read(mFd, &ev, sizeof(ev)));
             if (ret < 0) {
-                ALOGE("Failed to read from uhid node: %s", strerror(errno));
+                ALOGE("%d: Failed to read from uhid node: %s", mId, strerror(errno));
                 mDeviceCallback->onDeviceError();
                 return 0;
             }
             switch (ev.type) {
                 case UHID_OPEN: {
-                    ALOGI("Device opening callback");
+                    ALOGI("%d: UHID_OPEN received", mId);
                     mDeviceCallback->onDeviceOpen();
                     break;
                 }
@@ -239,12 +239,12 @@ namespace android {
                 case UHID_SET_REPORT: {
                     const struct uhid_set_report_req& set_report = ev.u.set_report;
                     if (set_report.size > UHID_DATA_MAX) {
-                        ALOGE("SET_REPORT contains too much data: size = %" PRIu16, set_report.size);
+                        ALOGE("%d: SET_REPORT contains too much data: size = %" PRIu16, mId, set_report.size);
                         return 0;
                     }
                     std::vector<uint8_t> data(set_report.data, set_report.data + set_report.size);
                     if (DEBUG_OUTPUT) {
-                        ALOGD("Received SET_REPORT: id=%" PRIu32 " rnum=%" PRIu8 " data=%s", set_report.id,
+                        ALOGD("%d: Received SET_REPORT: id=%" PRIu32 " rnum=%" PRIu8 " data=%s", mId, set_report.id,
                               set_report.rnum, toString(data).c_str());
                     }
                     mDeviceCallback->onDeviceSetReport(set_report.id, set_report.rtype, data);
@@ -254,13 +254,17 @@ namespace android {
                     struct uhid_output_req& output = ev.u.output;
                     std::vector<uint8_t> data(output.data, output.data + output.size);
                     if (DEBUG_OUTPUT) {
-                        ALOGD("UHID_OUTPUT rtype=%" PRIu8 " data=%s", output.rtype, toString(data).c_str());
+                        ALOGD("%d: UHID_OUTPUT rtype=%" PRIu8 " data=%s", mId, output.rtype, toString(data).c_str());
                     }
                     mDeviceCallback->onDeviceOutput(output.rtype, data);
                     break;
                 }
+                case UHID_CLOSE: {
+                    ALOGI("%d: UHID_CLOSE received", mId);
+                    break;
+                }
                 default: {
-                    ALOGI("Unhandled event type: %" PRIu32, ev.type);
+                    ALOGI("%d: Unhandled event type: %" PRIu32, mId, ev.type);
                     break;
                 }
             }

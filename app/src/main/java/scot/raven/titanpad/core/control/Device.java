@@ -21,7 +21,7 @@ import java.util.Map;
 
 @SuppressWarnings({"FieldCanBeLocal", "unused", "ReplaceNullCheck"})
 public class Device {
-    private static final String TAG = "HidDevice";
+    private static final String TAG = "TitanPadHidDevice";
 
     private static final int MSG_OPEN_DEVICE = 1;
     private static final int MSG_SEND_REPORT = 2;
@@ -137,7 +137,7 @@ public class Device {
                     Log.e(TAG, "Tried to send report to closed device.");
                 }
             } else if (msg.what == MSG_SEND_GET_FEATURE_REPORT_REPLY) {
-                if (mPtr != 0 && mBarrierToken) {
+                if (mPtr != 0) {
                     nativeSendGetFeatureReportReply(mPtr, msg.arg1, (byte[]) msg.obj);
                 } else {
                     Log.e(TAG, "Tried to send feature report reply to closed device.");

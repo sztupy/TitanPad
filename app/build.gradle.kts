@@ -11,6 +11,7 @@ plugins {
 android {
     namespace = "scot.raven.titanpad"
     compileSdk = 36
+    ndkVersion = "29.0.14206865"
 
     defaultConfig {
         applicationId = "scot.raven.titanpad"
@@ -20,6 +21,11 @@ android {
         versionName = "0.3.0-beta"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+        externalNativeBuild {
+            cmake {
+                cppFlags += ""
+            }
+        }
     }
 
     buildTypes {
@@ -51,6 +57,12 @@ android {
         compose = true
         buildConfig = true
         aidl = true
+    }
+    externalNativeBuild {
+        cmake {
+            path = file("src/main/cpp/CMakeLists.txt")
+            version = "3.22.1"
+        }
     }
 }
 

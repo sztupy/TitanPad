@@ -3,7 +3,6 @@ package scot.raven.titanpad.core.control
 import android.os.RemoteException
 import android.util.Log
 import android.util.SparseArray
-import com.android.commands.hid.Device
 import kotlin.experimental.and
 import kotlin.experimental.inv
 import kotlin.experimental.or

@@ -1,13 +1,10 @@
-package com.android.commands.hid;
+package scot.raven.titanpad.core.control;
 
-import android.annotation.SuppressLint;
-import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.HandlerThread;
 import android.os.Looper;
 import android.os.Message;
-import android.os.MessageQueue;
 import android.os.SystemClock;
 import android.util.Log;
 import android.util.SparseArray;
@@ -23,17 +20,14 @@ import java.util.Arrays;
 import java.util.Map;
 
 @SuppressWarnings({"FieldCanBeLocal", "unused", "ReplaceNullCheck"})
-@SuppressLint("ObsoleteSdkInt")
 public class Device {
     private static final String TAG = "HidDevice";
 
     private static final int MSG_OPEN_DEVICE = 1;
     private static final int MSG_SEND_REPORT = 2;
     private static final int MSG_SEND_GET_FEATURE_REPORT_REPLY = 3;
-    @SuppressLint("ObsoleteSdkInt")
-    private static final int MSG_SEND_SET_REPORT_REPLY = Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU ? 4 : -1;
-    @SuppressLint("ObsoleteSdkInt")
-    private static final int MSG_CLOSE_DEVICE = Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU ? 5 : 4;
+    private static final int MSG_SEND_SET_REPORT_REPLY = 4;
+    private static final int MSG_CLOSE_DEVICE = 5;
 
     // Sync with linux uhid_event_type::UHID_OUTPUT
     private static final byte UHID_EVENT_TYPE_UHID_OUTPUT = 6;
@@ -53,32 +47,16 @@ public class Device {
     private int mResponseId;
 
     static {
-        System.loadLibrary("hid");
+        System.loadLibrary("titanpad");
     }
-    //since Android 6.0.1
-    private static native long nativeOpenDevice(String name, int id, int vid, int pid,
-                                                byte[] descriptor, MessageQueue queue, DeviceCallback callback);
-    //since Android 8.1,API 27
-    private static native long nativeOpenDevice(String name, int id, int vid, int pid,
-                                                byte[] descriptor, DeviceCallback callback);
-    //since Android 11,API 30
-    private static native long nativeOpenDevice(String name, int id, int vid, int pid, int bus,
-                                                byte[] descriptor, DeviceCallback callback);
-
-    //since Android 15,API 35
     private static native long nativeOpenDevice(String name, String uniq, int id, int vid, int pid, int bus,
                                                 byte[] descriptor, DeviceCallback callback);
-
     private static native void nativeSendReport(long ptr, byte[] data);
-
     private static native void nativeSendGetFeatureReportReply(long ptr, int id, byte[] data);
-
-    //since Android 14,API 34
     private static native void nativeSendSetReportReply(long ptr, int id, boolean success);
-
     private static native void nativeCloseDevice(long ptr);
 
-    public Device(int id, String name,String uniq, int vid, int pid, int bus, byte[] descriptor,
+    public Device(int id, String name, String uniq, int vid, int pid, int bus, byte[] descriptor,
                   byte[] report, SparseArray<byte[]> featureReports, Map<ByteBuffer, byte[]> outputs) {
         mId = id;
         mThread = new HandlerThread("HidDeviceHandler");
@@ -144,26 +122,13 @@ public class Device {
             super(looper);
         }
 
-        @SuppressLint("ObsoleteSdkInt")
         @Override
         public void handleMessage(Message msg) {
-
             if (msg.what == MSG_OPEN_DEVICE) {
                 Bundle args = (Bundle) msg.obj;
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.VANILLA_ICE_CREAM) {
-                    mPtr = nativeOpenDevice(args.getString("name"), args.getString("uniq"), args.getInt("id"), args.getInt("vid"), args.getInt("pid"),
-                            args.getInt("bus"), args.getByteArray("descriptor"), new DeviceCallback());
-                } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-                    mPtr = nativeOpenDevice(args.getString("name"), args.getInt("id"), args.getInt("vid"), args.getInt("pid"),
-                            args.getInt("bus"), args.getByteArray("descriptor"), new DeviceCallback());
-                } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O_MR1) {
-                    mPtr = nativeOpenDevice(args.getString("name"), args.getInt("id"), args.getInt("vid"), args.getInt("pid"),
-                            args.getByteArray("descriptor"), new DeviceCallback());
-                } else {
-                    getLooper();
-                    mPtr = nativeOpenDevice(args.getString("name"), args.getInt("id"), args.getInt("vid"), args.getInt("pid"),
-                            args.getByteArray("descriptor"), Looper.myQueue(), new DeviceCallback());
-                }
+                mPtr = nativeOpenDevice(args.getString("name"), args.getString("uniq"), args.getInt("id"), args.getInt("vid"), args.getInt("pid"),
+                        args.getInt("bus"), args.getByteArray("descriptor"), new DeviceCallback());
+                Log.d(TAG, "Open device id: " + mPtr);
                 pauseEvents();
             } else if (msg.what == MSG_SEND_REPORT) {
                 if (mPtr != 0 && mBarrierToken) {

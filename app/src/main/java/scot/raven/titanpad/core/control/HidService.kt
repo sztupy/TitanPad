@@ -195,14 +195,14 @@ class HidService : IHidService.Stub() {
 
     val mouseCode: ByteArray = byteArrayOf(0x00, 0x00, 0x00, 0x00, 0x00)
 
-    val mouseFeatureReportData: ByteArray = byteArrayOf(0x00)
+    val mouseFeatureReportData: ByteArray = byteArrayOf(0xff.toByte())
 
     val keyboardCode: ByteArray = byteArrayOf(0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00)
     val gamePadCode: ByteArray = byteArrayOf(0x00, 0x00, 0x00, 0x00, 0x00, 0x00)
 
     val touchScreenCode: ByteArray = byteArrayOf(0x00, 0x00, 0x00, 0x00, 0x00)
 
-    val touchScreenReportData: ByteArray = byteArrayOf(0x01)
+    val touchScreenReportData: ByteArray = byteArrayOf(0x00)
 
     init {
         Log.i(LOG_TAG, "Starting TitanPad HidService")

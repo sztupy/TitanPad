@@ -20,4 +20,7 @@
 # hide the original source file name.
 #-renamesourcefileattribute SourceFile
 
--dontobfuscate
+-keep class scot.raven.titanpad.core.control.Device { *; }
+-keep class scot.raven.titanpad.core.control.Device$DeviceCallback { *; }
+-keep class scot.raven.titanpad.core.control.Device$DeviceHandler { *; }
+-keep class scot.raven.titanpad.core.control.HidService { *; }

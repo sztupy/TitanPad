@@ -5,5 +5,5 @@
     <string name="accessibility_service_label">TitanPad</string>
 
     <!-- Settings -->
-    <string name="settings_title">TitanPad: Titan 2 Trackpad</string>
+    <string name="settings_title">TitanPad: Android Input Remapper</string>
 </resources>

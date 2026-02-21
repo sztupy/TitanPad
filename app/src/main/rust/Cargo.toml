@@ -1,0 +1,12 @@
+[package]
+name = "titanpad_rust"
+version = "0.1.0"
+edition = "2024"
+
+[lib]
+name = "titanpad_rust"
+crate-type = ["cdylib"]
+
+[dependencies]
+evdev = "0.13.2"
+jni = "0.21.1"

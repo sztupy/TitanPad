@@ -1,9 +1,7 @@
-import org.jetbrains.kotlin.gradle.dsl.JvmTarget
-
 plugins {
     alias(libs.plugins.android.application)
-    alias(libs.plugins.kotlin.android)
-    alias(libs.plugins.kotlin.compose)
+    alias(libs.plugins.compose.compiler)
+    alias(libs.plugins.android.rust)
     id("org.jlleitschuh.gradle.ktlint") version "14.0.1"
     kotlin("plugin.serialization") version "1.9.0"
 }
@@ -15,7 +13,7 @@ android {
 
     defaultConfig {
         applicationId = "scot.raven.titanpad"
-        minSdk = 35
+        minSdk = 29
         targetSdk = 36
         versionCode = 5
         versionName = "0.3.0-beta"
@@ -26,6 +24,13 @@ android {
                 cppFlags += ""
             }
         }
+    }
+
+    buildFeatures {
+        compose = true
+        buildConfig = true
+        aidl = true
+        resValues = true
     }
 
     buildTypes {
@@ -40,25 +45,23 @@ android {
         }
         debug {
             resValue("string", "app_name", "TitanPad Debug")
+            resValue("string", "accessibility_service_label", "TitanPad Debug")
             resValue("color", "ic_launcher_background", value="#FFAAAA")
             applicationIdSuffix = ".debug"
             versionNameSuffix = "-debug"
         }
     }
+
     compileOptions {
-        sourceCompatibility = JavaVersion.VERSION_17
-        targetCompatibility = JavaVersion.VERSION_17
+        sourceCompatibility = JavaVersion.VERSION_21
+        targetCompatibility = JavaVersion.VERSION_21
     }
+
+    //noinspection WrongGradleMethod
     kotlin {
-        compilerOptions {
-            jvmTarget = JvmTarget.JVM_17
-        }
+        jvmToolchain(21)
     }
-    buildFeatures {
-        compose = true
-        buildConfig = true
-        aidl = true
-    }
+
     externalNativeBuild {
         cmake {
             path = file("src/main/cpp/CMakeLists.txt")
@@ -67,8 +70,23 @@ android {
     }
 }
 
-dependencies {
+androidRust {
+    module("titanpad_rust") {
+        path = file("src/main/rust")
+        targets = listOf("arm", "arm64", "x86", "x86_64")
 
+        buildType("debug") {
+            profile = "dev"
+            runTests = true
+        }
+
+        buildType("release") {
+            profile = "release"
+        }
+    }
+}
+
+dependencies {
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)
     implementation(libs.androidx.activity.compose)
@@ -95,5 +113,5 @@ dependencies {
     implementation("dev.rikka.shizuku:provider:13.1.5")
     implementation(libs.coil.compose)
     implementation(libs.coil.gif)
-    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.9.0")
+    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.10.0")
 }

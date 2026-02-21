@@ -4,7 +4,9 @@
 
 ---
 
-# TitanPad: Trackpad mouse for Titan 2
+# TitanPad: Android Input Remapper
+
+And mainly Trackpad Mouse for Titan 2
 
 ![GitHub release (latest by date)](https://img.shields.io/github/v/release/sztupy/TitanPad) ![Android Version](https://img.shields.io/badge/Android-15.0%2B-brightgreen) ![GitHub all releases](https://img.shields.io/github/downloads/sztupy/TitanPad/total) ![License](https://img.shields.io/github/license/sztupy/TitanPad)
 
@@ -12,13 +14,16 @@
 <img src='./docs/gifs/demo.webp' width=450 alt='Application demo'>
 </div>
 
-TitanPad is an Accessibility service for Unihertz Titan 2 allowing you to use the keyboard's capacitive sensor as a trackpad moving a virtual mouse around the screen
+TitanPad is an Accessibility Service allowing you to remap input devices (touchscreen, trackpad, buttons and built-in keyboards) so they do something else, including send key events, move a mouse on the screen or scroll the current contents.
+
+As a main use case it has support for Unihertz Titan 2 allowing you to use the keyboard's capacitive sensor as a trackpad moving a virtual mouse around the screen among others.
 
 ## Table of Contents
 - [Installation](#installation)
 - [Acknowledgment](#acknowledgments)
 - [Overview](#overview)
 - [Troubleshooting](#troubleshooting)
+- [Build](#build)
 - [FAQs](#faqs)
 - [License](#license)
 
@@ -38,7 +43,7 @@ Install using adb:
 ### Shizuku
 The application also requires you to [install Shizuku](https://github.com/thedjchi/Shizuku/releases) for most features to work.
 
-Note that unless your device is rooted, you will need to restart the Shizuku service upon reboot.
+Note that unless your device is rooted, you will either need to restart the Shizuku service upon reboot, or be under the Wi-Fi coverage of an already trusted network.
 
 ## Acknowledgments
 - [austinauyeung](https://github.com/austinauyeung) whose [C9 app](https://github.com/austinauyeung/C9) is used as the fork / core for this project. While it has been stripped from a lot of features C9's Cursor Mode implementation is heavily used as the virtual mouse implementation that doesn't require Shizuku
@@ -49,9 +54,9 @@ Note that unless your device is rooted, you will need to restart the Shizuku ser
 
 ## Overview
 
-The app uses some clever tricks to read the keyboard's capacitive sensor and translate it to virtual mouse events, like a Trackpad.
+The app accesses the system's input events through Shizuku allowing you to read inputs that are hidden from the main Android system. Afterwards it can translate these events to virtualized input devices, like a mouse, a virtual keyboard or a virtual gamepad.
 
-It also has some basic multi-touch functionality based on the fact that the sensor while doesn't support multiple fingers, it does support obtaining the approximate size of your touch, so if you use two fingers close to each other it will return a larger touch point. This information can then be used to differentiate between single finger touches and double finger touches.
+As a main use case it can read the Unihertz Titan 2's capacitive keyboard and remap it's input as a mouse, joystick or scrollbar. It also has some basic multi-touch functionality based on the fact that the sensor while doesn't support multiple fingers, it does support obtaining the approximate size of your touch, so if you use two fingers close to each other it will return a larger touch point. This information can then be used to differentiate between single finger touches and double finger touches.
 
 ## Basic setup
 
@@ -112,6 +117,10 @@ This will map touches on the trackpad as taps on the screen at the same location
 
 This is more performant than the software based scroll and has the same features.
 
+### Hardware mouse scroll
+
+This will send scroll events for the hardware mouse set up earlier. The mouse is set up to have smooth scrolling enabled and the events will be sent accordingly. Scroll events will always happen where the hardware mouse cursor is right now (or if it is not enabled, then by default it is considered to be in the middle of the screen)
+
 ### Hardware based joystick
 
 This will set up a hardware emulated gamepad using kernel features.
@@ -128,6 +137,8 @@ You basically have two options:
   * Then without letting go of the keyboard hand from the touchpad you can now let go of the joystick side
   * You can touch the joystick side whenever needed, and you can press buttons with your keyboard side
   * If you let go of the keyboard hand from the trackpad you'll need to do the above setup again (release both hands, touch joystick side first, touch keyboard side second then release joystick side, keeping the keyboard side touching)
+
+[Watch this video for a video guide](https://www.youtube.com/watch?v=KmtyBWD3xmQ)
 
 ## Additional features
 
@@ -151,7 +162,7 @@ You can split the trackpad into two sides, with both sides having a different co
 
 ### Back screen touch
 
-You can also use the back screen's touch sensor to 
+You can also use the back screen's touch sensor for any events, including mouse moves, scrolling or joystick input
 
 ## Troubleshooting
 
@@ -165,7 +176,7 @@ A green banner on the main page indicates that Shizuku authorization has been gr
 <img src='./docs/imgs/screenshot_4_ok.png' width=200 alt='Screenshot showing both accessibility and Shizuku enabled, and with the correct version of the latter'>
 </div>
 
-**WARNING!** Also note that due to a bug in Shizuku v13.6.0 (the latest official release as of February 2026) it does not work fully on MTK phones. You either have to downgrade to v13.5.4, or use [thedjchi's Shizuku fork](https://github.com/thedjchi/Shizuku/releases), which also contain other fixes and improvements. 
+**WARNING!** Also note that due to a bug in Shizuku v13.6.0 (the latest official release as of February 2026) it does not work fully on MTK phones. You either have to downgrade to v13.5.4 (the version present on Google Play), or use [thedjchi's Shizuku fork](https://github.com/thedjchi/Shizuku/releases), which also contain other fixes and improvements. 
 
 ## Screenshots
 
@@ -175,6 +186,19 @@ A green banner on the main page indicates that Shizuku authorization has been gr
 <img src='./docs/imgs/screenshot_example_3.png' width=200 alt='Tap settings'>
 <img src='./docs/imgs/screenshot_example_4.png' width=200 alt='Software emulation'>
 </div>
+
+## Build
+
+To build the app you need:
+
+- Android Studio Panda 1 2025.3.1 or later
+  - Under SDK Manager install at least:
+    - Android SDK 36.1
+    - Android NDK 29.0
+    - CMake 4.1.2
+- Rust
+  - Install rust from https://rustup.rs/
+  - `rustup target add aarch64-linux-android armv7-linux-androideabi i686-linux-android x86_64-linux-android`
 
 ## FAQs
 ### Where can I make feature suggestions or report bugs?

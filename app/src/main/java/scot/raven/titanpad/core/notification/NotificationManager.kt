@@ -5,6 +5,7 @@ import android.app.NotificationManager
 import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
+import android.os.Build
 import androidx.core.app.NotificationCompat
 import kotlinx.coroutines.flow.StateFlow
 import scot.raven.titanpad.R
@@ -34,18 +35,20 @@ class NotificationManager(private val context: Context) {
     }
 
     private fun createNotificationChannel() {
-        val channel = NotificationChannel(
-            CHANNEL_ID,
-            "Active Cursor",
-            NotificationManager.IMPORTANCE_LOW
-        ).apply {
-            description = "Shows when a cursor mode is active"
-            setShowBadge(false)
-            enableLights(false)
-            enableVibration(false)
-            setSound(null, null)
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            val channel = NotificationChannel(
+                CHANNEL_ID,
+                "Active Cursor",
+                NotificationManager.IMPORTANCE_LOW
+            ).apply {
+                description = "Shows when a cursor mode is active"
+                setShowBadge(false)
+                enableLights(false)
+                enableVibration(false)
+                setSound(null, null)
+            }
+            notificationManager.createNotificationChannel(channel)
         }
-        notificationManager.createNotificationChannel(channel)
     }
 
     fun showNotification(mode: ModeCoordinator.OverlayMode) {

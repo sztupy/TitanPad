@@ -101,6 +101,7 @@ import java.nio.charset.Charset
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 import java.util.Arrays
+import java.util.Date
 import java.util.Locale
 import java.util.UUID
 import kotlin.math.min
@@ -1159,7 +1160,15 @@ fun rememberDocumentCreateLauncher(
     }
 
     return {
-        intentLauncher.launch("$fileName-${LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMdd-HHmmss"))}.json")
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            intentLauncher.launch(
+                "$fileName-${
+                    LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMdd-HHmmss"))
+                }.json"
+            )
+        } else {
+            intentLauncher.launch("$fileName-${System.currentTimeMillis()}.json")
+        }
     }
 }
 

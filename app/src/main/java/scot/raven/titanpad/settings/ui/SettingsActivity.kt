@@ -103,9 +103,12 @@ class SettingsActivity : ComponentActivity() {
         val filter = IntentFilter()
         filter.addAction(BROADCAST_CURSOR_ACTIVATED)
 
-        val flags = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) RECEIVER_EXPORTED else 0
-
-        registerReceiver(receiver, filter, flags)
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
+            registerReceiver(receiver, filter, RECEIVER_EXPORTED)
+        } else {
+            @Suppress("UnspecifiedRegisterReceiverFlag")
+            registerReceiver(receiver, filter)
+        }
 
         checkAccessibilityServiceStatus()
 

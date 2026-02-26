@@ -221,9 +221,13 @@ class AppAccessibilityService : AccessibilityService(), LifecycleOwner,
                 addAction(ACTION_ACTIVATE_CURSOR)
                 addAction(ACTION_DEACTIVATE_CURSOR)
             }
-            val flags = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) RECEIVER_EXPORTED else 0
 
-            registerReceiver(receiver, filter, flags)
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
+                registerReceiver(receiver, filter, RECEIVER_EXPORTED)
+            } else {
+                @Suppress("UnspecifiedRegisterReceiverFlag")
+                registerReceiver(receiver, filter)
+            }
 
             lifecycleRegistry.handleLifecycleEvent(Lifecycle.Event.ON_RESUME)
 

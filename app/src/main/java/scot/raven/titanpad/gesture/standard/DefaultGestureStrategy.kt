@@ -3,8 +3,10 @@ package scot.raven.titanpad.gesture.standard
 import android.accessibilityservice.AccessibilityService
 import android.accessibilityservice.GestureDescription
 import android.graphics.Path
+import android.os.Build
 import android.os.Handler
 import android.os.Looper
+import androidx.annotation.RequiresApi
 import scot.raven.titanpad.core.logs.Logger
 import scot.raven.titanpad.gesture.api.GestureCompletionListener
 import scot.raven.titanpad.gesture.api.GestureStrategy
@@ -46,6 +48,7 @@ class DefaultGestureStrategy(
             }
         }
 
+    @RequiresApi(Build.VERSION_CODES.O)
     override suspend fun startTap(x: Float, y: Float, completionListener: GestureCompletionListener?): Boolean {
         try {
             Logger.d("DefaultGestureStrategy: starting tap at ($x, $y)")
@@ -85,6 +88,7 @@ class DefaultGestureStrategy(
         }
     }
 
+    @RequiresApi(Build.VERSION_CODES.O)
     override suspend fun dragTap(fromX: Float, fromY: Float, toX: Float, toY: Float, completionListener: GestureCompletionListener?): Boolean {
         try {
             Logger.d("DefaultGestureStrategy: dragging from ($fromX, $fromY) to ($toX, $toY)")
@@ -133,6 +137,7 @@ class DefaultGestureStrategy(
         }
     }
 
+    @RequiresApi(Build.VERSION_CODES.O)
     override suspend fun endTap(finalX: Float, finalY: Float, completionListener: GestureCompletionListener?): Boolean {
         try {
             Logger.d("DefaultGestureStrategy: ending tap at ($finalX, $finalY)")

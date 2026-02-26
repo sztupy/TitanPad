@@ -113,5 +113,5 @@ dependencies {
     implementation("dev.rikka.shizuku:provider:13.1.5")
     implementation(libs.coil.compose)
     implementation(libs.coil.gif)
-    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.10.0")
+    implementation(libs.kotlinx.serialization.json)
 }

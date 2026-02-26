@@ -270,6 +270,9 @@ namespace android {
             }
             return 1;
         }
+        void Device::close() {
+            // not used
+        }
     } // namespace uhid
     std::vector<uint8_t> getData(JNIEnv* env, jbyteArray javaArray) {
         std::vector<uint8_t> data;

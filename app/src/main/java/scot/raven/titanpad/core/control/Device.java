@@ -19,7 +19,7 @@ import java.nio.ByteBuffer;
 import java.util.Arrays;
 import java.util.Map;
 
-@SuppressWarnings({"FieldCanBeLocal", "unused", "ReplaceNullCheck"})
+@SuppressWarnings({"FieldCanBeLocal", "unused", "ReplaceNullCheck", "JavaJniMissingFunction"})
 public class Device {
     private static final String TAG = "TitanPadHidDevice";
 

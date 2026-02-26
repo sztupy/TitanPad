@@ -8,6 +8,7 @@ import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
 import android.graphics.Rect
+import android.os.Build
 import android.view.KeyEvent
 import android.view.WindowManager
 import android.view.accessibility.AccessibilityEvent
@@ -220,7 +221,9 @@ class AppAccessibilityService : AccessibilityService(), LifecycleOwner,
                 addAction(ACTION_ACTIVATE_CURSOR)
                 addAction(ACTION_DEACTIVATE_CURSOR)
             }
-            registerReceiver(receiver, filter, RECEIVER_EXPORTED)
+            val flags = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) RECEIVER_EXPORTED else 0
+
+            registerReceiver(receiver, filter, flags)
 
             lifecycleRegistry.handleLifecycleEvent(Lifecycle.Event.ON_RESUME)
 

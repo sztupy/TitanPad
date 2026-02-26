@@ -5,6 +5,7 @@ import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
 import android.database.ContentObserver
+import android.os.Build
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
@@ -101,7 +102,10 @@ class SettingsActivity : ComponentActivity() {
 
         val filter = IntentFilter()
         filter.addAction(BROADCAST_CURSOR_ACTIVATED)
-        registerReceiver(receiver, filter, RECEIVER_NOT_EXPORTED)
+
+        val flags = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) RECEIVER_EXPORTED else 0
+
+        registerReceiver(receiver, filter, flags)
 
         checkAccessibilityServiceStatus()
 

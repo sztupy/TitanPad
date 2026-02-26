@@ -5,12 +5,11 @@ import android.content.Context
 import android.content.Intent
 import android.content.pm.ApplicationInfo
 import android.content.pm.PackageManager
-import android.graphics.Bitmap
 import android.net.Uri
+import android.os.Build
 import android.os.Bundle
 import android.provider.MediaStore
 import android.webkit.MimeTypeMap
-import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.PickVisualMediaRequest
@@ -86,25 +85,25 @@ import androidx.core.net.toUri
 import androidx.datastore.core.IOException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import okio.ByteString.Companion.encodeUtf8
-import okio.internal.commonToUtf8String
 import rikka.shizuku.Shizuku
 import scot.raven.titanpad.R
 import scot.raven.titanpad.core.logs.Logger
 import scot.raven.titanpad.core.util.KeyCodeUtil
 import scot.raven.titanpad.cursor.domain.InputType
 import scot.raven.titanpad.settings.domain.UsageConfig
-import scot.raven.titanpad.settings.repository.SettingsRepository
 import java.io.File
 import java.io.FileOutputStream
+import java.io.InputStream
 import java.nio.charset.Charset
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
+import java.util.Arrays
 import java.util.Locale
 import java.util.UUID
+import kotlin.math.min
 
 
 @Composable
@@ -1080,18 +1079,22 @@ class UnifiedImagePickerLauncher(
     private val pickVisualMediaLauncher: ActivityResultLauncher<PickVisualMediaRequest>
 ) {
     fun launch(context: Context) {
-        try {
-            Logger.d("Launching PickVisualMedia")
-            pickVisualMediaLauncher.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly))
-            return
-        } catch (e: Exception) {
-            Logger.e("PickVisualMedia launch failed, falling back to Intent", e)
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            try {
+                Logger.d("Launching PickVisualMedia")
+                pickVisualMediaLauncher.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly))
+                return
+            } catch (e: Exception) {
+                Logger.e("PickVisualMedia launch failed, falling back to Intent", e)
+            }
         }
 
         val intents = mutableListOf<Intent>()
-        intents += Intent(MediaStore.ACTION_PICK_IMAGES).apply {
-            type = "image/*"
-            putExtra(MediaStore.EXTRA_PICK_IMAGES_MAX, 1)
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            intents += Intent(MediaStore.ACTION_PICK_IMAGES).apply {
+                type = "image/*"
+                putExtra(MediaStore.EXTRA_PICK_IMAGES_MAX, 1)
+            }
         }
         intents += listOf(
             Intent(Intent.ACTION_GET_CONTENT).apply {
@@ -1160,6 +1163,70 @@ fun rememberDocumentCreateLauncher(
     }
 }
 
+fun readBytes(input: InputStream): ByteArray? {
+    val len = Int.MAX_VALUE
+
+    var bufs: MutableList<ByteArray>? = null
+    var result: ByteArray? = null
+    var total = 0
+    var remaining = len
+    var n: Int
+    do {
+        var buf = ByteArray(min(remaining, 8192))
+        var nread = 0
+
+        // read to EOF which may read more or less than buffer size
+        while ((input.read(
+                buf, nread,
+                min(buf.size - nread, remaining)
+            ).also { n = it }) > 0
+        ) {
+            nread += n
+            remaining -= n
+        }
+
+        if (nread > 0) {
+            if (Int.MAX_VALUE - 8 - total < nread) {
+                throw OutOfMemoryError("Required array size too large")
+            }
+            if (nread < buf.size) {
+                buf = Arrays.copyOfRange(buf, 0, nread)
+            }
+            total += nread
+            if (result == null) {
+                result = buf
+            } else {
+                if (bufs == null) {
+                    bufs = ArrayList()
+                    bufs.add(result)
+                }
+                bufs.add(buf)
+            }
+        }
+        // if the last call to read returned -1 or the number of bytes
+        // requested have been read then break
+    } while (n >= 0 && remaining > 0)
+
+    if (bufs == null) {
+        if (result == null) {
+            return ByteArray(0)
+        }
+        return if (result.size == total) result else result.copyOf(total)
+    }
+
+    result = ByteArray(total)
+    var offset = 0
+    remaining = total
+    for (b in bufs) {
+        val count = min(b.size, remaining)
+        System.arraycopy(b, 0, result, offset, count)
+        offset += count
+        remaining -= count
+    }
+
+    return result
+}
+
 @Composable
 fun rememberDocumentLoaderLauncher(
     settingsState: SettingsState,
@@ -1175,8 +1242,8 @@ fun rememberDocumentLoaderLauncher(
             if (uri?.path != null) {
                 try {
                     context.contentResolver.openInputStream(uri)?.use { input ->
-                        val data = input.readAllBytes()
-                        val inputData = data.toString(Charset.forName("UTF-8"))
+                        val data = readBytes(input)
+                        val inputData = data?.toString(Charset.forName("UTF-8")) ?: ""
                         outputCallback(inputData)
                     }
                 } catch (e: Exception) {

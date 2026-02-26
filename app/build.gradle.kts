@@ -13,7 +13,7 @@ android {
 
     defaultConfig {
         applicationId = "scot.raven.titanpad"
-        minSdk = 29
+        minSdk = 28
         targetSdk = 36
         versionCode = 5
         versionName = "0.3.0-beta"

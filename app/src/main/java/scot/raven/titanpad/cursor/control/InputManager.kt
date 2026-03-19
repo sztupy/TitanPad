@@ -18,6 +18,8 @@ import rikka.shizuku.Shizuku.UserServiceArgs
 import scot.raven.titanpad.BuildConfig
 import scot.raven.titanpad.core.control.HidService
 import scot.raven.titanpad.core.control.IHidService
+import scot.raven.titanpad.core.control.IInputReaderService
+import scot.raven.titanpad.core.control.InputReaderService
 import scot.raven.titanpad.core.control.ModeCoordinator
 import scot.raven.titanpad.core.logs.Logger
 import scot.raven.titanpad.gesture.api.GestureManager
@@ -42,12 +44,14 @@ class InputManager(
     private val bottomButtonEventDevice: String = DEFAULT_LEFT_BOTTOM_EVENT_DEVICE,
     private val logTag: String = DEFAULT_LOG_TAG,
 ) {
-
     private var getTrackpadEventJob: Job? = null
     private var getBackScreenEventJob: Job? = null
     private var getTopButtonEventJob: Job? = null
     private var getBottomButtonEventJob: Job? = null
     private var hidService: IHidService? = null
+
+    private var inputReaderService: IInputReaderService? = null
+
     private var keyboardInputHandler = KeyInputHandler(
         settingsFlow = settingsFlow,
         modeCoordinator = modeCoordinator
@@ -119,7 +123,7 @@ class InputManager(
         scope.launch(Dispatchers.IO) {
             Log.i(DEBUG_TAG, "hidService starting")
             try {
-                bindUserService()
+                bindHidUserService()
                 while (isActive) {
                     delay(100)
                 }
@@ -133,7 +137,24 @@ class InputManager(
             trackpadInputHandler.setHidService(null)
             keyboardInputHandler.setHidService(null)
             backScreenInputHandler.setHidService(null)
-            unbindUserService()
+            unbindHidUserService()
+        }
+
+        scope.launch(Dispatchers.IO) {
+            Log.i(DEBUG_TAG, "inputReaderService starting")
+            try {
+                bindInputReaderUserService()
+                while (isActive) {
+                    delay(100)
+                }
+            } catch (e: Exception) {
+                Log.e(DEBUG_TAG, "inputReaderService: ${e.message}", e)
+                Log.e(logTag, "Trackpad inputReaderService failed", e)
+            }
+            Log.i(DEBUG_TAG, "inputReaderService stopping")
+            inputReaderService?.exit()
+            inputReaderService=null
+            unbindInputReaderUserService()
         }
     }
 
@@ -190,17 +211,21 @@ class InputManager(
         return getTrackpadEventJob != null && getTrackpadEventJob?.isActive == true
     }
 
-    private val userServiceConnection: ServiceConnection = object : ServiceConnection {
+    private val userHidServiceConnection: ServiceConnection = object : ServiceConnection {
         override fun onServiceConnected(componentName: ComponentName, binder: IBinder?) {
             val res = StringBuilder()
-            res.append("onServiceConnected: ").append(componentName.className).append('\n')
+            res.append("onHidServiceConnected: ").append(componentName.className).append('\n')
             if (binder != null && binder.pingBinder()) {
                 val service: IHidService = IHidService.Stub.asInterface(binder)
                 try {
                     hidService = service
-                    trackpadInputHandler.setHidService(service)
-                    keyboardInputHandler.setHidService(service)
-                    backScreenInputHandler.setHidService(service)
+                    if (hidService != null) {
+                        trackpadInputHandler.setHidService(service)
+                        keyboardInputHandler.setHidService(service)
+                        backScreenInputHandler.setHidService(service)
+                    } else {
+                        Logger.e("Did not get Hid Service")
+                    }
                 } catch (e: RemoteException) {
                     e.printStackTrace()
                     res.append(Log.getStackTraceString(e))
@@ -216,11 +241,11 @@ class InputManager(
             trackpadInputHandler.setHidService(null)
             keyboardInputHandler.setHidService(null)
             backScreenInputHandler.setHidService(null)
-            Logger.i("onServiceDisconnected: " + '\n' + componentName.className)
+            Logger.i("onHidServiceDisconnected: " + '\n' + componentName.className)
         }
     }
 
-    private val userServiceArgs: UserServiceArgs = UserServiceArgs(
+    private val userHidServiceArgs: UserServiceArgs = UserServiceArgs(
         ComponentName(
             BuildConfig.APPLICATION_ID,
             HidService::class.java.name
@@ -231,13 +256,13 @@ class InputManager(
         .debuggable(BuildConfig.DEBUG)
         .version(BuildConfig.VERSION_CODE)
 
-    private fun bindUserService() {
+    private fun bindHidUserService() {
         val res = StringBuilder()
         try {
             if (Shizuku.getVersion() < 10) {
                 res.append("requires Shizuku API 10")
             } else {
-                Shizuku.bindUserService(userServiceArgs, userServiceConnection)
+                Shizuku.bindUserService(userHidServiceArgs, userHidServiceConnection)
             }
         } catch (tr: Throwable) {
             tr.printStackTrace()
@@ -246,13 +271,86 @@ class InputManager(
         Logger.i(res.toString().trim { it <= ' ' })
     }
 
-    private fun unbindUserService() {
+    private fun unbindHidUserService() {
         val res = StringBuilder()
         try {
             if (Shizuku.getVersion() < 10) {
                 res.append("requires Shizuku API 10")
             } else {
-                Shizuku.unbindUserService(userServiceArgs, userServiceConnection, true)
+                Shizuku.unbindUserService(userHidServiceArgs, userHidServiceConnection, true)
+            }
+        } catch (tr: Throwable) {
+            tr.printStackTrace()
+            res.append(tr.toString())
+        }
+        Logger.i(res.toString().trim { it <= ' ' })
+    }
+
+    private val userInputReaderServiceConnection: ServiceConnection = object : ServiceConnection {
+        override fun onServiceConnected(componentName: ComponentName, binder: IBinder?) {
+            val res = StringBuilder()
+            res.append("onInputReaderServiceConnected: ").append(componentName.className).append('\n')
+            if (binder != null && binder.pingBinder()) {
+                val service: IInputReaderService = IInputReaderService.Stub.asInterface(binder)
+                try {
+                    inputReaderService = service
+                    if (inputReaderService != null) {
+                        inputReaderService?.init()
+                    } else {
+                        Logger.e("Did not get Input Reader Service")
+                    }
+                } catch (e: RemoteException) {
+                    e.printStackTrace()
+                    res.append(Log.getStackTraceString(e))
+                }
+            } else {
+                res.append("invalid binder for ").append(componentName).append(" received")
+            }
+            Logger.i(res.toString())
+        }
+
+        override fun onServiceDisconnected(componentName: ComponentName) {
+            hidService = null
+            trackpadInputHandler.setHidService(null)
+            keyboardInputHandler.setHidService(null)
+            backScreenInputHandler.setHidService(null)
+            Logger.i("onInputServiceDisconnected: " + '\n' + componentName.className)
+        }
+    }
+
+    private val userInputReaderServiceArgs: UserServiceArgs = UserServiceArgs(
+        ComponentName(
+            BuildConfig.APPLICATION_ID,
+            InputReaderService::class.java.name
+        )
+    )
+        .daemon(false)
+        .processNameSuffix("service")
+        .debuggable(BuildConfig.DEBUG)
+        .version(BuildConfig.VERSION_CODE)
+
+    private fun bindInputReaderUserService() {
+        val res = StringBuilder()
+        try {
+            if (Shizuku.getVersion() < 10) {
+                res.append("requires Shizuku API 10")
+            } else {
+                Shizuku.bindUserService(userInputReaderServiceArgs, userInputReaderServiceConnection)
+            }
+        } catch (tr: Throwable) {
+            tr.printStackTrace()
+            res.append(tr.toString())
+        }
+        Logger.i(res.toString().trim { it <= ' ' })
+    }
+
+    private fun unbindInputReaderUserService() {
+        val res = StringBuilder()
+        try {
+            if (Shizuku.getVersion() < 10) {
+                res.append("requires Shizuku API 10")
+            } else {
+                Shizuku.unbindUserService(userInputReaderServiceArgs, userInputReaderServiceConnection, true)
             }
         } catch (tr: Throwable) {
             tr.printStackTrace()

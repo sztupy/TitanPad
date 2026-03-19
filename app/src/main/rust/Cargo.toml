@@ -8,5 +8,8 @@ name = "titanpad_rust"
 crate-type = ["cdylib"]
 
 [dependencies]
+android_logger = "0.15.1"
 evdev = "0.13.2"
-jni = "0.21.1"
+eyre = "0.6.12"
+jni = "0.22.1"
+log = "0.4.29"

@@ -14,7 +14,10 @@ mod find_devices;
 mod jni_class;
 
 #[unsafe(no_mangle)]
-pub extern "C" fn Java_scot_raven_titanpad_core_control_InputReaderService_initLibrary(_env: Env) {
+pub extern "C" fn Java_scot_raven_titanpad_core_control_InputReaderService_initLibrary<'caller>(
+    mut _unowned_env: EnvUnowned<'caller>,
+    _this: JObject<'caller>,
+) {
     android_logger::init_once(
         Config::default()
             .with_max_level(LevelFilter::Debug)
@@ -31,7 +34,7 @@ fn find_devices_impl<'local>(env: &mut Env<'local>) -> eyre::Result<JObject<'loc
     let items_list = env.new_object(cls_array_list, jni_sig!("()V"), &[])?;
 
     for device in device_list {
-        let device_jni = create_device_data(env, device)?;
+        let device_jni = create_device_data(env, device.1, device.0)?;
 
         env.call_method(
             &items_list,

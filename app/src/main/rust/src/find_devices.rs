@@ -2,14 +2,14 @@ use std::os::unix::fs::FileTypeExt;
 
 use evdev::Device;
 
-pub(crate) fn find_devices() -> eyre::Result<Vec<Device>> {
+pub(crate) fn find_devices() -> eyre::Result<Vec<(String, Device)>> {
     let result = find_touchpad_and_keyboard_dev()?;
 
     Ok(result)
 }
 
-fn find_touchpad_and_keyboard_dev() -> eyre::Result<Vec<Device>> {
-    let mut result: Vec<Device> = Vec::new();
+fn find_touchpad_and_keyboard_dev() -> eyre::Result<Vec<(String, Device)>> {
+    let mut result: Vec<(String, Device)> = Vec::new();
 
     for ent in std::fs::read_dir("/dev/input")? {
         let Ok(ent) = ent else {
@@ -39,7 +39,12 @@ fn find_touchpad_and_keyboard_dev() -> eyre::Result<Vec<Device>> {
             continue;
         };
 
-        result.push(dev)
+        let path_data = ent
+            .path()
+            .into_os_string()
+            .into_string()
+            .unwrap_or_default();
+        result.push((path_data, dev));
     }
 
     Ok(result)

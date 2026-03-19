@@ -13,7 +13,7 @@ class InputReaderService : IInputReaderService.Stub() {
     override fun init() {
         initLibrary()
         val result = findDevices()
-        result.forEach { Logger.i("DATA: ${it.name}") }
+        result.forEach { Logger.i("DATA: ${it.name} ${it.path} ${it.physicalPath} ${it.busType} ${it.vendor} ${it.product} ${it.version}") }
     }
 
     override fun exit() {

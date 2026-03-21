@@ -14,7 +14,7 @@ mod find_devices;
 mod jni_class;
 
 #[unsafe(no_mangle)]
-pub extern "C" fn Java_scot_raven_titanpad_core_control_InputReaderService_initLibrary<'caller>(
+pub extern "C" fn Java_scot_raven_titanpad_core_evdev_EvdevReaderService_initLibrary<'caller>(
     mut _unowned_env: EnvUnowned<'caller>,
     _this: JObject<'caller>,
 ) {
@@ -48,7 +48,7 @@ fn find_devices_impl<'local>(env: &mut Env<'local>) -> eyre::Result<JObject<'loc
 }
 
 #[unsafe(no_mangle)]
-pub extern "C" fn Java_scot_raven_titanpad_core_control_InputReaderService_findDevices<'caller>(
+pub extern "C" fn Java_scot_raven_titanpad_core_evdev_EvdevReaderService_findDevices<'caller>(
     mut unowned_env: EnvUnowned<'caller>,
     _this: JObject<'caller>,
 ) -> JObject<'caller> {

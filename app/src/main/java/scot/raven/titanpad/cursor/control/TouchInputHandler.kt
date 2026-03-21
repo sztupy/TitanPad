@@ -8,6 +8,8 @@ import kotlinx.coroutines.launch
 import scot.raven.titanpad.accessibility.AppAccessibilityService
 import scot.raven.titanpad.core.control.IHidService
 import scot.raven.titanpad.core.control.ModeCoordinator
+import scot.raven.titanpad.core.evdev.IEventCallback
+import scot.raven.titanpad.core.evdev.IInputEvent
 import scot.raven.titanpad.core.logs.Logger
 import scot.raven.titanpad.core.util.BoundingBoxUtil
 import scot.raven.titanpad.cursor.domain.InputType
@@ -25,7 +27,7 @@ class TouchInputHandler(
     private val scope: CoroutineScope,
     private val modeCoordinator: ModeCoordinator,
     private val backScreenMode: Boolean
-) : InputHandler {
+) : IEventCallback.Stub() {
     private var hidService: IHidService? = null
     private var touchDown = false
     private var lastPositionX = 0
@@ -51,12 +53,14 @@ class TouchInputHandler(
         hidService = service
     }
 
-    override fun parseInput(line: String) {
+    override fun accept(line: IInputEvent?) {
+        if (line == null) return;
+
         if (modeCoordinator.activeMode.value != ModeCoordinator.OverlayMode.ON)
             return
 
         when {
-            line.contains("BTN_TOUCH") && line.contains("DOWN") -> {
+            line.eventType == 1 && line.eventCode == 330 && line.eventValue == 1 -> { // BTN_TOUCH DOWN
                 touchDown = true
                 startPosSet = false
                 scrollHasStarted = false
@@ -68,7 +72,7 @@ class TouchInputHandler(
                 startTime = System.nanoTime()
             }
 
-            line.contains("BTN_TOUCH") && line.contains("UP") -> {
+            line.eventType == 1 && line.eventCode == 330 && line.eventValue == 0 -> { // BTN_TOUCH UP
                 if (touchDown) {
                     endTime = System.nanoTime()
                 }
@@ -76,59 +80,31 @@ class TouchInputHandler(
                 startPosSet = false
             }
 
-            line.contains("ABS_MT_POSITION_X") -> {
-                val parts = line.trim().split(Regex("\\s+"))
-                if (parts.size >= 3) {
-                    val hexValue = parts.last()
-                    val newX = hexValue.toIntOrNull(16)
-                    if (newX != null) {
-                        currentX = newX
-                        if (touchDown && !startPosSet) {
-                            lastPositionX = newX
-                            startPositionX = newX
-                        }
-                    }
+            line.eventType == 3 && line.eventCode == 53 -> { // ABS_MT_POSITION_X
+                currentX = line.eventValue
+                if (touchDown && !startPosSet) {
+                    lastPositionX = line.eventValue
+                    startPositionX = line.eventValue
                 }
             }
 
-            line.contains("ABS_MT_POSITION_Y") -> {
-                val parts = line.trim().split(Regex("\\s+"))
-                if (parts.size >= 3) {
-                    val hexValue = parts.last()
-                    val newY = hexValue.toIntOrNull(16)
-                    if (newY != null) {
-                        currentY = newY
-                        if (touchDown && !startPosSet) {
-                            lastPositionY = newY
-                            startPositionY = newY
-                        }
-                    }
+            line.eventType == 3 && line.eventCode == 54 -> { // ABS_MT_POSITION_Y
+                currentY = line.eventValue
+                if (touchDown && !startPosSet) {
+                    lastPositionY = line.eventValue
+                    startPositionY = line.eventValue
                 }
             }
 
-            line.contains("ABS_MT_TOUCH_MAJOR") -> {
-                val parts = line.trim().split(Regex("\\s+"))
-                if (parts.size >= 3) {
-                    val hexValue = parts.last()
-                    val newWidth = hexValue.toIntOrNull(16)
-                    if (newWidth != null) {
-                        width = newWidth
-                    }
-                }
+            line.eventType == 3 && line.eventCode == 48 -> { // ABS_MT_TOUCH_MAJOR
+                width = line.eventValue
             }
 
-            line.contains("ABS_MT_TOUCH_MINOR") -> {
-                val parts = line.trim().split(Regex("\\s+"))
-                if (parts.size >= 3) {
-                    val hexValue = parts.last()
-                    val newHeight = hexValue.toIntOrNull(16)
-                    if (newHeight != null) {
-                        height = newHeight
-                    }
-                }
+            line.eventType == 3 && line.eventCode == 49 -> { // ABS_MT_TOUCH_MINOR
+                height = line.eventValue
             }
 
-            line.contains("SYN_REPORT") -> {
+            line.eventType == 0 && line.eventCode == 0 && line.eventValue == 0 -> { // SYN_REPORT
                 val settings = settingsFlow.value.getActiveConfig()
                 if (touchDown && !startPosSet) {
                     numFingers = if (width <= settings.twoFingerSensitivity) 1 else 2
@@ -371,6 +347,9 @@ class TouchInputHandler(
             }
             numFingers = 0
         }
+    }
+
+    override fun destroy() {
     }
 
     companion object {

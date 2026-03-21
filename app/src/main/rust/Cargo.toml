@@ -13,3 +13,4 @@ evdev = "0.13.2"
 eyre = "0.6.12"
 jni = "0.22.1"
 log = "0.4.29"
+nix = { version = "0.29.0", features = ["ioctl", "fs", "event", "poll"] }

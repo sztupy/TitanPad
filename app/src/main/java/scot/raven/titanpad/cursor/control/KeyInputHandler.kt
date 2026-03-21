@@ -3,6 +3,8 @@ package scot.raven.titanpad.cursor.control
 import kotlinx.coroutines.flow.StateFlow
 import scot.raven.titanpad.core.control.IHidService
 import scot.raven.titanpad.core.control.ModeCoordinator
+import scot.raven.titanpad.core.evdev.IEventCallback
+import scot.raven.titanpad.core.evdev.IInputEvent
 import scot.raven.titanpad.core.logs.Logger
 import scot.raven.titanpad.cursor.domain.FuncButtonMap
 import scot.raven.titanpad.settings.domain.ApplicationSettings
@@ -10,20 +12,23 @@ import scot.raven.titanpad.settings.domain.ApplicationSettings
 class KeyInputHandler(
     val settingsFlow: StateFlow<ApplicationSettings>,
     val modeCoordinator: ModeCoordinator
-) : InputHandler {
+) : IEventCallback.Stub() {
     private var hidService: IHidService? = null
 
     fun setHidService(service: IHidService?) {
         hidService = service
     }
 
-    override fun parseInput(line: String) {
+    override fun destroy() {
+    }
+
+    override fun accept(line: IInputEvent?) {
+        if (line == null) return;
         when {
-            line.contains("EV_KEY") && line.contains("DOWN") -> {
+            line.eventType == 1 && line.eventValue == 1 -> {
                 val settings = settingsFlow.value
-                val parts = line.trim().split(Regex("\\s+"))
-                when(parts[1]) {
-                    "00f9" -> {
+                when(line.eventCode) {
+                    249 -> {
                         Logger.d("Func1 key down")
                         if (settings.alwaysRemapFuncKeys)
                             hidService?.keyDown(if (settings.alwaysRemapFuncKeysCompat) 0x44 else 0x68)
@@ -37,7 +42,7 @@ class KeyInputHandler(
                             }
 
                     }
-                    "00fa" -> {
+                    250 -> {
                         Logger.d("Func2 key down")
                         if (settings.alwaysRemapFuncKeys)
                             hidService?.keyDown(if (settings.alwaysRemapFuncKeysCompat) 0x45 else 0x69)
@@ -53,11 +58,10 @@ class KeyInputHandler(
                 }
             }
 
-            line.contains("EV_KEY") && line.contains("UP") -> {
+            line.eventType == 1 && line.eventValue == 0 -> {
                 val settings = settingsFlow.value
-                val parts = line.trim().split(Regex("\\s+"))
-                when(parts[1]) {
-                    "00f9" -> {
+                when(line.eventCode) {
+                    249 -> {
                         Logger.d("Func1 key up")
                         if (settings.alwaysRemapFuncKeys)
                             hidService?.keyUp(if (settings.alwaysRemapFuncKeysCompat) 0x44 else 0x68)
@@ -70,7 +74,7 @@ class KeyInputHandler(
                                 else -> {}
                             }
                     }
-                    "00fa" -> {
+                    250 -> {
                         Logger.d("Func2 key up")
                         if (settings.alwaysRemapFuncKeys)
                             hidService?.keyUp(if (settings.alwaysRemapFuncKeysCompat) 0x45 else 0x69)

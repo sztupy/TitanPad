@@ -18,14 +18,16 @@ import rikka.shizuku.Shizuku.UserServiceArgs
 import scot.raven.titanpad.BuildConfig
 import scot.raven.titanpad.core.control.HidService
 import scot.raven.titanpad.core.control.IHidService
-import scot.raven.titanpad.core.control.IInputReaderService
-import scot.raven.titanpad.core.control.InputReaderService
+import scot.raven.titanpad.core.evdev.IEvdevReaderService
 import scot.raven.titanpad.core.control.ModeCoordinator
+import scot.raven.titanpad.core.evdev.EvdevDevice
+import scot.raven.titanpad.core.evdev.EvdevReaderService
+import scot.raven.titanpad.core.evdev.IEvdevDevice
+import scot.raven.titanpad.core.evdev.IEventCallback
 import scot.raven.titanpad.core.logs.Logger
 import scot.raven.titanpad.gesture.api.GestureManager
 import scot.raven.titanpad.settings.domain.ApplicationSettings
-import java.io.BufferedReader
-import java.io.InputStreamReader
+import kotlin.String
 
 /**
  * Listens to trackpad events via Shizuku and triggers callbacks on swipe.
@@ -50,7 +52,7 @@ class InputManager(
     private var getBottomButtonEventJob: Job? = null
     private var hidService: IHidService? = null
 
-    private var inputReaderService: IInputReaderService? = null
+    private var inputReaderService: IEvdevReaderService? = null
 
     private var keyboardInputHandler = KeyInputHandler(
         settingsFlow = settingsFlow,
@@ -107,19 +109,6 @@ class InputManager(
             return
         }
 
-        getTrackpadEventJob?.cancel()
-        getBackScreenEventJob?.cancel()
-        getBottomButtonEventJob?.cancel()
-        getTopButtonEventJob?.cancel()
-
-        Log.d(DEBUG_TAG, "start() launching getevent coroutine...")
-        getTrackpadEventJob = eventParser(trackpadEventDevice, trackpadInputHandler)
-        getBackScreenEventJob = eventParser(backScreenEventDevice, backScreenInputHandler)
-        getBottomButtonEventJob = eventParser(topButtonEventDevice, keyboardInputHandler)
-        getTopButtonEventJob = eventParser(bottomButtonEventDevice, keyboardInputHandler)
-        Log.d(DEBUG_TAG, "start() completed - getevent job launched")
-        Log.d(logTag, "Trackpad gesture detection started")
-
         scope.launch(Dispatchers.IO) {
             Log.i(DEBUG_TAG, "hidService starting")
             try {
@@ -144,8 +133,39 @@ class InputManager(
             Log.i(DEBUG_TAG, "inputReaderService starting")
             try {
                 bindInputReaderUserService()
-                while (isActive) {
-                    delay(100)
+                Log.i(DEBUG_TAG, "inputReaderService bound")
+
+                while (isActive && inputReaderService == null) {
+                    Log.i(DEBUG_TAG, "waiting for inputReaderService to become active")
+                    delay(1000)
+                }
+
+                val deviceList: List<IBinder>? = inputReaderService?.devices() as List<IBinder>?
+                try {
+                    if (deviceList != null) {
+                        Log.i(DEBUG_TAG, "inputReaderService devicelist: ${deviceList.size}")
+                        for (deviceBinder in deviceList) {
+                            val device = IEvdevDevice.Stub.asInterface(deviceBinder)
+                            when (device.path) {
+                                trackpadEventDevice -> getTrackpadEventJob = eventParser(device, trackpadInputHandler)
+                                backScreenEventDevice -> getBackScreenEventJob = eventParser(device, backScreenInputHandler)
+                                topButtonEventDevice -> getTopButtonEventJob = eventParser(device, keyboardInputHandler)
+                                bottomButtonEventDevice -> getBottomButtonEventJob = eventParser(device, keyboardInputHandler)
+                                else -> device.close()
+                            }
+                        }
+                    }
+
+                    while (isActive) {
+                        delay(100)
+                    }
+                } finally {
+                    if (deviceList != null) {
+                        for (deviceBinder in deviceList) {
+                            val device = IEvdevDevice.Stub.asInterface(deviceBinder)
+                            device.close()
+                        }
+                    }
                 }
             } catch (e: Exception) {
                 Log.e(DEBUG_TAG, "inputReaderService: ${e.message}", e)
@@ -158,50 +178,32 @@ class InputManager(
         }
     }
 
+    fun eventParser(eventDevice: IEvdevDevice, inputHandler: IEventCallback): Job {
+        return scope.launch(Dispatchers.IO) {
+          try {
+                Log.d(DEBUG_TAG, "eventparser reader loop starts for ${eventDevice.name} ${eventDevice.path}")
+                  while (isActive) {
+                      eventDevice.events(1000, inputHandler)
+                  }
+
+                  Log.d(DEBUG_TAG, "getevent reader loop ended for ${eventDevice.name} ${eventDevice.path}")
+              } catch (e: Exception) {
+                  Log.e(DEBUG_TAG, "getevent coroutine FAILED: ${e.message}", e)
+              }
+        }
+    }
+
     fun stop() {
         Log.d(DEBUG_TAG, "stop() called - had active job: ${getTrackpadEventJob != null}")
         getTrackpadEventJob?.cancel()
+        getBackScreenEventJob?.cancel()
         getBottomButtonEventJob?.cancel()
         getTopButtonEventJob?.cancel()
         getTrackpadEventJob = null
+        getBackScreenEventJob = null
         getBottomButtonEventJob = null
         getTopButtonEventJob = null
         Log.d(logTag, "Trackpad gesture detection stopped")
-    }
-
-    fun eventParser(eventDevice: String, inputHandler: InputHandler): Job {
-        return scope.launch(Dispatchers.IO) {
-            try {
-                Log.d(DEBUG_TAG, "getevent coroutine started, getting Shizuku.newProcess method...")
-                val newProcessMethod = Shizuku::class.java.getDeclaredMethod(
-                    "newProcess",
-                    Array<String>::class.java,
-                    Array<String>::class.java,
-                    String::class.java
-                )
-                newProcessMethod.isAccessible = true
-
-                Log.d(DEBUG_TAG, "Invoking Shizuku.newProcess for getevent -l $eventDevice")
-                val process = newProcessMethod.invoke(
-                    null,
-                    arrayOf("getevent", "-l", eventDevice),
-                    null,
-                    null
-                ) as Process
-
-                Log.d(DEBUG_TAG, "getevent process started successfully, reading events...")
-                BufferedReader(InputStreamReader(process.inputStream)).use { reader ->
-                    while (isActive) {
-                        val line = reader.readLine() ?: break
-                        inputHandler.parseInput(line)
-                    }
-                }
-                Log.d(DEBUG_TAG, "getevent reader loop ended")
-            } catch (e: Exception) {
-                Log.e(DEBUG_TAG, "getevent coroutine FAILED: ${e.message}", e)
-                Log.e(logTag, "Trackpad getevent failed", e)
-            }
-        }
     }
 
     /**
@@ -291,7 +293,7 @@ class InputManager(
             val res = StringBuilder()
             res.append("onInputReaderServiceConnected: ").append(componentName.className).append('\n')
             if (binder != null && binder.pingBinder()) {
-                val service: IInputReaderService = IInputReaderService.Stub.asInterface(binder)
+                val service: IEvdevReaderService = IEvdevReaderService.Stub.asInterface(binder)
                 try {
                     inputReaderService = service
                     if (inputReaderService != null) {
@@ -321,7 +323,7 @@ class InputManager(
     private val userInputReaderServiceArgs: UserServiceArgs = UserServiceArgs(
         ComponentName(
             BuildConfig.APPLICATION_ID,
-            InputReaderService::class.java.name
+            EvdevReaderService::class.java.name
         )
     )
         .daemon(false)

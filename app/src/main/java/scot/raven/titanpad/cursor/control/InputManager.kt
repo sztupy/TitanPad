@@ -369,8 +369,8 @@ class InputManager(
         const val DEFAULT_LEFT_BOTTOM_EVENT_DEVICE = "/dev/input/event3" // left bottom button is event 00fa
 //        // event4 would be the non-existent headphone jack sensor
         const val DEFAULT_BACK_SCREEN_EVENT_DEVICE = "/dev/input/event5" // back screen touch
-//        const val DEFAULT_KEYBOARD_EVENT_DEVICE = "/dev/input/event6" // keyboard buttons
-        const val DEFAULT_TRACKPAD_EVENT_DEVICE = "/dev/input/event7" // keyboard touch
+//        const val DEFAULT_KEYBOARD_EVENT_DEVICE = "/dev/input/event7" // keyboard buttons
+        const val DEFAULT_TRACKPAD_EVENT_DEVICE = "/dev/input/event6" // keyboard touch
         // event8 has an unknown purpose
 
         const val DEFAULT_LOG_TAG = "PastieraIME"
